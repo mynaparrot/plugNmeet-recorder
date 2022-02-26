@@ -14,7 +14,6 @@ jobs:
           node-version: "16.x"
       - name: Build project
         run: |
-          cd recorder
           npm install
           npm run build
           mkdir -p tmp/recorder
@@ -25,10 +24,10 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: upload recorder
-          path: recorder/tmp/recorder.zip
+          path: tmp/recorder.zip
       - name: Upload to release
         uses: JasonEtco/upload-to-release@master
         with:
-          args: recorder/tmp/recorder.zip application/zip
+          args: tmp/recorder.zip application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
