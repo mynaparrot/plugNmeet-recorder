@@ -1,0 +1,34 @@
+name: Build and release recorder
+on:
+  release:
+    types: [ published ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16.x"
+      - name: Build project
+        run: |
+          cd recorder
+          npm install
+          npm run build
+          mkdir -p tmp/recorder
+          rsync -ar dist package.json config_sample.yaml tmp/recorder/
+          cd tmp
+          zip -X -r recorder.zip recorder
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: upload recorder
+          path: recorder/tmp/recorder.zip
+      - name: Upload to release
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: recorder/tmp/recorder.zip application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

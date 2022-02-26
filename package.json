@@ -1,0 +1,38 @@
+{
+  "name": "plugnmeet-recorder",
+  "version": "1.0.0",
+  "description": "Simple plubNmeet recorder",
+  "author": "Jibon L. Costa",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "npm run build && concurrently -c \"red,green\" --kill-others \"node ./dist/index.js\" \"sleep 1 && node ./dist/websocketServer.js\"",
+    "dev": "concurrently -c \"red,green,blue\" --kill-others \"ts-node-dev src/index.ts\" \"sleep 1 && npm run websocket-server && esw -w --ext '.ts','.js' --fix\"",
+    "websocket-server": "ts-node-dev src/websocketServer.ts",
+    "build": "rm -rf ./dist && tsc -p . --outDir ./dist && cp -rf ./src/chrome-extension ./dist/chrome-extension"
+  },
+  "dependencies": {
+    "ioredis": "^4.28.5",
+    "js-yaml": "^4.1.0",
+    "puppeteer": "^13.4.0",
+    "winston": "^3.6.0",
+    "ws": "^8.5.0",
+    "xvfb": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/ioredis": "^4.28.8",
+    "@types/js-yaml": "^4.0.5",
+    "@types/ws": "^8.5.1",
+    "@typescript-eslint/eslint-plugin": "^5.12.1",
+    "@typescript-eslint/parser": "^5.12.1",
+    "concurrently": "^7.0.0",
+    "eslint": "^8.10.0",
+    "eslint-config-prettier": "^8.4.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-watch": "^8.0.0",
+    "prettier": "^2.5.1",
+    "ts-node": "^10.5.0",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.5.5"
+  }
+}

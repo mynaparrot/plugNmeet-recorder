@@ -1,0 +1,9 @@
+log
+*.log
+npm-debug.log*
+.idea
+package-lock.json
+config.yaml
+dist
+node_modules/
+recording_files/

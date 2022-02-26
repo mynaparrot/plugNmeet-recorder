@@ -1,0 +1,30 @@
+recorder:
+  id: node_01
+  max_limit: 10
+  post_mp4_convert: true
+  # use it if you want to use custom chrome
+  custom_chrome_path: ""
+  copy_to_path:
+    # plugnmeet-server should have access this path otherwise user can't download recordings.
+    # this path can be NSF or other network path too but make sure nodejs has permission
+    # to write this path.
+    main_path: "../recording_files"
+    # this is optional. If you set this path then it will be included with recording
+    # and store in database. This path should be inside main_path. Sometime user want to
+    # use specific recording directory for this particular recorder.
+    sub_path: "node_01"
+plugNmeet_info:
+  join_host: "http://localhost:8080/?access_token="
+websocket_server:
+  host: "ws://localhost"
+  port: 4000
+  # openssl rand -hex 10
+  # OR
+  # cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1
+  auth_token: WEBSOCKET_AUTH_TOKEN
+redis_info:
+  host: "localhost"
+  port: "6379"
+  username: ""
+  password: ""
+  db: 0
