@@ -14,6 +14,9 @@ recorder:
     # use specific recording directory for this particular recorder.
     sub_path: "node_01"
 plugNmeet_info:
+  # this should be url of your domain where you're using plugNmeet-client
+  # if it's live server then should be https link otherwise won't work.
+  # format: https://PLUG_N_MEET_SERVER_DOMAIN/?access_token=
   join_host: "http://localhost:8080/?access_token="
 websocket_server:
   host: "ws://localhost"

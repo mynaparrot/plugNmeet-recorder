@@ -46,11 +46,14 @@ cp config_sample.yaml config.yaml
    make sure both recorder & plugnmeet server can access that directory. Otherwise, user won't be able to download
    recordings. Also make sure that nodejs has write permission to the path.
 
-5) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose appropriate one
+5) Change `join_host` with correct format. It should be https url where you've installed `plugNmeet-server`
+   with `plugNmeet-client`.
+
+6) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose appropriate one
    based on availability. In that case change value of `id` inside `config.yaml` file. Make sure that value is unique,
    example: `node_01`, `node_02` ... You can also change the value of `max_limit` based on capacity of the server.
 
-6) Start server `npm start`
+7) Start server `npm start`
 
 **Development**
 
