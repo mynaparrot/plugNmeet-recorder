@@ -41,11 +41,10 @@ sudo apt install -y fonts-noto fonts-liberation
 cp config_sample.yaml config.yaml
 ```
 
-4) Change the relevant information in the `config.yaml` file. Redis information should be the same
-   as `plugnmeet-server's`. The `main_path` value should be same as `recording_files_path` value of `plugnmeet-server`.
-   If you intend to use NFS, ensure that both the recorder and the plugnmeet-server can access this directory.
-   Otherwise, the user will be unable to download recordings. Also, ensure that nodejs has write permissions on the
-   path.
+4) Change the relevant information in the `config.yaml` file. Redis information should be the same as `plugnmeet-server`
+   . The `main_path` value should be same as `recording_files_path` value of `plugnmeet-server`'s `config.yaml` file. If
+   you intend to use NFS, ensure that both the recorder and the plugnmeet-server can access this directory. Otherwise,
+   the user will be unable to download recordings. Also, ensure that nodejs has write permissions on the path.
 
 5) Change `join_host` with correct format. It should be https url where you've installed `plugNmeet-server`
    with `plugNmeet-client`.
