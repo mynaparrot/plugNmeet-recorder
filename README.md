@@ -1,9 +1,9 @@
 # plugNmeet-recorder
 
-plugNmeet-recorder can be used for recording and RTMP broadcasting. This is a CPU-intensive program. It is recommended
-to use a separate server other than the same server you are using for plugNmeet or livekit.. But if you are not using
-recording that often then you can use the same server. In that case, it is recommended to use
-the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script for setup.
+The plugNmeet-recorder can be used to record sessions as well as RTMP broadcasts. This software consumes CPU power, so
+it's best to run it on a different server from the one used for plugNmeet or livekit. However, if you are not recording
+frequently, you can continue to use the same server. In this scenario,
+the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script is recommended for installation.
 
 **Requirements**
 
@@ -35,23 +35,24 @@ sudo apt install -y fonts-noto fonts-liberation
 **Install recorder**
 
 1) To download the latest version, check [release page.](https://github.com/mynaparrot/plugNmeet-recorder/releases)
-2) Unzip the recoder.zip file and navigate to the directory from the terminal, then run.
+2) Unzip the recorder.zip file and navigate to the directory from the terminal, then run.
 
 ```
 cp config_sample.yaml config.yaml
 ```
 
-4) Change the necessary info inside `config.yaml` file. Redis info should be same as `plugnmeet-server` & `main_path`
-   should be same as `plugnmeet-server's` config.yaml `recording_files_path` value. If you're planning to use `NFS` then
-   make sure both recorder & plugnmeet server can access that directory. Otherwise, user won't be able to download
-   recordings. Also make sure that nodejs has write permission to the path.
+4) Change the relevant information in the `config.yaml` file. Redis information should be the same
+   as `plugnmeet-server's`. The `main_path` value should be same as `recording_files_path` value of `plugnmeet-server`.
+   If you intend to use NFS, ensure that both the recorder and the plugnmeet-server can access this directory.
+   Otherwise, the user will be unable to download recordings. Also, ensure that nodejs has write permissions on the
+   path.
 
 5) Change `join_host` with correct format. It should be https url where you've installed `plugNmeet-server`
    with `plugNmeet-client`.
 
 6) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose appropriate one
    based on availability. In that case change value of `id` inside `config.yaml` file. Make sure that value is unique,
-   example: `node_01`, `node_02` ... You can also change the value of `max_limit` based on capacity of the server.
+   example: `node_01`, `node_02` ... You can also set the value of `max_limit` based on the server's capacity.
 
 7) Start server `npm start`
 
