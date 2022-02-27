@@ -51,7 +51,7 @@ export default class RecordingService {
       fileStream.write(msg);
     });
 
-    // If the client disconnects, stop FFmpeg.
+    // If the client disconnects.
     this.ws.on('close', async () => {
       fileStream.close();
       this.ws.terminate();
