@@ -118,7 +118,7 @@ export default class RecordingService {
     const payload: RecorderResp = {
       from: 'recorder',
       status: true,
-      task: 'proceeded',
+      task: 'recording-proceeded',
       msg: 'process completed',
       record_id: this.recordId,
       sid: this.roomSid,
