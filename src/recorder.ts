@@ -26,12 +26,15 @@ if (!args) {
   process.exit();
 }
 
+const width = 1500;
+const height = 800;
+
 if (platform === 'linux') {
   // prettier-ignore
   xvfb = new Xvfb({
     silent: true,
     xvfb_args: [
-      '-screen', '0', '1280x800x24', '-ac', '-nolisten', 'tcp', '-dpi', '96', '+extension', 'RANDR',
+      '-screen', '0', `${width}x${height}x24`, '-ac', '-nolisten', 'tcp', '-dpi', '200', '+extension', 'RANDR',
     ],
   });
 }
@@ -185,7 +188,7 @@ const options:
     '--no-zygote',
     '--start-fullscreen',
     '--app=https://www.google.com/',
-    //`--window-size=${width},${height}`, // you can use fixed width/height
+    `--window-size=${width},${height}`,
   ],
   executablePath: '/usr/bin/google-chrome',
   defaultViewport: null,
