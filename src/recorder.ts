@@ -26,8 +26,8 @@ if (!args) {
   process.exit();
 }
 
-const width = 1500;
-const height = 800;
+const width = 1600;
+const height = 900;
 
 if (platform === 'linux') {
   // prettier-ignore
