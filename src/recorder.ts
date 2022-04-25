@@ -26,7 +26,7 @@ if (!args) {
   process.exit();
 }
 
-const width = 1500;
+const width = 1600;
 const height = 800;
 
 if (platform === 'linux') {
