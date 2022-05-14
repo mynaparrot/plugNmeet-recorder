@@ -44,6 +44,7 @@ export interface RedisInfo {
 
 export interface RecorderReq {
   from: string;
+  from_server_id: string;
   task: string;
   room_id: string;
   record_id: string;
@@ -54,6 +55,7 @@ export interface RecorderReq {
 }
 
 export interface RecorderArgs {
+  from_server_id: string;
   room_id: string;
   record_id: string;
   sid: string;
@@ -71,6 +73,7 @@ export interface RecorderArgs {
 
 export interface RecorderResp {
   from: string;
+  to_server_id: string;
   task: string;
   status: boolean;
   msg: string;

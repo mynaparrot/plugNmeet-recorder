@@ -39,6 +39,7 @@ wss.on('connection', function connection(ws, req) {
   const room_id = params.get('room_id');
   const room_sid = params.get('room_sid');
   const record_id = params.get('record_id');
+  const from_server_id = params.get('from_server_id');
 
   if (auth_token !== websocketServerInfo.auth_token || !service) {
     ws.terminate();
@@ -48,7 +49,15 @@ wss.on('connection', function connection(ws, req) {
   logger.info(`new ${service} task for ${room_sid}`);
 
   if (service === 'recording') {
-    new RecordingService(ws, recorder, redisInfo, room_id, room_sid, record_id);
+    new RecordingService(
+      ws,
+      recorder,
+      redisInfo,
+      room_id,
+      room_sid,
+      record_id,
+      from_server_id,
+    );
   } else if (service === 'rtmp') {
     const rtmpUrl = params.get('rtmp_url');
     new RtmpService(ws, rtmpUrl);

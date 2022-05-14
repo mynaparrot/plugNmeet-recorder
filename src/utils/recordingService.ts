@@ -12,6 +12,7 @@ export default class RecordingService {
   private roomId: string;
   private roomSid: string;
   private recordId: string;
+  private fromServerId: string;
 
   constructor(
     ws: any,
@@ -20,6 +21,7 @@ export default class RecordingService {
     roomId: any,
     roomSid: any,
     recordId: any,
+    from_server_id: any,
   ) {
     this.ws = ws;
     this.recorder = recorder;
@@ -27,6 +29,7 @@ export default class RecordingService {
     this.roomId = roomId;
     this.roomSid = roomSid;
     this.recordId = recordId;
+    this.fromServerId = from_server_id;
     this.startService();
   }
 
@@ -117,6 +120,7 @@ export default class RecordingService {
   private notifyByRedis = async (filePath: string, file_size: number) => {
     const payload: RecorderResp = {
       from: 'recorder',
+      to_server_id: this.fromServerId,
       status: true,
       task: 'recording-proceeded',
       msg: 'process completed',

@@ -69,9 +69,10 @@ try {
       payload.recorder_id === recorder.id
     ) {
       logger.info('Main: ' + payload.task);
-      const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.room_id}&room_sid=${payload.sid}&record_id=${payload.record_id}`;
+      const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.room_id}&room_sid=${payload.sid}&record_id=${payload.record_id}&from_server_id=${payload.from_server_id}`;
 
       const toSend: RecorderArgs = {
+        from_server_id: payload.from_server_id,
         room_id: payload.room_id,
         record_id: payload.record_id,
         sid: payload.sid,

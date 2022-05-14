@@ -85,6 +85,7 @@ const closeConnection = async (hasError: boolean, msg: string) => {
 
   const payload: RecorderResp = {
     from: 'recorder',
+    to_server_id: recorderArgs.from_server_id,
     status: !hasError,
     task,
     msg: msg,
@@ -106,6 +107,7 @@ const recordingStartedMsg = async (msg: string) => {
 
   const payload: RecorderResp = {
     from: 'recorder',
+    to_server_id: recorderArgs.from_server_id,
     status: true,
     task,
     msg: msg,
