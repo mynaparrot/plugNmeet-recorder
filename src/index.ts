@@ -14,6 +14,7 @@ import {
   RedisInfo,
 } from './utils/interfaces';
 import { logger } from './utils/helper';
+import { addRecorder, sendPing } from './utils/redisTasks';
 
 let redisInfo: RedisInfo;
 let recorder: Recorder;
@@ -49,13 +50,7 @@ try {
       logger.error('Failed to subscribe: %s', err.message);
     } else {
       logger.info('Subscribed successfully! Waiting for message');
-      const payload: RecorderAddReq = {
-        from: 'recorder',
-        task: 'addRecorder',
-        recorder_id: recorder.id,
-        max_limit: recorder.max_limit,
-      };
-      await pubNode.publish('plug-n-meet-recorder', JSON.stringify(payload));
+      addRecorder(redisOptions, recorder.id, recorder.max_limit);
       startPing();
     }
   });
@@ -109,21 +104,12 @@ try {
   });
 
   const startPing = () => {
-    const sendPing = async () => {
-      const payload: RecorderPingReq = {
-        from: 'recorder',
-        task: 'ping',
-        recorder_id: recorder.id, // this node's ID
-      };
-      await pubNode.publish('plug-n-meet-recorder', JSON.stringify(payload));
-    };
-
     // send first ping
-    sendPing();
+    sendPing(redisOptions, recorder.id);
     // let's send ping in every 10 seconds
     // to make sure this node is online
     setInterval(() => {
-      sendPing();
+      sendPing(redisOptions, recorder.id);
     }, 10000);
   };
 })();

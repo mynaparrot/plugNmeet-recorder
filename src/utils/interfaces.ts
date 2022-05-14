@@ -6,6 +6,13 @@ export interface Recorder {
   copy_to_path: CopyToPath;
 }
 
+export interface RecorderRedisHashInfo {
+  maxLimit: number;
+  currentProgress: number;
+  last_ping: number;
+  created: number;
+}
+
 export interface CopyToPath {
   main_path: string;
   sub_path?: string;
