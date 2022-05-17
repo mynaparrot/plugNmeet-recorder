@@ -9,7 +9,7 @@ export interface Recorder {
 export interface RecorderRedisHashInfo {
   maxLimit: number;
   currentProgress: number;
-  last_ping: number;
+  lastPing: number;
   created: number;
 }
 
@@ -36,6 +36,7 @@ export interface RecorderAddReq {
   task: string;
   recorder_id: string;
   max_limit: number;
+  lastPing: number;
 }
 
 export interface RecorderPingReq {

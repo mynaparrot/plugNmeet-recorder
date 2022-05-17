@@ -101,7 +101,7 @@ try {
   const startPing = () => {
     // send first ping
     sendPing(redisOptions, recorder.id);
-    // let's send ping in every 10 seconds
+    // let's send ping in every 5 seconds
     // to make sure this node is online
     setInterval(() => {
       sendPing(redisOptions, recorder.id);

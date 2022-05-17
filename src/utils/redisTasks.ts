@@ -8,12 +8,13 @@ export const addRecorder = async (
   max_limit: number,
 ) => {
   const redis = new Redis(redisOptions);
+  const now = Math.floor(new Date().getTime() / 1000);
   const recorderInfo: any = {};
   recorderInfo[recorder_id] = JSON.stringify({
     maxLimit: max_limit,
     currentProgress: 0,
-    last_ping: Date.now(),
-    created: Date.now(),
+    lastPing: now,
+    created: now,
   });
   await redis.hset(recorderKey, recorderInfo);
 };
@@ -25,13 +26,12 @@ export const sendPing = async (
   const redis = new Redis(redisOptions);
   redis.watch(recorderKey, async () => {
     const info = await redis.hget(recorderKey, recorder_id);
-    //console.log(info);
     if (!info) {
       return;
     }
 
     const currentInfo: RecorderRedisHashInfo = JSON.parse(info);
-    currentInfo.last_ping = Date.now();
+    currentInfo.lastPing = Math.floor(new Date().getTime() / 1000);
 
     // update again
     const r = redis.multi({ pipeline: true });
