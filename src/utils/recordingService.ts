@@ -1,35 +1,34 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
-import Redis, { RedisOptions } from 'ioredis';
 
-import { Recorder, RecorderResp, RedisInfo } from './interfaces';
-import { logger } from './helper';
+import { PlugNmeetInfo, Recorder, RecorderResp, RedisInfo } from './interfaces';
+import { logger, notify } from './helper';
 
 export default class RecordingService {
   private ws: any;
   private recorder: Recorder;
+  private plugNmeetInfo: PlugNmeetInfo;
   private redisInfo: RedisInfo;
   private roomId: string;
   private roomSid: string;
   private recordId: string;
-  private fromServerId: string;
 
   constructor(
     ws: any,
     recorder: Recorder,
+    plugNmeetInfo: PlugNmeetInfo,
     redisInfo: RedisInfo,
     roomId: any,
     roomSid: any,
     recordId: any,
-    from_server_id: any,
   ) {
     this.ws = ws;
     this.recorder = recorder;
+    this.plugNmeetInfo = plugNmeetInfo;
     this.redisInfo = redisInfo;
     this.roomId = roomId;
     this.roomSid = roomSid;
     this.recordId = recordId;
-    this.fromServerId = from_server_id;
     this.startService();
   }
 
@@ -120,7 +119,6 @@ export default class RecordingService {
   private notifyByRedis = async (filePath: string, file_size: number) => {
     const payload: RecorderResp = {
       from: 'recorder',
-      to_server_id: this.fromServerId,
       status: true,
       task: 'recording-proceeded',
       msg: 'process completed',
@@ -132,20 +130,6 @@ export default class RecordingService {
       recorder_id: this.recorder.id,
     };
 
-    const redisOptions: RedisOptions = {
-      host: this.redisInfo.host,
-      port: this.redisInfo.port,
-      username: this.redisInfo.username,
-      password: this.redisInfo.password,
-      db: this.redisInfo.db,
-    };
-
-    try {
-      const pubNode = new Redis(redisOptions);
-      await pubNode.publish('plug-n-meet-recorder', JSON.stringify(payload));
-      await pubNode.quit();
-    } catch (e) {
-      logger.error(e);
-    }
+    notify(this.plugNmeetInfo, payload);
   };
 }

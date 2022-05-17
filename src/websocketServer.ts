@@ -2,17 +2,24 @@ import { Server as WebSocketServer } from 'ws';
 import http from 'http';
 import yaml from 'js-yaml';
 import fs from 'fs';
-import { Recorder, RedisInfo, WebsocketServerInfo } from './utils/interfaces';
+import {
+  PlugNmeetInfo,
+  Recorder,
+  RedisInfo,
+  WebsocketServerInfo,
+} from './utils/interfaces';
 import RecordingService from './utils/recordingService';
 import RtmpService from './utils/rtmpService';
 import { logger } from './utils/helper';
 
 let websocketServerInfo: WebsocketServerInfo;
 let recorder: Recorder;
+let plugNmeetInfo: PlugNmeetInfo;
 let redisInfo: RedisInfo;
 try {
   const config: any = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
   websocketServerInfo = config.websocket_server;
+  plugNmeetInfo = config.plugNmeet_info;
   redisInfo = config.redis_info;
   recorder = config.recorder;
 } catch (e) {
@@ -39,7 +46,6 @@ wss.on('connection', function connection(ws, req) {
   const room_id = params.get('room_id');
   const room_sid = params.get('room_sid');
   const record_id = params.get('record_id');
-  const from_server_id = params.get('from_server_id');
 
   if (auth_token !== websocketServerInfo.auth_token || !service) {
     ws.terminate();
@@ -52,11 +58,11 @@ wss.on('connection', function connection(ws, req) {
     new RecordingService(
       ws,
       recorder,
+      plugNmeetInfo,
       redisInfo,
       room_id,
       room_sid,
       record_id,
-      from_server_id,
     );
   } else if (service === 'rtmp') {
     const rtmpUrl = params.get('rtmp_url');

@@ -25,7 +25,10 @@ export interface WebsocketServerInfo {
 }
 
 export interface PlugNmeetInfo {
-  join_host: string;
+  host: string;
+  api_key: string;
+  api_secret: string;
+  join_host?: string;
 }
 
 export interface RecorderAddReq {
@@ -51,7 +54,6 @@ export interface RedisInfo {
 
 export interface RecorderReq {
   from: string;
-  from_server_id: string;
   task: string;
   room_id: string;
   record_id: string;
@@ -62,13 +64,12 @@ export interface RecorderReq {
 }
 
 export interface RecorderArgs {
-  from_server_id: string;
   room_id: string;
   record_id: string;
   sid: string;
   access_token: string;
   redisInfo: RedisInfo;
-  join_host: string;
+  plugNmeetInfo: PlugNmeetInfo;
   post_mp4_convert: boolean;
   copy_to_path: CopyToPath;
   serviceType: string;
@@ -80,7 +81,6 @@ export interface RecorderArgs {
 
 export interface RecorderResp {
   from: string;
-  to_server_id: string;
   task: string;
   status: boolean;
   msg: string;

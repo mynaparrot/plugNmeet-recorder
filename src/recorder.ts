@@ -10,7 +10,8 @@ import Redis, { RedisOptions } from 'ioredis';
 import Xvfb from 'xvfb';
 
 import { RecorderArgs, RecorderResp } from './utils/interfaces';
-import { logger, sleep } from './utils/helper';
+import { logger, notify, sleep } from './utils/helper';
+import { updateRecorderProgress } from './utils/redisTasks';
 
 const args: any = process.argv.slice(2),
   platform = os.platform();
@@ -48,8 +49,7 @@ const redisOptions: RedisOptions = {
   db: recorderArgs.redisInfo.db,
 };
 
-const pubNode = new Redis(redisOptions);
-const subNode = pubNode.duplicate();
+const subNode = new Redis(redisOptions);
 
 subNode.subscribe('plug-n-meet-recorder', (err, count) => {
   if (err) {
@@ -85,7 +85,6 @@ const closeConnection = async (hasError: boolean, msg: string) => {
 
   const payload: RecorderResp = {
     from: 'recorder',
-    to_server_id: recorderArgs.from_server_id,
     status: !hasError,
     task,
     msg: msg,
@@ -94,8 +93,13 @@ const closeConnection = async (hasError: boolean, msg: string) => {
     room_id: recorderArgs.room_id,
     recorder_id: recorderArgs.recorder_id, // this recorder ID
   };
-  await pubNode.publish('plug-n-meet-recorder', JSON.stringify(payload));
-  await pubNode.quit();
+
+  await notify(recorderArgs.plugNmeetInfo, payload);
+  await updateRecorderProgress(
+    recorderArgs.redisInfo,
+    recorderArgs.recorder_id,
+    false,
+  );
   await subNode.quit();
 };
 
@@ -107,7 +111,6 @@ const recordingStartedMsg = async (msg: string) => {
 
   const payload: RecorderResp = {
     from: 'recorder',
-    to_server_id: recorderArgs.from_server_id,
     status: true,
     task,
     msg: msg,
@@ -116,7 +119,13 @@ const recordingStartedMsg = async (msg: string) => {
     room_id: recorderArgs.room_id,
     recorder_id: recorderArgs.recorder_id, // this recorder ID
   };
-  await pubNode.publish('plug-n-meet-recorder', JSON.stringify(payload));
+
+  await notify(recorderArgs.plugNmeetInfo, payload);
+  await updateRecorderProgress(
+    recorderArgs.redisInfo,
+    recorderArgs.recorder_id,
+    true,
+  );
 };
 
 const stopRecorder = async () => {
@@ -188,7 +197,7 @@ const options:
     '--disable-dev-shm-usage',
     '--no-sandbox',
     '--no-zygote',
-    '--start-fullscreen',
+    //'--start-fullscreen',
     '--app=https://www.google.com/',
     `--window-size=${width},${height}`,
   ],
@@ -206,7 +215,15 @@ if (recorderArgs.custom_chrome_path) {
 }
 
 (async () => {
-  const url = recorderArgs.join_host + recorderArgs.access_token;
+  let url;
+  if (recorderArgs.plugNmeetInfo.join_host) {
+    url = recorderArgs.plugNmeetInfo.join_host + recorderArgs.access_token;
+  } else {
+    url =
+      recorderArgs.plugNmeetInfo.host +
+      '/?access_token=' +
+      recorderArgs.access_token;
+  }
 
   try {
     if (platform == 'linux') {

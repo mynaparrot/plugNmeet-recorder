@@ -23,17 +23,54 @@ export const sendPing = async (
   recorder_id: string,
 ) => {
   const redis = new Redis(redisOptions);
-  const info = await redis.hget(recorderKey, recorder_id);
+  redis.watch(recorderKey, async () => {
+    const info = await redis.hget(recorderKey, recorder_id);
+    //console.log(info);
+    if (!info) {
+      return;
+    }
 
-  if (!info) {
-    return;
-  }
+    const currentInfo: RecorderRedisHashInfo = JSON.parse(info);
+    currentInfo.last_ping = Date.now();
 
-  const currentInfo: RecorderRedisHashInfo = JSON.parse(info);
-  currentInfo.last_ping = Date.now();
+    // update again
+    const r = redis.multi({ pipeline: true });
+    const recorderInfo: any = {};
+    recorderInfo[recorder_id] = JSON.stringify(currentInfo);
+    await r.hset(recorderKey, recorderInfo);
+    await r.exec();
 
-  // update again
-  const recorderInfo: any = {};
-  recorderInfo[recorder_id] = JSON.stringify(currentInfo);
-  await redis.hset(recorderKey, recorderInfo);
+    await redis.unwatch();
+    await redis.quit();
+  });
+};
+
+export const updateRecorderProgress = async (
+  redisOptions: RedisOptions,
+  recorder_id: any,
+  increment: boolean,
+) => {
+  const redis = new Redis(redisOptions);
+  redis.watch(recorderKey, async () => {
+    const info = await redis.hget(recorderKey, recorder_id);
+    if (!info) {
+      return;
+    }
+
+    const currentInfo: RecorderRedisHashInfo = JSON.parse(info);
+    if (increment) {
+      currentInfo.currentProgress += 1;
+    } else {
+      currentInfo.currentProgress -= 1;
+    }
+
+    const r = redis.multi({ pipeline: true });
+    const recorderInfo: any = {};
+    recorderInfo[recorder_id] = JSON.stringify(currentInfo);
+    await r.hset(recorderKey, recorderInfo);
+    await r.exec();
+
+    await redis.unwatch();
+    await redis.quit();
+  });
 };

@@ -7,9 +7,7 @@ import {
   WebsocketServerInfo,
   PlugNmeetInfo,
   Recorder,
-  RecorderAddReq,
   RecorderArgs,
-  RecorderPingReq,
   RecorderReq,
   RedisInfo,
 } from './utils/interfaces';
@@ -50,7 +48,7 @@ try {
       logger.error('Failed to subscribe: %s', err.message);
     } else {
       logger.info('Subscribed successfully! Waiting for message');
-      addRecorder(redisOptions, recorder.id, recorder.max_limit);
+      await addRecorder(redisOptions, recorder.id, recorder.max_limit);
       startPing();
     }
   });
@@ -64,16 +62,15 @@ try {
       payload.recorder_id === recorder.id
     ) {
       logger.info('Main: ' + payload.task);
-      const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.room_id}&room_sid=${payload.sid}&record_id=${payload.record_id}&from_server_id=${payload.from_server_id}`;
+      const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.room_id}&room_sid=${payload.sid}&record_id=${payload.record_id}`;
 
       const toSend: RecorderArgs = {
-        from_server_id: payload.from_server_id,
         room_id: payload.room_id,
         record_id: payload.record_id,
         sid: payload.sid,
         access_token: payload.access_token,
         redisInfo: redisInfo,
-        join_host: plugNmeetInfo.join_host,
+        plugNmeetInfo: plugNmeetInfo,
         post_mp4_convert: recorder.post_mp4_convert,
         copy_to_path: recorder.copy_to_path,
         recorder_id: recorder.id,
@@ -110,6 +107,6 @@ try {
     // to make sure this node is online
     setInterval(() => {
       sendPing(redisOptions, recorder.id);
-    }, 10000);
+    }, 5000);
   };
 })();
