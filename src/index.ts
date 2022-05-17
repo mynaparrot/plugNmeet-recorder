@@ -39,9 +39,7 @@ try {
     db: redisInfo.db,
     name: recorder.id,
   };
-
-  const pubNode = new Redis(redisOptions);
-  const subNode = pubNode.duplicate();
+  const subNode = new Redis(redisOptions);
 
   subNode.subscribe('plug-n-meet-recorder', async (err) => {
     if (err) {
