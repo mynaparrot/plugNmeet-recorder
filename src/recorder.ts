@@ -197,7 +197,7 @@ const options:
     '--disable-dev-shm-usage',
     '--no-sandbox',
     '--no-zygote',
-    //'--start-fullscreen',
+    '--start-fullscreen',
     '--app=https://www.google.com/',
     `--window-size=${width},${height}`,
   ],
