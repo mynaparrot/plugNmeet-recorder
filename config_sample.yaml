@@ -14,10 +14,11 @@ recorder:
     # use specific recording directory for this particular recorder.
     sub_path: "node_01"
 plugNmeet_info:
-  host: "http://localhost:8080"
-  api_key: "plugnmeet"
-  api_secret: "zumyyYWqv7KR2kUqvYdq4z4sXg7XTBD2ljT6"
-  # join_host is optional. Use it if your client installed in different place
+  # http://localhost:8080
+  host: PLUG_N_MEET_SERVER_DOMAIN
+  api_key: PLUG_N_MEET_API_KEY
+  api_secret: PLUG_N_MEET_SECRET
+  # join_host is optional. Use it if plugNmeet-client installed in different place
   # if it's live server then should be https link otherwise won't work.
   # format: https://PLUG_N_MEET_SERVER_DOMAIN/?access_token=
   # join_host: "http://localhost:3000/?access_token="

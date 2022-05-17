@@ -46,8 +46,7 @@ cp config_sample.yaml config.yaml
    you intend to use NFS, ensure that both the recorder and the plugnmeet-server can access this directory. Otherwise,
    the user will be unable to download recordings. Also, ensure that nodejs has write permissions on the path.
 
-5) Change `join_host` with correct format. It should be https url where you've installed `plugNmeet-server`
-   with `plugNmeet-client`.
+5) Change `plugNmeet_info` with correct information.
 
 6) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose appropriate one
    based on availability. In that case change value of `id` inside `config.yaml` file. Make sure that value is unique,
