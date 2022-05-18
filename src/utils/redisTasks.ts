@@ -60,7 +60,7 @@ export const updateRecorderProgress = async (
     const currentInfo: RecorderRedisHashInfo = JSON.parse(info);
     if (increment) {
       currentInfo.currentProgress += 1;
-    } else {
+    } else if (currentInfo.currentProgress > 0) {
       currentInfo.currentProgress -= 1;
     }
 
