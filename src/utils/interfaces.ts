@@ -6,6 +6,13 @@ export interface Recorder {
   copy_to_path: CopyToPath;
 }
 
+export interface RecorderRedisHashInfo {
+  maxLimit: number;
+  currentProgress: number;
+  lastPing: number;
+  created: number;
+}
+
 export interface CopyToPath {
   main_path: string;
   sub_path?: string;
@@ -18,7 +25,10 @@ export interface WebsocketServerInfo {
 }
 
 export interface PlugNmeetInfo {
-  join_host: string;
+  host: string;
+  api_key: string;
+  api_secret: string;
+  join_host?: string;
 }
 
 export interface RecorderAddReq {
@@ -26,6 +36,7 @@ export interface RecorderAddReq {
   task: string;
   recorder_id: string;
   max_limit: number;
+  lastPing: number;
 }
 
 export interface RecorderPingReq {
@@ -59,7 +70,7 @@ export interface RecorderArgs {
   sid: string;
   access_token: string;
   redisInfo: RedisInfo;
-  join_host: string;
+  plugNmeetInfo: PlugNmeetInfo;
   post_mp4_convert: boolean;
   copy_to_path: CopyToPath;
   serviceType: string;

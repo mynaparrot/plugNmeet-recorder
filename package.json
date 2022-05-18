@@ -12,6 +12,7 @@
     "build": "rm -rf ./dist && tsc -p . --outDir ./dist && cp -rf ./src/chrome-extension ./dist/chrome-extension"
   },
   "dependencies": {
+    "axios": "^0.27.2",
     "ioredis": "^5.0.4",
     "js-yaml": "^4.1.0",
     "puppeteer": "^13.7.0",

@@ -7,13 +7,12 @@ import {
   WebsocketServerInfo,
   PlugNmeetInfo,
   Recorder,
-  RecorderAddReq,
   RecorderArgs,
-  RecorderPingReq,
   RecorderReq,
   RedisInfo,
 } from './utils/interfaces';
 import { logger } from './utils/helper';
+import { addRecorder, sendPing } from './utils/redisTasks';
 
 let redisInfo: RedisInfo;
 let recorder: Recorder;
@@ -40,22 +39,14 @@ try {
     db: redisInfo.db,
     name: recorder.id,
   };
-
-  const pubNode = new Redis(redisOptions);
-  const subNode = pubNode.duplicate();
+  const subNode = new Redis(redisOptions);
 
   subNode.subscribe('plug-n-meet-recorder', async (err) => {
     if (err) {
       logger.error('Failed to subscribe: %s', err.message);
     } else {
       logger.info('Subscribed successfully! Waiting for message');
-      const payload: RecorderAddReq = {
-        from: 'recorder',
-        task: 'addRecorder',
-        recorder_id: recorder.id,
-        max_limit: recorder.max_limit,
-      };
-      await pubNode.publish('plug-n-meet-recorder', JSON.stringify(payload));
+      await addRecorder(redisOptions, recorder.id, recorder.max_limit);
       startPing();
     }
   });
@@ -77,7 +68,7 @@ try {
         sid: payload.sid,
         access_token: payload.access_token,
         redisInfo: redisInfo,
-        join_host: plugNmeetInfo.join_host,
+        plugNmeetInfo: plugNmeetInfo,
         post_mp4_convert: recorder.post_mp4_convert,
         copy_to_path: recorder.copy_to_path,
         recorder_id: recorder.id,
@@ -108,21 +99,12 @@ try {
   });
 
   const startPing = () => {
-    const sendPing = async () => {
-      const payload: RecorderPingReq = {
-        from: 'recorder',
-        task: 'ping',
-        recorder_id: recorder.id, // this node's ID
-      };
-      await pubNode.publish('plug-n-meet-recorder', JSON.stringify(payload));
-    };
-
     // send first ping
-    sendPing();
-    // let's send ping in every 10 seconds
+    sendPing(redisOptions, recorder.id);
+    // let's send ping in every 5 seconds
     // to make sure this node is online
     setInterval(() => {
-      sendPing();
-    }, 10000);
+      sendPing(redisOptions, recorder.id);
+    }, 5000);
   };
 })();

@@ -2,17 +2,24 @@ import { Server as WebSocketServer } from 'ws';
 import http from 'http';
 import yaml from 'js-yaml';
 import fs from 'fs';
-import { Recorder, RedisInfo, WebsocketServerInfo } from './utils/interfaces';
+import {
+  PlugNmeetInfo,
+  Recorder,
+  RedisInfo,
+  WebsocketServerInfo,
+} from './utils/interfaces';
 import RecordingService from './utils/recordingService';
 import RtmpService from './utils/rtmpService';
 import { logger } from './utils/helper';
 
 let websocketServerInfo: WebsocketServerInfo;
 let recorder: Recorder;
+let plugNmeetInfo: PlugNmeetInfo;
 let redisInfo: RedisInfo;
 try {
   const config: any = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
   websocketServerInfo = config.websocket_server;
+  plugNmeetInfo = config.plugNmeet_info;
   redisInfo = config.redis_info;
   recorder = config.recorder;
 } catch (e) {
@@ -48,7 +55,15 @@ wss.on('connection', function connection(ws, req) {
   logger.info(`new ${service} task for ${room_sid}`);
 
   if (service === 'recording') {
-    new RecordingService(ws, recorder, redisInfo, room_id, room_sid, record_id);
+    new RecordingService(
+      ws,
+      recorder,
+      plugNmeetInfo,
+      redisInfo,
+      room_id,
+      room_sid,
+      record_id,
+    );
   } else if (service === 'rtmp') {
     const rtmpUrl = params.get('rtmp_url');
     new RtmpService(ws, rtmpUrl);

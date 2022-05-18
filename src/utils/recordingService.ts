@@ -1,13 +1,13 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
-import Redis, { RedisOptions } from 'ioredis';
 
-import { Recorder, RecorderResp, RedisInfo } from './interfaces';
-import { logger } from './helper';
+import { PlugNmeetInfo, Recorder, RecorderResp, RedisInfo } from './interfaces';
+import { logger, notify } from './helper';
 
 export default class RecordingService {
   private ws: any;
   private recorder: Recorder;
+  private plugNmeetInfo: PlugNmeetInfo;
   private redisInfo: RedisInfo;
   private roomId: string;
   private roomSid: string;
@@ -16,6 +16,7 @@ export default class RecordingService {
   constructor(
     ws: any,
     recorder: Recorder,
+    plugNmeetInfo: PlugNmeetInfo,
     redisInfo: RedisInfo,
     roomId: any,
     roomSid: any,
@@ -23,6 +24,7 @@ export default class RecordingService {
   ) {
     this.ws = ws;
     this.recorder = recorder;
+    this.plugNmeetInfo = plugNmeetInfo;
     this.redisInfo = redisInfo;
     this.roomId = roomId;
     this.roomSid = roomSid;
@@ -106,7 +108,7 @@ export default class RecordingService {
         // format: sub_path/roomSid/filename
         const storeFilePath = `${sub_path}${this.roomSid}/${mp4File}`;
         // now notify to plugNmeet
-        this.notifyByRedis(storeFilePath, Number(fileSize));
+        await this.notifyByRedis(storeFilePath, Number(fileSize));
 
         // delete webm file as we don't need it.
         await fs.promises.unlink(from);
@@ -128,20 +130,6 @@ export default class RecordingService {
       recorder_id: this.recorder.id,
     };
 
-    const redisOptions: RedisOptions = {
-      host: this.redisInfo.host,
-      port: this.redisInfo.port,
-      username: this.redisInfo.username,
-      password: this.redisInfo.password,
-      db: this.redisInfo.db,
-    };
-
-    try {
-      const pubNode = new Redis(redisOptions);
-      await pubNode.publish('plug-n-meet-recorder', JSON.stringify(payload));
-      await pubNode.quit();
-    } catch (e) {
-      logger.error(e);
-    }
+    await notify(this.plugNmeetInfo, payload);
   };
 }
