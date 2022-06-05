@@ -12,6 +12,7 @@ export default class RecordingService {
   private roomId: string;
   private roomSid: string;
   private recordId: string;
+  private ffmpegThreads: string;
 
   constructor(
     ws: any,
@@ -21,6 +22,7 @@ export default class RecordingService {
     roomId: any,
     roomSid: any,
     recordId: any,
+    ffmpegThreads = '4',
   ) {
     this.ws = ws;
     this.recorder = recorder;
@@ -29,6 +31,7 @@ export default class RecordingService {
     this.roomId = roomId;
     this.roomSid = roomSid;
     this.recordId = recordId;
+    this.ffmpegThreads = ffmpegThreads;
     this.startService();
   }
 
@@ -80,19 +83,21 @@ export default class RecordingService {
     const mp4File = `${this.recordId}.mp4`;
     const to = `${saveToPath}/${mp4File}`;
 
+    // prettier-ignore
     const ls = spawn(
       'ffmpeg',
       [
         '-y',
-        '-i "' + from + '"',
+        '-i ', from,
+        '-threads', this.ffmpegThreads,
         '-movflags faststart',
-        '-c:v libx264',
+        '-c:v copy',
+        //'-c:v libx264',
         '-preset veryfast',
-        '-profile:v high',
-        '-level 4.2',
-        '-max_muxing_queue_size 9999',
-        '-vf mpdecimate',
-        '-vsync vfr "' + to + '"',
+        //'-max_muxing_queue_size 9999',
+        //'-vf mpdecimate',
+        '-vsync vfr',
+        to,
       ],
       {
         shell: true,

@@ -63,6 +63,7 @@ wss.on('connection', function connection(ws, req) {
       room_id,
       room_sid,
       record_id,
+      websocketServerInfo.ffmpeg_threads,
     );
   } else if (service === 'rtmp') {
     const rtmpUrl = params.get('rtmp_url');
