@@ -84,18 +84,15 @@ export default class RecordingService {
     const to = `${saveToPath}/${mp4File}`;
 
     // prettier-ignore
-    const ls = spawn(
+    const ffmpeg = spawn(
       'ffmpeg',
       [
         '-y',
         '-i ', from,
         '-threads', this.ffmpegThreads,
         '-movflags faststart',
-        '-c:v copy',
-        //'-c:v libx264',
+        '-c:v copy', // we can copy as Chrome will record in h264 codec
         '-preset veryfast',
-        //'-max_muxing_queue_size 9999',
-        //'-vf mpdecimate',
         '-vsync vfr',
         to,
       ],
@@ -104,7 +101,7 @@ export default class RecordingService {
       },
     );
 
-    ls.on('close', async (code) => {
+    ffmpeg.on('close', async (code) => {
       if (code == 0) {
         logger.info('Conversion done to here: ' + to);
         const stat = await fs.promises.stat(to);
