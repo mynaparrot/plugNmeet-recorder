@@ -13,27 +13,27 @@
   },
   "dependencies": {
     "axios": "^0.27.2",
-    "ioredis": "^5.0.5",
+    "ioredis": "^5.0.6",
     "js-yaml": "^4.1.0",
-    "puppeteer": "^14.1.0",
+    "puppeteer": "^14.2.1",
     "winston": "^3.7.2",
-    "ws": "^8.6.0",
+    "ws": "^8.7.0",
     "xvfb": "^0.4.0"
   },
   "devDependencies": {
     "@types/ioredis": "^4.28.10",
     "@types/js-yaml": "^4.0.5",
     "@types/ws": "^8.5.3",
-    "@typescript-eslint/eslint-plugin": "^5.25.0",
-    "@typescript-eslint/parser": "^5.25.0",
-    "concurrently": "^7.2.0",
-    "eslint": "^8.15.0",
+    "@typescript-eslint/eslint-plugin": "^5.27.1",
+    "@typescript-eslint/parser": "^5.27.1",
+    "concurrently": "^7.2.1",
+    "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-watch": "^8.0.0",
     "prettier": "^2.6.2",
-    "ts-node": "^10.7.0",
-    "ts-node-dev": "^1.1.8",
-    "typescript": "^4.6.4"
+    "ts-node": "^10.8.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.7.3"
   }
 }
