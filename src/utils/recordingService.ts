@@ -70,7 +70,7 @@ export default class RecordingService {
         // format: sub_path/roomSid/filename
         const storeFilePath = `${sub_path}${this.roomSid}/${this.recordId}.webm`;
         // now notify to plugNmeet
-        this.notifyByRedis(storeFilePath, Number(fileSize));
+        this.notifyRecordingTask(storeFilePath, Number(fileSize));
       }
     });
   };
@@ -110,7 +110,7 @@ export default class RecordingService {
         // format: sub_path/roomSid/filename
         const storeFilePath = `${sub_path}${this.roomSid}/${mp4File}`;
         // now notify to plugNmeet
-        await this.notifyByRedis(storeFilePath, Number(fileSize));
+        await this.notifyRecordingTask(storeFilePath, Number(fileSize));
 
         // delete webm file as we don't need it.
         await fs.promises.unlink(from);
@@ -118,7 +118,7 @@ export default class RecordingService {
     });
   };
 
-  private notifyByRedis = async (filePath: string, file_size: number) => {
+  private notifyRecordingTask = async (filePath: string, file_size: number) => {
     const payload: RecorderResp = {
       from: 'recorder',
       status: true,
