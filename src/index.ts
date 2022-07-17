@@ -30,23 +30,32 @@ try {
   process.exit();
 }
 
+const redisOptions: RedisOptions = {
+  host: redisInfo.host,
+  port: redisInfo.port,
+  username: redisInfo.username,
+  password: redisInfo.password,
+  db: redisInfo.db,
+  connectionName: recorder.id,
+};
+
 (async () => {
-  const redisOptions: RedisOptions = {
-    host: redisInfo.host,
-    port: redisInfo.port,
-    username: redisInfo.username,
-    password: redisInfo.password,
-    db: redisInfo.db,
-    name: recorder.id,
-  };
-  const subNode = new Redis(redisOptions);
+  let redis: Redis;
+  try {
+    redis = new Redis(redisOptions);
+  } catch (e) {
+    logger.error(e);
+    return;
+  }
+
+  const subNode = redis.duplicate();
 
   subNode.subscribe('plug-n-meet-recorder', async (err) => {
     if (err) {
       logger.error('Failed to subscribe: %s', err.message);
     } else {
       logger.info('Subscribed successfully! Waiting for message');
-      await addRecorder(redisOptions, recorder.id, recorder.max_limit);
+      await addRecorder(redis, recorder.id, recorder.max_limit);
       startPing();
     }
   });
@@ -100,11 +109,11 @@ try {
 
   const startPing = () => {
     // send first ping
-    sendPing(redisOptions, recorder.id);
+    sendPing(redis, recorder.id);
     // let's send ping in every 5 seconds
     // to make sure this node is online
     setInterval(() => {
-      sendPing(redisOptions, recorder.id);
+      sendPing(redis, recorder.id);
     }, 5000);
   };
 })();

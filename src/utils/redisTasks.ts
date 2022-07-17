@@ -1,13 +1,12 @@
-import Redis, { RedisOptions } from 'ioredis';
+import Redis from 'ioredis';
 import { RecorderRedisHashInfo } from './interfaces';
 const recorderKey = 'pnm:recorders';
 
 export const addRecorder = async (
-  redisOptions: RedisOptions,
+  redis: Redis,
   recorder_id: string,
   max_limit: number,
 ) => {
-  const redis = new Redis(redisOptions);
   const now = Math.floor(new Date().getTime() / 1000);
   const recorderInfo: any = {};
   recorderInfo[recorder_id] = JSON.stringify({
@@ -19,11 +18,7 @@ export const addRecorder = async (
   await redis.hset(recorderKey, recorderInfo);
 };
 
-export const sendPing = async (
-  redisOptions: RedisOptions,
-  recorder_id: string,
-) => {
-  const redis = new Redis(redisOptions);
+export const sendPing = async (redis: Redis, recorder_id: string) => {
   redis.watch(recorderKey, async () => {
     const info = await redis.hget(recorderKey, recorder_id);
     if (!info) {
@@ -41,16 +36,15 @@ export const sendPing = async (
     await r.exec();
 
     await redis.unwatch();
-    await redis.quit();
   });
 };
 
 export const updateRecorderProgress = async (
-  redisOptions: RedisOptions,
+  redis: Redis,
   recorder_id: any,
   increment: boolean,
+  closeConnection = false,
 ) => {
-  const redis = new Redis(redisOptions);
   redis.watch(recorderKey, async () => {
     const info = await redis.hget(recorderKey, recorder_id);
     if (!info) {
@@ -71,6 +65,9 @@ export const updateRecorderProgress = async (
     await r.exec();
 
     await redis.unwatch();
-    await redis.quit();
+
+    if (closeConnection) {
+      await redis.quit();
+    }
   });
 };

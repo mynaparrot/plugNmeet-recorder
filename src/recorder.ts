@@ -47,9 +47,11 @@ const redisOptions: RedisOptions = {
   username: recorderArgs.redisInfo.username,
   password: recorderArgs.redisInfo.password,
   db: recorderArgs.redisInfo.db,
+  connectionName: recorderArgs.recorder_id + '-fork',
 };
 
-const subNode = new Redis(redisOptions);
+const redis = new Redis(redisOptions);
+const subNode = redis.duplicate();
 
 subNode.subscribe('plug-n-meet-recorder', (err, count) => {
   if (err) {
@@ -95,11 +97,8 @@ const closeConnection = async (hasError: boolean, msg: string) => {
   };
 
   await notify(recorderArgs.plugNmeetInfo, payload);
-  await updateRecorderProgress(
-    recorderArgs.redisInfo,
-    recorderArgs.recorder_id,
-    false,
-  );
+  await updateRecorderProgress(redis, recorderArgs.recorder_id, false, true);
+
   await subNode.quit();
 };
 
@@ -121,11 +120,7 @@ const recordingStartedMsg = async (msg: string) => {
   };
 
   await notify(recorderArgs.plugNmeetInfo, payload);
-  await updateRecorderProgress(
-    recorderArgs.redisInfo,
-    recorderArgs.recorder_id,
-    true,
-  );
+  await updateRecorderProgress(redis, recorderArgs.recorder_id, true);
 };
 
 const stopRecorder = async () => {
