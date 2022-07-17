@@ -47,7 +47,6 @@ const redisOptions: RedisOptions = {
   username: recorderArgs.redisInfo.username,
   password: recorderArgs.redisInfo.password,
   db: recorderArgs.redisInfo.db,
-  connectionName: recorderArgs.recorder_id + '-fork',
 };
 
 const redis = new Redis(redisOptions);
