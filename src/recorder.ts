@@ -47,9 +47,18 @@ const redisOptions: RedisOptions = {
   username: recorderArgs.redisInfo.username,
   password: recorderArgs.redisInfo.password,
   db: recorderArgs.redisInfo.db,
+  connectionName: recorderArgs.recorder_id + '-fork',
 };
 
-const redis = new Redis(redisOptions);
+let redis: Redis;
+
+try {
+  redis = new Redis(redisOptions);
+} catch (e) {
+  logger.error(e);
+  process.exit(1);
+}
+
 const subNode = redis.duplicate();
 
 subNode.subscribe('plug-n-meet-recorder', (err, count) => {
@@ -96,8 +105,11 @@ const closeConnection = async (hasError: boolean, msg: string) => {
   };
 
   await notify(recorderArgs.plugNmeetInfo, payload);
-  await updateRecorderProgress(redis, recorderArgs.recorder_id, false, true);
+  await updateRecorderProgress(redis, recorderArgs.recorder_id, false);
 
+  // wait few moments
+  await sleep(1500);
+  await redis.quit();
   await subNode.quit();
   process.exit();
 };
