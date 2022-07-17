@@ -100,6 +100,7 @@ const closeConnection = async (hasError: boolean, msg: string) => {
   await updateRecorderProgress(redis, recorderArgs.recorder_id, false, true);
 
   await subNode.quit();
+  process.exit();
 };
 
 const recordingStartedMsg = async (msg: string) => {

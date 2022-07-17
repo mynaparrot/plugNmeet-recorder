@@ -5,7 +5,6 @@ import fs from 'fs';
 import {
   PlugNmeetInfo,
   Recorder,
-  RedisInfo,
   WebsocketServerInfo,
 } from './utils/interfaces';
 import RecordingService from './utils/recordingService';
@@ -15,12 +14,10 @@ import { logger } from './utils/helper';
 let websocketServerInfo: WebsocketServerInfo;
 let recorder: Recorder;
 let plugNmeetInfo: PlugNmeetInfo;
-let redisInfo: RedisInfo;
 try {
   const config: any = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
   websocketServerInfo = config.websocket_server;
   plugNmeetInfo = config.plugNmeet_info;
-  redisInfo = config.redis_info;
   recorder = config.recorder;
 } catch (e) {
   console.log('Error: ', e);
@@ -59,7 +56,6 @@ wss.on('connection', function connection(ws, req) {
       ws,
       recorder,
       plugNmeetInfo,
-      redisInfo,
       room_id,
       room_sid,
       record_id,

@@ -1,14 +1,13 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 
-import { PlugNmeetInfo, Recorder, RecorderResp, RedisInfo } from './interfaces';
+import { PlugNmeetInfo, Recorder, RecorderResp } from './interfaces';
 import { logger, notify } from './helper';
 
 export default class RecordingService {
   private ws: any;
   private recorder: Recorder;
   private plugNmeetInfo: PlugNmeetInfo;
-  private redisInfo: RedisInfo;
   private roomId: string;
   private roomSid: string;
   private recordId: string;
@@ -18,7 +17,6 @@ export default class RecordingService {
     ws: any,
     recorder: Recorder,
     plugNmeetInfo: PlugNmeetInfo,
-    redisInfo: RedisInfo,
     roomId: any,
     roomSid: any,
     recordId: any,
@@ -27,7 +25,6 @@ export default class RecordingService {
     this.ws = ws;
     this.recorder = recorder;
     this.plugNmeetInfo = plugNmeetInfo;
-    this.redisInfo = redisInfo;
     this.roomId = roomId;
     this.roomSid = roomSid;
     this.recordId = recordId;
