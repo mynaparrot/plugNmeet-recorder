@@ -111,6 +111,25 @@ export default class RecordingService {
 
         // delete webm file as we don't need it.
         await fs.promises.unlink(from);
+      } else {
+        logger.info(
+          "there was some error, so we'll just keep the webm file here: " +
+            from,
+        );
+
+        const stat = await fs.promises.stat(from);
+        const fileSize = (stat.size / (1024 * 1024)).toFixed(2);
+
+        const webmFile = `${this.recordId}.webm`;
+        // format: sub_path/roomSid/filename
+        const storeFilePath = `${sub_path}${this.roomSid}/${webmFile}`;
+        // now notify to plugNmeet
+        await this.notifyRecordingTask(storeFilePath, Number(fileSize));
+
+        if (fs.existsSync(to)) {
+          // delete unsuccessful file.
+          await fs.promises.unlink(to);
+        }
       }
     });
   };
