@@ -188,6 +188,11 @@ const closeBrowser = async () => {
   return;
 };
 
+process.on('disconnect', async () => {
+  await onCloseOrErrorEvent();
+  process.exit();
+});
+
 const options:
   | LaunchOptions
   | BrowserLaunchArgumentOptions

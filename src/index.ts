@@ -11,13 +11,17 @@ import {
   RecorderReq,
   RedisInfo,
 } from './utils/interfaces';
-import { logger } from './utils/helper';
+import { logger, sleep } from './utils/helper';
 import { addRecorder, sendPing } from './utils/redisTasks';
+import { ChildProcess } from 'concurrently/dist/src/command';
 
 let redisInfo: RedisInfo;
 let recorder: Recorder;
 let plugNmeetInfo: PlugNmeetInfo;
 let websocketServerInfo: WebsocketServerInfo;
+let redis: Redis, subNode: Redis;
+const childProcessesMap = new Map<number, string>();
+const recordProcessMap = new Map<string, number>();
 
 try {
   const config: any = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
@@ -39,16 +43,28 @@ const redisOptions: RedisOptions = {
   connectionName: recorder.id,
 };
 
+process.on('SIGINT', async () => {
+  console.log('Caught interrupt signal, cleaning up');
+  if (redis && redis.status === 'connect') {
+    redis.disconnect();
+    subNode.disconnect();
+  }
+  // if (childs.length) {
+  //   childs.forEach((c) => c.disconnect());
+  // }
+
+  await sleep(2000);
+  process.exit();
+});
+
 (async () => {
-  let redis: Redis;
   try {
     redis = new Redis(redisOptions);
+    subNode = redis.duplicate();
   } catch (e) {
     logger.error(e);
     return;
   }
-
-  const subNode = redis.duplicate();
 
   subNode.subscribe('plug-n-meet-recorder', async (err) => {
     if (err) {
@@ -62,50 +78,64 @@ const redisOptions: RedisOptions = {
 
   subNode.on('message', (channel, message) => {
     const payload: RecorderReq = JSON.parse(message);
-
     if (
       payload.from === 'plugnmeet' &&
       (payload.task === 'start-recording' || payload.task === 'start-rtmp') &&
       payload.recorder_id === recorder.id
     ) {
       logger.info('Main: ' + payload.task);
-      const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.room_id}&room_sid=${payload.sid}&record_id=${payload.record_id}`;
-
-      const toSend: RecorderArgs = {
-        room_id: payload.room_id,
-        record_id: payload.record_id,
-        sid: payload.sid,
-        access_token: payload.access_token,
-        redisInfo: redisInfo,
-        plugNmeetInfo: plugNmeetInfo,
-        post_mp4_convert: recorder.post_mp4_convert,
-        copy_to_path: recorder.copy_to_path,
-        recorder_id: recorder.id,
-        serviceType: 'recording',
-        websocket_url,
-      };
-
-      if (recorder.custom_chrome_path) {
-        toSend.custom_chrome_path = recorder.custom_chrome_path;
-      }
-
-      if (payload.task === 'start-recording') {
-        toSend.websocket_url = toSend.websocket_url + '&service=recording';
-      } else if (payload.task === 'start-rtmp') {
-        toSend.websocket_url =
-          toSend.websocket_url + '&service=rtmp&rtmp_url=' + payload.rtmp_url;
-        toSend.serviceType = 'rtmp';
-      }
-
-      if (typeof process.env.TS_NODE_DEV !== 'undefined') {
-        fork('src/recorder', [JSON.stringify(toSend)], {
-          execArgv: ['-r', 'ts-node/register'],
-        });
-      } else {
-        fork('dist/recorder', [JSON.stringify(toSend)]);
-      }
+      handleStartRequest(payload);
     }
   });
+
+  const handleStartRequest = (payload: RecorderReq) => {
+    const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.room_id}&room_sid=${payload.sid}&record_id=${payload.record_id}`;
+
+    const toSend: RecorderArgs = {
+      room_id: payload.room_id,
+      record_id: payload.record_id,
+      sid: payload.sid,
+      access_token: payload.access_token,
+      redisInfo: redisInfo,
+      plugNmeetInfo: plugNmeetInfo,
+      post_mp4_convert: recorder.post_mp4_convert,
+      copy_to_path: recorder.copy_to_path,
+      recorder_id: recorder.id,
+      serviceType: 'recording',
+      websocket_url,
+    };
+
+    if (recorder.custom_chrome_path) {
+      toSend.custom_chrome_path = recorder.custom_chrome_path;
+    }
+
+    if (payload.task === 'start-recording') {
+      toSend.websocket_url = toSend.websocket_url + '&service=recording';
+    } else if (payload.task === 'start-rtmp') {
+      toSend.websocket_url =
+        toSend.websocket_url + '&service=rtmp&rtmp_url=' + payload.rtmp_url;
+      toSend.serviceType = 'rtmp';
+    }
+
+    let child: ChildProcess;
+
+    if (typeof process.env.TS_NODE_DEV !== 'undefined') {
+      child = fork('src/recorder', [JSON.stringify(toSend)], {
+        execArgv: ['-r', 'ts-node/register'],
+      });
+    } else {
+      child = fork('dist/recorder', [JSON.stringify(toSend)]);
+    }
+
+    if (child.pid) {
+      childProcessesMap.set(child.pid, JSON.stringify(toSend));
+      recordProcessMap.set(toSend.record_id, child.pid);
+    }
+
+    child.on('exit', () => {
+      console.log('child exit: ' + child.pid);
+    });
+  };
 
   const startPing = () => {
     // send first ping
