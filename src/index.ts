@@ -10,9 +10,10 @@ import {
   RecorderArgs,
   RecorderReq,
   RedisInfo,
-  ChildProcessMap,
+  ChildProcessInfoMap,
   FromChildToParent,
   RecorderResp,
+  FromParentToChild,
 } from './utils/interfaces';
 import { logger, notify, sleep } from './utils/helper';
 import {
@@ -27,8 +28,8 @@ let recorder: Recorder;
 let plugNmeetInfo: PlugNmeetInfo;
 let websocketServerInfo: WebsocketServerInfo;
 let redis: Redis, subNode: Redis;
-const childProcessesMap = new Map<number, ChildProcessMap>();
-const recordProcessMap = new Map<string, any>();
+const childProcessesInfoMapByChildPid = new Map<number, ChildProcessInfoMap>();
+const childProcessesMapByRoomSid = new Map<string, any>();
 
 try {
   const config: any = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
@@ -51,16 +52,19 @@ const redisOptions: RedisOptions = {
 };
 
 process.on('SIGINT', async () => {
-  console.log('Caught interrupt signal, cleaning up');
+  logger.info('Caught interrupt signal, cleaning up');
+
+  childProcessesMapByRoomSid.forEach((c) => c.kill('SIGINT'));
+  await sleep(5000);
+
   if (redis && redis.status === 'connect') {
     redis.disconnect();
     subNode.disconnect();
   }
-  // if (childs.length) {
-  //   childs.forEach((c) => c.disconnect());
-  // }
-
-  await sleep(2000);
+  // clear everything
+  childProcessesMapByRoomSid.clear();
+  childProcessesInfoMapByChildPid.clear();
+  // now end the process
   process.exit();
 });
 
@@ -99,9 +103,18 @@ process.on('SIGINT', async () => {
       payload.task === 'stop-recording' ||
       payload.task === 'stop-rtmp'
     ) {
-      const child = recordProcessMap.get(payload.sid);
+      const child = childProcessesMapByRoomSid.get(payload.sid);
       if (child) {
-        child?.send({ hello: 'world' });
+        const recordInfo = childProcessesInfoMapByChildPid.get(child.pid);
+        if (recordInfo) {
+          const toChild: FromParentToChild = {
+            task: payload.task,
+            record_id: recordInfo.record_id,
+            room_id: recordInfo.room_id,
+            sid: recordInfo.sid,
+          };
+          child?.send(toChild);
+        }
       }
     }
   });
@@ -114,7 +127,6 @@ process.on('SIGINT', async () => {
       record_id: payload.record_id,
       sid: payload.sid,
       access_token: payload.access_token,
-      redisInfo: redisInfo,
       plugNmeetInfo: plugNmeetInfo,
       post_mp4_convert: recorder.post_mp4_convert,
       copy_to_path: recorder.copy_to_path,
@@ -146,14 +158,14 @@ process.on('SIGINT', async () => {
     }
 
     if (child.pid) {
-      const childProcess: ChildProcessMap = {
+      const childProcessInfo: ChildProcessInfoMap = {
         serviceType: toSend.serviceType,
         record_id: toSend.record_id,
         room_id: toSend.room_id,
         sid: toSend.sid,
       };
-      childProcessesMap.set(child.pid, childProcess);
-      recordProcessMap.set(payload.sid, child);
+      childProcessesInfoMapByChildPid.set(child.pid, childProcessInfo);
+      childProcessesMapByRoomSid.set(payload.sid, child);
     }
 
     child.on('message', (msg: FromChildToParent) => {
@@ -162,19 +174,35 @@ process.on('SIGINT', async () => {
       }
     });
 
-    child.on('exit', () => {
+    child.on('exit', (code: number) => {
       if (child.pid) {
-        console.log(childProcessesMap.get(child.pid));
+        const recordInfo = childProcessesInfoMapByChildPid.get(child.pid);
+
+        if (typeof recordInfo !== 'undefined') {
+          // we can use same as FromChildToParent message format.
+          const toChild: FromChildToParent = {
+            msg: code === 0 ? 'no error' : 'had error',
+            status: code === 0,
+            task:
+              recordInfo.serviceType === 'recording'
+                ? 'stop-recording'
+                : 'stop-rtmp',
+            record_id: recordInfo.record_id,
+            room_id: recordInfo.room_id,
+            sid: recordInfo.sid,
+          };
+          handleMsgFromChild(toChild, child.pid);
+        }
       }
     });
   };
 
   const handleMsgFromChild = async (msg: FromChildToParent, pid: number) => {
-    const childProcess = childProcessesMap.get(pid);
-    console.log(childProcess, msg);
+    let increment = true,
+      payload: RecorderResp;
 
     if (msg.task === 'recording-started' || msg.task === 'rtmp-started') {
-      const payload: RecorderResp = {
+      payload = {
         from: 'recorder',
         status: msg.status,
         task: msg.task,
@@ -184,9 +212,28 @@ process.on('SIGINT', async () => {
         room_id: msg.room_id,
         recorder_id: recorder.id, // this recorder ID
       };
+    } else if (msg.task === 'recording-ended' || msg.task === 'rtmp-ended') {
+      increment = false;
+      payload = {
+        from: 'recorder',
+        status: msg.status,
+        task: msg.task,
+        msg: msg.msg,
+        record_id: msg.record_id,
+        sid: msg.sid,
+        room_id: msg.room_id,
+        recorder_id: recorder.id, // this recorder ID
+      };
+      // clean up
+      childProcessesInfoMapByChildPid.delete(pid);
+      childProcessesMapByRoomSid.delete(payload.sid);
+    }
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    if (payload) {
       await notify(plugNmeetInfo, payload);
-      await updateRecorderProgress(redis, recorder.id, true);
+      await updateRecorderProgress(redis, recorder.id, increment);
     }
   };
 

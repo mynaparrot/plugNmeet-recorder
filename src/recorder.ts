@@ -4,18 +4,16 @@ import puppeteer, {
   LaunchOptions,
 } from 'puppeteer';
 import os from 'os';
-import Redis, { RedisOptions } from 'ioredis';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Xvfb from 'xvfb';
 
 import {
   FromChildToParent,
+  FromParentToChild,
   RecorderArgs,
-  RecorderResp,
 } from './utils/interfaces';
-import { logger, notify, sleep } from './utils/helper';
-import { updateRecorderProgress } from './utils/redisTasks';
+import { logger, sleep } from './utils/helper';
 
 const args: any = process.argv.slice(2),
   platform = os.platform();
@@ -45,51 +43,6 @@ if (platform === 'linux') {
 }
 
 const recorderArgs: RecorderArgs = JSON.parse(args);
-const redisOptions: RedisOptions = {
-  host: recorderArgs.redisInfo.host,
-  port: recorderArgs.redisInfo.port,
-  username: recorderArgs.redisInfo.username,
-  password: recorderArgs.redisInfo.password,
-  db: recorderArgs.redisInfo.db,
-  connectionName: recorderArgs.recorder_id + '-fork',
-};
-
-let redis: Redis;
-
-try {
-  redis = new Redis(redisOptions);
-} catch (e) {
-  logger.error(e);
-  process.exit(1);
-}
-
-const subNode = redis.duplicate();
-
-subNode.subscribe('plug-n-meet-recorder', (err, count) => {
-  if (err) {
-    logger.error('Failed to subscribe: %s', err.message);
-  } else {
-    logger.info(
-      `FORK recorder: Subscribed successfully! This client is currently subscribed to ${count} channels.`,
-    );
-  }
-});
-
-subNode.on('message', async (channel, message) => {
-  const payload: RecorderResp = JSON.parse(message);
-
-  if (
-    payload.from === 'plugnmeet' &&
-    ((payload.task === 'stop-recording' &&
-      recorderArgs.serviceType === 'recording') ||
-      (payload.task === 'stop-rtmp' && recorderArgs.serviceType === 'rtmp')) &&
-    payload.sid === recorderArgs.sid
-  ) {
-    logger.info('FORK: ' + payload.task + ' sid: ' + payload.sid);
-    closedBycmd = true;
-    await stopRecorder();
-  }
-});
 
 const closeConnection = async (hasError: boolean, msg: string) => {
   let task = 'recording-ended';
@@ -97,24 +50,20 @@ const closeConnection = async (hasError: boolean, msg: string) => {
     task = 'rtmp-ended';
   }
 
-  const payload: RecorderResp = {
-    from: 'recorder',
-    status: !hasError,
+  const toParent: FromChildToParent = {
+    status: true,
     task,
-    msg: msg,
-    record_id: recorderArgs.record_id,
+    msg,
     sid: recorderArgs.sid,
     room_id: recorderArgs.room_id,
-    recorder_id: recorderArgs.recorder_id, // this recorder ID
+    record_id: recorderArgs.record_id,
   };
-
-  await notify(recorderArgs.plugNmeetInfo, payload);
-  await updateRecorderProgress(redis, recorderArgs.recorder_id, false);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  process.send(toParent);
 
   // wait few moments
   await sleep(1500);
-  await redis.quit();
-  await subNode.quit();
   process.exit();
 };
 
@@ -190,12 +139,18 @@ const closeBrowser = async () => {
   return;
 };
 
-process.on('disconnect', async () => {
+process.on('SIGINT', async () => {
+  logger.info('Child: got SIGINT, cleaning up');
   await onCloseOrErrorEvent();
   process.exit();
 });
-process.on('message', (e) => {
-  console.log(e);
+
+process.on('message', async (msg: FromParentToChild) => {
+  if (msg.task === 'stop-recording' || msg.task === 'stop-rtmp') {
+    logger.info('Child: ' + msg.task + ' sid: ' + msg.sid);
+    closedBycmd = true;
+    await stopRecorder();
+  }
 });
 
 const options:
@@ -214,7 +169,7 @@ const options:
     '--disable-dev-shm-usage',
     '--no-sandbox',
     '--no-zygote',
-    //'--start-fullscreen',
+    '--start-fullscreen',
     '--app=https://www.google.com/',
     `--window-size=${width},${height}`,
   ],
