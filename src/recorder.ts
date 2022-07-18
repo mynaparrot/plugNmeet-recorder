@@ -9,7 +9,11 @@ import Redis, { RedisOptions } from 'ioredis';
 // @ts-ignore
 import Xvfb from 'xvfb';
 
-import { RecorderArgs, RecorderResp } from './utils/interfaces';
+import {
+  FromChildToParent,
+  RecorderArgs,
+  RecorderResp,
+} from './utils/interfaces';
 import { logger, notify, sleep } from './utils/helper';
 import { updateRecorderProgress } from './utils/redisTasks';
 
@@ -120,19 +124,17 @@ const recordingStartedMsg = async (msg: string) => {
     task = 'rtmp-started';
   }
 
-  const payload: RecorderResp = {
-    from: 'recorder',
+  const toParent: FromChildToParent = {
     status: true,
     task,
-    msg: msg,
-    record_id: recorderArgs.record_id,
+    msg,
     sid: recorderArgs.sid,
     room_id: recorderArgs.room_id,
-    recorder_id: recorderArgs.recorder_id, // this recorder ID
+    record_id: recorderArgs.record_id,
   };
-
-  await notify(recorderArgs.plugNmeetInfo, payload);
-  await updateRecorderProgress(redis, recorderArgs.recorder_id, true);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  process.send(toParent);
 };
 
 const stopRecorder = async () => {

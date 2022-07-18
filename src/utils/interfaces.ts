@@ -93,3 +93,26 @@ export interface RecorderResp {
   file_path?: string;
   file_size?: number;
 }
+
+export interface ChildProcessMap {
+  serviceType: string;
+  record_id: string;
+  sid: string;
+  room_id: string;
+}
+
+export interface FromChildToParent {
+  task: string;
+  status: boolean;
+  msg: string;
+  record_id: string;
+  sid: string;
+  room_id: string;
+}
+
+export interface FromParentToChild {
+  task: string;
+  record_id: string;
+  sid: string;
+  room_id: string;
+}

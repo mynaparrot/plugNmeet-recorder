@@ -10,9 +10,16 @@ import {
   RecorderArgs,
   RecorderReq,
   RedisInfo,
+  ChildProcessMap,
+  FromChildToParent,
+  RecorderResp,
 } from './utils/interfaces';
-import { logger, sleep } from './utils/helper';
-import { addRecorder, sendPing } from './utils/redisTasks';
+import { logger, notify, sleep } from './utils/helper';
+import {
+  addRecorder,
+  sendPing,
+  updateRecorderProgress,
+} from './utils/redisTasks';
 import { ChildProcess } from 'concurrently/dist/src/command';
 
 let redisInfo: RedisInfo;
@@ -20,7 +27,7 @@ let recorder: Recorder;
 let plugNmeetInfo: PlugNmeetInfo;
 let websocketServerInfo: WebsocketServerInfo;
 let redis: Redis, subNode: Redis;
-const childProcessesMap = new Map<number, string>();
+const childProcessesMap = new Map<number, ChildProcessMap>();
 const recordProcessMap = new Map<string, any>();
 
 try {
@@ -139,15 +146,48 @@ process.on('SIGINT', async () => {
     }
 
     if (child.pid) {
-      childProcessesMap.set(child.pid, JSON.stringify(toSend));
+      const childProcess: ChildProcessMap = {
+        serviceType: toSend.serviceType,
+        record_id: toSend.record_id,
+        room_id: toSend.room_id,
+        sid: toSend.sid,
+      };
+      childProcessesMap.set(child.pid, childProcess);
       recordProcessMap.set(payload.sid, child);
     }
+
+    child.on('message', (msg: FromChildToParent) => {
+      if (child.pid) {
+        handleMsgFromChild(msg, child.pid);
+      }
+    });
 
     child.on('exit', () => {
       if (child.pid) {
         console.log(childProcessesMap.get(child.pid));
       }
     });
+  };
+
+  const handleMsgFromChild = async (msg: FromChildToParent, pid: number) => {
+    const childProcess = childProcessesMap.get(pid);
+    console.log(childProcess, msg);
+
+    if (msg.task === 'recording-started' || msg.task === 'rtmp-started') {
+      const payload: RecorderResp = {
+        from: 'recorder',
+        status: msg.status,
+        task: msg.task,
+        msg: msg.msg,
+        record_id: msg.record_id,
+        sid: msg.sid,
+        room_id: msg.room_id,
+        recorder_id: recorder.id, // this recorder ID
+      };
+
+      await notify(plugNmeetInfo, payload);
+      await updateRecorderProgress(redis, recorder.id, true);
+    }
   };
 
   const startPing = () => {
