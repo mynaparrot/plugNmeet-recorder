@@ -103,7 +103,14 @@ process.on('SIGINT', async () => {
       payload.task === 'stop-recording' ||
       payload.task === 'stop-rtmp'
     ) {
-      const child = childProcessesMapByRoomSid.get(payload.sid);
+      let serviceType = 'recording';
+      if (payload.task === 'stop-rtmp') {
+        serviceType = 'rtmp';
+      }
+      const child = childProcessesMapByRoomSid.get(
+        serviceType + ':' + payload.sid,
+      );
+
       if (child) {
         const recordInfo = childProcessesInfoMapByChildPid.get(child.pid);
         if (recordInfo) {
@@ -165,7 +172,10 @@ process.on('SIGINT', async () => {
         sid: toSend.sid,
       };
       childProcessesInfoMapByChildPid.set(child.pid, childProcessInfo);
-      childProcessesMapByRoomSid.set(payload.sid, child);
+      childProcessesMapByRoomSid.set(
+        toSend.serviceType + ':' + payload.sid,
+        child,
+      );
     }
 
     child.on('message', (msg: FromChildToParent) => {
@@ -224,9 +234,13 @@ process.on('SIGINT', async () => {
         room_id: msg.room_id,
         recorder_id: recorder.id, // this recorder ID
       };
+      let serviceType = 'recording';
+      if (payload.task === 'rtmp-ended') {
+        serviceType = 'rtmp';
+      }
       // clean up
       childProcessesInfoMapByChildPid.delete(pid);
-      childProcessesMapByRoomSid.delete(payload.sid);
+      childProcessesMapByRoomSid.delete(serviceType + ':' + payload.sid);
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
