@@ -141,7 +141,12 @@ const closeBrowser = async () => {
 
 process.on('SIGINT', async () => {
   logger.info('Child: got SIGINT, cleaning up');
-  await onCloseOrErrorEvent();
+  if (!wasCalledClose) {
+    await onCloseOrErrorEvent();
+  } else {
+    await closeBrowser();
+    process.exit();
+  }
 });
 
 process.on('message', async (msg: FromParentToChild) => {
