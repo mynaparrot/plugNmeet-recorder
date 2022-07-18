@@ -21,7 +21,7 @@ let plugNmeetInfo: PlugNmeetInfo;
 let websocketServerInfo: WebsocketServerInfo;
 let redis: Redis, subNode: Redis;
 const childProcessesMap = new Map<number, string>();
-const recordProcessMap = new Map<string, number>();
+const recordProcessMap = new Map<string, any>();
 
 try {
   const config: any = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
@@ -78,13 +78,24 @@ process.on('SIGINT', async () => {
 
   subNode.on('message', (channel, message) => {
     const payload: RecorderReq = JSON.parse(message);
+    if (payload.from !== 'plugnmeet') {
+      return;
+    }
+    logger.info('Main: ' + payload.task);
+
     if (
-      payload.from === 'plugnmeet' &&
       (payload.task === 'start-recording' || payload.task === 'start-rtmp') &&
       payload.recorder_id === recorder.id
     ) {
-      logger.info('Main: ' + payload.task);
       handleStartRequest(payload);
+    } else if (
+      payload.task === 'stop-recording' ||
+      payload.task === 'stop-rtmp'
+    ) {
+      const child = recordProcessMap.get(payload.sid);
+      if (child) {
+        child?.send({ hello: 'world' });
+      }
     }
   });
 
@@ -129,11 +140,13 @@ process.on('SIGINT', async () => {
 
     if (child.pid) {
       childProcessesMap.set(child.pid, JSON.stringify(toSend));
-      recordProcessMap.set(toSend.record_id, child.pid);
+      recordProcessMap.set(payload.sid, child);
     }
 
     child.on('exit', () => {
-      console.log('child exit: ' + child.pid);
+      if (child.pid) {
+        console.log(childProcessesMap.get(child.pid));
+      }
     });
   };
 

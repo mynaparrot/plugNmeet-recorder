@@ -192,6 +192,9 @@ process.on('disconnect', async () => {
   await onCloseOrErrorEvent();
   process.exit();
 });
+process.on('message', (e) => {
+  console.log(e);
+});
 
 const options:
   | LaunchOptions
@@ -209,7 +212,7 @@ const options:
     '--disable-dev-shm-usage',
     '--no-sandbox',
     '--no-zygote',
-    '--start-fullscreen',
+    //'--start-fullscreen',
     '--app=https://www.google.com/',
     `--window-size=${width},${height}`,
   ],
