@@ -61,10 +61,6 @@ const closeConnection = async (hasError: boolean, msg: string) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   process.send(toParent);
-
-  // wait few moments
-  await sleep(1500);
-  process.exit();
 };
 
 const recordingStartedMsg = async (msg: string) => {
@@ -115,6 +111,10 @@ const onCloseOrErrorEvent = async () => {
 
   // clear everything else
   await closeBrowser();
+
+  // wait few moments
+  await sleep(1500);
+  process.exit();
 };
 
 // this method should call to clean all browser instances
@@ -142,7 +142,6 @@ const closeBrowser = async () => {
 process.on('SIGINT', async () => {
   logger.info('Child: got SIGINT, cleaning up');
   await onCloseOrErrorEvent();
-  process.exit();
 });
 
 process.on('message', async (msg: FromParentToChild) => {
