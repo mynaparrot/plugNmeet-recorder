@@ -70,7 +70,6 @@ export interface RecorderArgs {
   record_id: string;
   sid: string;
   access_token: string;
-  redisInfo: RedisInfo;
   plugNmeetInfo: PlugNmeetInfo;
   post_mp4_convert: boolean;
   copy_to_path: CopyToPath;
@@ -92,4 +91,27 @@ export interface RecorderResp {
   recorder_id?: string;
   file_path?: string;
   file_size?: number;
+}
+
+export interface ChildProcessInfoMap {
+  serviceType: string;
+  record_id: string;
+  sid: string;
+  room_id: string;
+}
+
+export interface FromChildToParent {
+  task: string;
+  status: boolean;
+  msg: string;
+  record_id: string;
+  sid: string;
+  room_id: string;
+}
+
+export interface FromParentToChild {
+  task: string;
+  record_id: string;
+  sid: string;
+  room_id: string;
 }
