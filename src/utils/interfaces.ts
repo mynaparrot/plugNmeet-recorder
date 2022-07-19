@@ -52,6 +52,11 @@ export interface RedisInfo {
   username?: string;
   password?: string;
   db?: number;
+  use_tls?: boolean;
+  sentinel_master_name?: string;
+  sentinel_addresses?: Array<string>;
+  sentinel_username?: string;
+  sentinel_password?: string;
 }
 
 export interface RecorderReq {
