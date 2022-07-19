@@ -7,14 +7,18 @@ const recorderKey = 'pnm:recorders';
 
 export const openRedisConnection = async (redisInfo: RedisInfo) => {
   let redisOptions: RedisOptions = {
-    host: redisInfo.host,
-    port: redisInfo.port,
     username: redisInfo.username ?? '',
     password: redisInfo.password ?? '',
     db: redisInfo.db ?? 0,
   };
-  if (redisInfo.use_tls) {
-    redisOptions.host = 'rediss://' + redisOptions.host;
+  if (!redisInfo.use_tls) {
+    redisOptions.host = redisInfo.host;
+    redisOptions.port = redisInfo.port;
+  } else {
+    redisOptions.tls = {
+      host: redisInfo.host,
+      port: redisInfo.port,
+    };
   }
 
   if (redisInfo.sentinel_addresses && redisInfo.sentinel_addresses.length > 0) {
@@ -25,9 +29,6 @@ export const openRedisConnection = async (redisInfo: RedisInfo) => {
         host: parts[0],
         port: Number(parts[1]),
       };
-      if (redisInfo.use_tls) {
-        address.host = 'rediss://' + address.host;
-      }
       sentinel_addresses.push(address);
     });
 
@@ -40,6 +41,10 @@ export const openRedisConnection = async (redisInfo: RedisInfo) => {
       sentinelUsername: redisInfo.sentinel_username ?? '',
       sentinelPassword: redisInfo.sentinel_username ?? '',
     };
+
+    if (redisInfo.use_tls) {
+      redisOptions.enableTLSForSentinelMode = true;
+    }
   }
 
   let redis: Redis | null = null;
