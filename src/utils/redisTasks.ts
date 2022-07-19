@@ -1,8 +1,61 @@
-import Redis from 'ioredis';
-import { RecorderRedisHashInfo } from './interfaces';
+import Redis, { RedisOptions } from 'ioredis';
+import { RecorderRedisHashInfo, RedisInfo } from './interfaces';
 import { logger } from './helper';
+import { SentinelAddress } from 'ioredis/built/connectors/SentinelConnector/types';
 
 const recorderKey = 'pnm:recorders';
+
+export const openRedisConnection = async (redisInfo: RedisInfo) => {
+  let redisOptions: RedisOptions = {
+    host: redisInfo.host,
+    port: redisInfo.port,
+    username: redisInfo.username ?? '',
+    password: redisInfo.password ?? '',
+    db: redisInfo.db ?? 0,
+  };
+  if (redisInfo.use_tls) {
+    redisOptions.host = 'rediss://' + redisOptions.host;
+  }
+
+  if (redisInfo.sentinel_addresses && redisInfo.sentinel_addresses.length > 0) {
+    const sentinel_addresses: Array<SentinelAddress> = [];
+    redisInfo.sentinel_addresses.forEach((a) => {
+      const parts = a.split(':');
+      const address: SentinelAddress = {
+        host: parts[0],
+        port: Number(parts[1]),
+      };
+      if (redisInfo.use_tls) {
+        address.host = 'rediss://' + address.host;
+      }
+      sentinel_addresses.push(address);
+    });
+
+    redisOptions = {
+      username: redisInfo.username ?? '',
+      password: redisInfo.password ?? '',
+      db: redisInfo.db ?? 0,
+      name: redisInfo.sentinel_master_name,
+      sentinels: sentinel_addresses,
+      sentinelUsername: redisInfo.sentinel_username ?? '',
+      sentinelPassword: redisInfo.sentinel_username ?? '',
+    };
+  }
+
+  let redis: Redis | null = null;
+
+  try {
+    redis = new Redis(redisOptions);
+    const ping = await redis.ping();
+    if (ping !== 'PONG') {
+      return null;
+    }
+  } catch (e) {
+    logger.error(e);
+  }
+
+  return redis;
+};
 
 export const addRecorder = async (
   redis: Redis,

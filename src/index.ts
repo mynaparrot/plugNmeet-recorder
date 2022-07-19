@@ -1,4 +1,4 @@
-import Redis, { RedisOptions } from 'ioredis';
+import Redis from 'ioredis';
 import yaml from 'js-yaml';
 import * as fs from 'fs';
 import { fork } from 'child_process';
@@ -18,6 +18,7 @@ import {
 import { logger, notify, sleep } from './utils/helper';
 import {
   addRecorder,
+  openRedisConnection,
   sendPing,
   updateRecorderProgress,
 } from './utils/redisTasks';
@@ -42,15 +43,6 @@ try {
   process.exit();
 }
 
-const redisOptions: RedisOptions = {
-  host: redisInfo.host,
-  port: redisInfo.port,
-  username: redisInfo.username,
-  password: redisInfo.password,
-  db: redisInfo.db,
-  connectionName: recorder.id,
-};
-
 process.on('SIGINT', async () => {
   logger.info('Caught interrupt signal, cleaning up');
 
@@ -69,13 +61,11 @@ process.on('SIGINT', async () => {
 });
 
 (async () => {
-  try {
-    redis = new Redis(redisOptions);
-    subNode = redis.duplicate();
-  } catch (e) {
-    logger.error(e);
+  const redis = await openRedisConnection(redisInfo);
+  if (!redis) {
     return;
   }
+  const subNode = redis.duplicate();
 
   subNode.subscribe('plug-n-meet-recorder', async (err) => {
     if (err) {
@@ -209,7 +199,7 @@ process.on('SIGINT', async () => {
 
   const handleMsgFromChild = async (msg: FromChildToParent, pid: number) => {
     let increment = true,
-      payload: RecorderResp;
+      payload: RecorderResp | null = null;
 
     if (msg.task === 'recording-started' || msg.task === 'rtmp-started') {
       payload = {
@@ -243,8 +233,6 @@ process.on('SIGINT', async () => {
       childProcessesMapByRoomSid.delete(serviceType + ':' + payload.sid);
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     if (payload) {
       await notify(plugNmeetInfo, payload);
       await updateRecorderProgress(redis, recorder.id, increment);
