@@ -39,7 +39,7 @@ export const openRedisConnection = async (redisInfo: RedisInfo) => {
       name: redisInfo.sentinel_master_name,
       sentinels: sentinel_addresses,
       sentinelUsername: redisInfo.sentinel_username ?? '',
-      sentinelPassword: redisInfo.sentinel_username ?? '',
+      sentinelPassword: redisInfo.sentinel_password ?? '',
     };
 
     if (redisInfo.use_tls) {
