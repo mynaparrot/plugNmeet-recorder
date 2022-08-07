@@ -99,8 +99,8 @@ export interface RecorderResp {
 }
 
 export interface ChildProcessInfoMap {
-  serviceType: string;
-  record_id: string;
+  serviceType: number;
+  recording_id: string;
   sid: string;
   room_id: string;
 }
@@ -114,9 +114,9 @@ export interface FromChildToParent {
   room_id: string;
 }
 
-export interface FromParentToChild {
-  task: string;
-  record_id: string;
-  sid: string;
-  room_id: string;
-}
+// export interface FromParentToChild {
+//   task: string;
+//   record_id: string;
+//   sid: string;
+//   room_id: string;
+// }

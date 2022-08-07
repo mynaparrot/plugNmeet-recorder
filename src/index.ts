@@ -4,16 +4,11 @@ import * as fs from 'fs';
 import { fork } from 'child_process';
 
 import {
-  WebsocketServerInfo,
+  ChildProcessInfoMap,
   PlugNmeetInfo,
   Recorder,
-  RecorderArgs,
-  RecorderReq,
   RedisInfo,
-  ChildProcessInfoMap,
-  FromChildToParent,
-  RecorderResp,
-  FromParentToChild,
+  WebsocketServerInfo,
 } from './utils/interfaces';
 import { logger, notify, sleep } from './utils/helper';
 import {
@@ -23,6 +18,15 @@ import {
   updateRecorderProgress,
 } from './utils/redisTasks';
 import { ChildProcess } from 'concurrently/dist/src/command';
+import {
+  FromChildToParent,
+  FromParentToChild,
+  PlugNmeetToRecorder,
+  RecorderServiceType,
+  RecorderToPlugNmeet,
+  RecordingTasks,
+  StartRecorderChildArgs,
+} from './proto/plugnmeet_recorder_pb';
 
 let redisInfo: RedisInfo;
 let recorder: Recorder;
@@ -78,92 +82,107 @@ process.on('SIGINT', async () => {
   });
 
   subNode.on('message', (channel, message) => {
-    const payload: RecorderReq = JSON.parse(message);
+    let payload: PlugNmeetToRecorder;
+    try {
+      payload = PlugNmeetToRecorder.fromJsonString(message);
+    } catch (e) {
+      logger.error(e);
+      return;
+    }
     if (payload.from !== 'plugnmeet') {
       return;
     }
     logger.info('Main: ' + payload.task);
 
     if (
-      (payload.task === 'start-recording' || payload.task === 'start-rtmp') &&
-      payload.recorder_id === recorder.id
+      (payload.task === RecordingTasks.START_RECORDING ||
+        payload.task === RecordingTasks.START_RTMP) &&
+      payload.recorderId === recorder.id
     ) {
       handleStartRequest(payload);
     } else if (
-      payload.task === 'stop-recording' ||
-      payload.task === 'stop-rtmp'
+      payload.task === RecordingTasks.STOP_RECORDING ||
+      payload.task === RecordingTasks.STOP_RTMP
     ) {
       let serviceType = 'recording';
-      if (payload.task === 'stop-rtmp') {
+      if (payload.task === RecordingTasks.STOP_RTMP) {
         serviceType = 'rtmp';
       }
       const child = childProcessesMapByRoomSid.get(
-        serviceType + ':' + payload.sid,
+        serviceType + ':' + payload.roomSid,
       );
 
       if (child) {
         const recordInfo = childProcessesInfoMapByChildPid.get(child.pid);
         if (recordInfo) {
-          const toChild: FromParentToChild = {
+          const toChild = new FromParentToChild({
             task: payload.task,
-            record_id: recordInfo.record_id,
-            room_id: recordInfo.room_id,
-            sid: recordInfo.sid,
-          };
+            recordingId: recordInfo.recording_id,
+            roomId: recordInfo.room_id,
+            roomSid: recordInfo.sid,
+          });
           child?.send(toChild);
         }
       }
     }
   });
 
-  const handleStartRequest = (payload: RecorderReq) => {
-    const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.room_id}&room_sid=${payload.sid}&record_id=${payload.record_id}`;
+  const handleStartRequest = (payload: PlugNmeetToRecorder) => {
+    const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.roomId}&room_sid=${payload.roomSid}&recording_id=${payload.recordingId}`;
 
-    const toSend: RecorderArgs = {
-      room_id: payload.room_id,
-      record_id: payload.record_id,
-      sid: payload.sid,
-      access_token: payload.access_token,
-      plugNmeetInfo: plugNmeetInfo,
-      post_mp4_convert: recorder.post_mp4_convert,
-      copy_to_path: recorder.copy_to_path,
-      recorder_id: recorder.id,
-      serviceType: 'recording',
-      websocket_url,
-    };
+    const toSend = new StartRecorderChildArgs({
+      roomId: payload.roomId,
+      recordingId: payload.recordingId,
+      roomSid: payload.roomSid,
+      accessToken: payload.accessToken,
+      plugNMeetInfo: {
+        host: plugNmeetInfo.host,
+        apiKey: plugNmeetInfo.api_key,
+        apiSecret: plugNmeetInfo.api_secret,
+        joinHost: plugNmeetInfo.join_host,
+      },
+      postMp4Convert: recorder.post_mp4_convert,
+      copyToPath: {
+        mainPath: recorder.copy_to_path.main_path,
+        subPath: recorder.copy_to_path.sub_path,
+      },
+      recorderId: recorder.id,
+      serviceType: RecorderServiceType.RECORDING,
+      websocketUrl: websocket_url,
+    });
 
     if (recorder.custom_chrome_path) {
-      toSend.custom_chrome_path = recorder.custom_chrome_path;
+      toSend.customChromePath = recorder.custom_chrome_path;
     }
 
-    if (payload.task === 'start-recording') {
-      toSend.websocket_url = toSend.websocket_url + '&service=recording';
-    } else if (payload.task === 'start-rtmp') {
-      toSend.websocket_url =
-        toSend.websocket_url + '&service=rtmp&rtmp_url=' + payload.rtmp_url;
-      toSend.serviceType = 'rtmp';
+    if (payload.task === RecordingTasks.START_RECORDING) {
+      toSend.websocketUrl = toSend.websocketUrl + '&service=recording';
+    } else if (payload.task === RecordingTasks.START_RTMP) {
+      toSend.websocketUrl =
+        toSend.websocketUrl + '&service=rtmp&rtmp_url=' + payload.rtmpUrl;
+      toSend.serviceType = RecorderServiceType.RTMP;
     }
 
     let child: ChildProcess;
 
     if (typeof process.env.TS_NODE_DEV !== 'undefined') {
-      child = fork('src/recorder', [JSON.stringify(toSend)], {
+      child = fork('src/recorder', [toSend.toJsonString()], {
         execArgv: ['-r', 'ts-node/register'],
       });
     } else {
-      child = fork('dist/recorder', [JSON.stringify(toSend)]);
+      child = fork('dist/recorder', [toSend.toJsonString()]);
     }
 
     if (child.pid) {
       const childProcessInfo: ChildProcessInfoMap = {
         serviceType: toSend.serviceType,
-        record_id: toSend.record_id,
-        room_id: toSend.room_id,
-        sid: toSend.sid,
+        recording_id: toSend.recordingId,
+        room_id: toSend.roomId,
+        sid: toSend.roomSid,
       };
       childProcessesInfoMapByChildPid.set(child.pid, childProcessInfo);
       childProcessesMapByRoomSid.set(
-        toSend.serviceType + ':' + payload.sid,
+        toSend.serviceType + ':' + payload.roomSid,
         child,
       );
     }
@@ -180,17 +199,17 @@ process.on('SIGINT', async () => {
 
         if (typeof recordInfo !== 'undefined') {
           // we can use same as FromChildToParent message format.
-          const toChild: FromChildToParent = {
+          const toChild = new FromChildToParent({
             msg: code === 0 ? 'no error' : 'had error',
             status: code === 0,
             task:
-              recordInfo.serviceType === 'recording'
-                ? 'stop-recording'
-                : 'stop-rtmp',
-            record_id: recordInfo.record_id,
-            room_id: recordInfo.room_id,
-            sid: recordInfo.sid,
-          };
+              recordInfo.serviceType === RecorderServiceType.RECORDING
+                ? RecordingTasks.END_RECORDING
+                : RecordingTasks.END_RTMP,
+            recordingId: recordInfo.recording_id,
+            roomId: recordInfo.room_id,
+            roomSid: recordInfo.sid,
+          });
           handleMsgFromChild(toChild, child.pid);
         }
       }
@@ -199,38 +218,44 @@ process.on('SIGINT', async () => {
 
   const handleMsgFromChild = async (msg: FromChildToParent, pid: number) => {
     let increment = true,
-      payload: RecorderResp | null = null;
+      payload: RecorderToPlugNmeet | null = null;
 
-    if (msg.task === 'recording-started' || msg.task === 'rtmp-started') {
-      payload = {
+    if (
+      msg.task === RecordingTasks.START_RECORDING ||
+      msg.task === RecordingTasks.START_RTMP
+    ) {
+      payload = new RecorderToPlugNmeet({
         from: 'recorder',
         status: msg.status,
         task: msg.task,
         msg: msg.msg,
-        record_id: msg.record_id,
-        sid: msg.sid,
-        room_id: msg.room_id,
-        recorder_id: recorder.id, // this recorder ID
-      };
-    } else if (msg.task === 'recording-ended' || msg.task === 'rtmp-ended') {
+        recordingId: msg.recordingId,
+        roomSid: msg.roomSid,
+        roomId: msg.roomId,
+        recorderId: recorder.id, // this recorder ID
+      });
+    } else if (
+      msg.task === RecordingTasks.END_RECORDING ||
+      msg.task === RecordingTasks.END_RTMP
+    ) {
       increment = false;
-      payload = {
+      payload = new RecorderToPlugNmeet({
         from: 'recorder',
         status: msg.status,
         task: msg.task,
         msg: msg.msg,
-        record_id: msg.record_id,
-        sid: msg.sid,
-        room_id: msg.room_id,
-        recorder_id: recorder.id, // this recorder ID
-      };
-      let serviceType = 'recording';
-      if (payload.task === 'rtmp-ended') {
-        serviceType = 'rtmp';
+        recordingId: msg.recordingId,
+        roomSid: msg.roomSid,
+        roomId: msg.roomId,
+        recorderId: recorder.id, // this recorder ID
+      });
+      let serviceType = RecorderServiceType.RECORDING;
+      if (payload.task === RecordingTasks.END_RTMP) {
+        serviceType = RecorderServiceType.RTMP;
       }
       // clean up
       childProcessesInfoMapByChildPid.delete(pid);
-      childProcessesMapByRoomSid.delete(serviceType + ':' + payload.sid);
+      childProcessesMapByRoomSid.delete(serviceType + ':' + payload.roomSid);
     }
 
     if (payload) {
