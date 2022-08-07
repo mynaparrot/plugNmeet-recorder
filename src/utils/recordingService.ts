@@ -135,7 +135,7 @@ export default class RecordingService {
     });
   };
 
-  private notifyRecordingTask = async (filePath: string, file_size: any) => {
+  private notifyRecordingTask = async (filePath: string, file_size: number) => {
     const payload = new RecorderToPlugNmeet({
       from: 'recorder',
       status: true,

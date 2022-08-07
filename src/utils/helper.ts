@@ -24,11 +24,11 @@ export const notify = async (
 ) => {
   try {
     const url = plugNmeetInfo.host + '/auth/recorder/notify';
-    const res = await axios.post(url, body.toJsonString(), {
+    const res = await axios.post(url, body.toBinary(), {
       headers: {
         'API-KEY': plugNmeetInfo.api_key,
         'API-SECRET': plugNmeetInfo.api_secret,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/protobuf',
       },
     });
     return res.data;

@@ -4,7 +4,7 @@
 /* @ts-nocheck */
 
 import type {BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage} from "@bufbuild/protobuf";
-import {Message, proto3, protoInt64} from "@bufbuild/protobuf";
+import {Message, proto3} from "@bufbuild/protobuf";
 
 /**
  * @generated from enum plugnmeet.RecordingTasks
@@ -205,9 +205,9 @@ export class RecorderToPlugNmeet extends Message<RecorderToPlugNmeet> {
   filePath = "";
 
   /**
-   * @generated from field: uint64 file_size = 10;
+   * @generated from field: float file_size = 10;
    */
-  fileSize = protoInt64.zero;
+  fileSize = 0;
 
   constructor(data?: PartialMessage<RecorderToPlugNmeet>) {
     super();
@@ -226,7 +226,7 @@ export class RecorderToPlugNmeet extends Message<RecorderToPlugNmeet> {
     { no: 7, name: "room_sid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 8, name: "recorder_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 9, name: "file_path", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 10, name: "file_size", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 10, name: "file_size", kind: "scalar", T: 2 /* ScalarType.FLOAT */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RecorderToPlugNmeet {

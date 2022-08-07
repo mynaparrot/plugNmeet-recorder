@@ -104,9 +104,9 @@ process.on('SIGINT', async () => {
       payload.task === RecordingTasks.STOP_RECORDING ||
       payload.task === RecordingTasks.STOP_RTMP
     ) {
-      let serviceType = 'recording';
+      let serviceType = RecorderServiceType.RECORDING;
       if (payload.task === RecordingTasks.STOP_RTMP) {
-        serviceType = 'rtmp';
+        serviceType = RecorderServiceType.RTMP;
       }
       const child = childProcessesMapByRoomSid.get(
         serviceType + ':' + payload.roomSid,
