@@ -22,7 +22,7 @@
     "xvfb": "^0.4.0"
   },
   "devDependencies": {
-    "@bufbuild/protoc-gen-es": "^0.0.10",
+    "@bufbuild/protoc-gen-es": "0.0.10",
     "@types/ioredis": "4.28.10",
     "@types/js-yaml": "4.0.5",
     "@types/ws": "8.5.3",
