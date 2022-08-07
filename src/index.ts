@@ -217,38 +217,23 @@ process.on('SIGINT', async () => {
   };
 
   const handleMsgFromChild = async (msg: FromChildToParent, pid: number) => {
-    let increment = true,
-      payload: RecorderToPlugNmeet | null = null;
+    let increment = true;
+    const payload = new RecorderToPlugNmeet({
+      from: 'recorder',
+      status: msg.status,
+      task: msg.task,
+      msg: msg.msg,
+      recordingId: msg.recordingId,
+      roomSid: msg.roomSid,
+      roomId: msg.roomId,
+      recorderId: recorder.id, // this recorder ID
+    });
 
     if (
-      msg.task === RecordingTasks.START_RECORDING ||
-      msg.task === RecordingTasks.START_RTMP
-    ) {
-      payload = new RecorderToPlugNmeet({
-        from: 'recorder',
-        status: msg.status,
-        task: msg.task,
-        msg: msg.msg,
-        recordingId: msg.recordingId,
-        roomSid: msg.roomSid,
-        roomId: msg.roomId,
-        recorderId: recorder.id, // this recorder ID
-      });
-    } else if (
       msg.task === RecordingTasks.END_RECORDING ||
       msg.task === RecordingTasks.END_RTMP
     ) {
       increment = false;
-      payload = new RecorderToPlugNmeet({
-        from: 'recorder',
-        status: msg.status,
-        task: msg.task,
-        msg: msg.msg,
-        recordingId: msg.recordingId,
-        roomSid: msg.roomSid,
-        roomId: msg.roomId,
-        recorderId: recorder.id, // this recorder ID
-      });
       let serviceType = RecorderServiceType.RECORDING;
       if (payload.task === RecordingTasks.END_RTMP) {
         serviceType = RecorderServiceType.RTMP;
