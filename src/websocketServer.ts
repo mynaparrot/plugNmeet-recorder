@@ -42,7 +42,7 @@ wss.on('connection', function connection(ws, req) {
   const service = params.get('service');
   const room_id = params.get('room_id');
   const room_sid = params.get('room_sid');
-  const record_id = params.get('record_id');
+  const recording_id = params.get('recording_id');
 
   if (auth_token !== websocketServerInfo.auth_token || !service) {
     ws.terminate();
@@ -58,7 +58,7 @@ wss.on('connection', function connection(ws, req) {
       plugNmeetInfo,
       room_id,
       room_sid,
-      record_id,
+      recording_id,
       websocketServerInfo.ffmpeg_threads,
     );
   } else if (service === 'rtmp') {

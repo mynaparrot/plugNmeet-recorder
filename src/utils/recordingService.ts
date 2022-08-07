@@ -3,6 +3,7 @@ import fs from 'fs';
 
 import { PlugNmeetInfo, Recorder, RecorderResp } from './interfaces';
 import { logger, notify } from './helper';
+import {RecorderToPlugNmeet, RecordingTasks} from "../proto/plugnmeet_recorder_pb";
 
 export default class RecordingService {
   private ws: any;
@@ -135,18 +136,18 @@ export default class RecordingService {
   };
 
   private notifyRecordingTask = async (filePath: string, file_size: number) => {
-    const payload: RecorderResp = {
+    const payload = new RecorderToPlugNmeet({
       from: 'recorder',
       status: true,
-      task: 'recording-proceeded',
+      task: RecordingTasks.RECORDING_PROCEEDED,
       msg: 'process completed',
-      record_id: this.recordId,
-      sid: this.roomSid,
-      room_id: this.roomId,
-      file_path: filePath,
-      file_size: file_size,
-      recorder_id: this.recorder.id,
-    };
+      recordingId: this.recordId,
+      roomSid: this.roomSid,
+      roomId: this.roomId,
+      filePath: filePath,
+      fileSize: file_size,
+      recorderId: this.recorder.id,
+    });
 
     await notify(this.plugNmeetInfo, payload);
   };

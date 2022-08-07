@@ -8,12 +8,14 @@ import os from 'os';
 // @ts-ignore
 import Xvfb from 'xvfb';
 
+import { logger, sleep } from './utils/helper';
 import {
   FromChildToParent,
   FromParentToChild,
-  RecorderArgs,
-} from './utils/interfaces';
-import { logger, sleep } from './utils/helper';
+  RecorderServiceType,
+  RecordingTasks,
+  StartRecorderChildArgs,
+} from './proto/plugnmeet_recorder_pb';
 
 const args: any = process.argv.slice(2),
   platform = os.platform();
@@ -42,41 +44,41 @@ if (platform === 'linux') {
   });
 }
 
-const recorderArgs: RecorderArgs = JSON.parse(args);
+const recorderArgs = StartRecorderChildArgs.fromJsonString(args);
 
 const closeConnection = async (hasError: boolean, msg: string) => {
-  let task = 'recording-ended';
-  if (recorderArgs.serviceType === 'rtmp') {
-    task = 'rtmp-ended';
+  let task = RecordingTasks.END_RECORDING;
+  if (recorderArgs.serviceType === RecorderServiceType.RTMP) {
+    task = RecordingTasks.END_RTMP;
   }
 
-  const toParent: FromChildToParent = {
+  const toParent = new FromChildToParent({
     status: true,
     task,
     msg,
-    sid: recorderArgs.sid,
-    room_id: recorderArgs.room_id,
-    record_id: recorderArgs.record_id,
-  };
+    roomSid: recorderArgs.roomSid,
+    roomId: recorderArgs.roomId,
+    recordingId: recorderArgs.recordingId,
+  });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   process.send(toParent);
 };
 
 const recordingStartedMsg = async (msg: string) => {
-  let task = 'recording-started';
-  if (recorderArgs.serviceType === 'rtmp') {
-    task = 'rtmp-started';
+  let task = RecordingTasks.START_RECORDING;
+  if (recorderArgs.serviceType === RecorderServiceType.RTMP) {
+    task = RecordingTasks.START_RTMP;
   }
 
-  const toParent: FromChildToParent = {
+  const toParent = new FromChildToParent({
     status: true,
     task,
     msg,
-    sid: recorderArgs.sid,
-    room_id: recorderArgs.room_id,
-    record_id: recorderArgs.record_id,
-  };
+    roomSid: recorderArgs.roomSid,
+    roomId: recorderArgs.roomId,
+    recordingId: recorderArgs.recordingId,
+  });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   process.send(toParent);
@@ -150,8 +152,11 @@ process.on('SIGINT', async () => {
 });
 
 process.on('message', async (msg: FromParentToChild) => {
-  if (msg.task === 'stop-recording' || msg.task === 'stop-rtmp') {
-    logger.info('Child: ' + msg.task + ' sid: ' + msg.sid);
+  if (
+    msg.task === RecordingTasks.STOP_RECORDING ||
+    msg.task === RecordingTasks.STOP_RTMP
+  ) {
+    logger.info('Child: ' + msg.task + ' sid: ' + msg.roomSid);
     closedBycmd = true;
     await stopRecorder();
   }
@@ -186,19 +191,19 @@ if (platform == 'darwin') {
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 }
 // override with custom_chrome_path
-if (recorderArgs.custom_chrome_path) {
-  (options as any).executablePath = recorderArgs.custom_chrome_path;
+if (recorderArgs.customChromePath) {
+  (options as any).executablePath = recorderArgs.customChromePath;
 }
 
 (async () => {
   let url;
-  if (recorderArgs.plugNmeetInfo.join_host) {
-    url = recorderArgs.plugNmeetInfo.join_host + recorderArgs.access_token;
+  if (recorderArgs.plugNMeetInfo?.joinHost) {
+    url = recorderArgs.plugNMeetInfo.joinHost + recorderArgs.accessToken;
   } else {
     url =
-      recorderArgs.plugNmeetInfo.host +
+      recorderArgs.plugNMeetInfo?.host +
       '/?access_token=' +
-      recorderArgs.access_token;
+      recorderArgs.accessToken;
   }
 
   try {
@@ -276,7 +281,7 @@ if (recorderArgs.custom_chrome_path) {
         },
         '*',
       );
-    }, recorderArgs.websocket_url);
+    }, recorderArgs.websocketUrl);
 
     // we should notify
     await recordingStartedMsg('started');
