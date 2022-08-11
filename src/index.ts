@@ -101,31 +101,54 @@ process.on('SIGINT', async () => {
     ) {
       handleStartRequest(payload);
     } else if (
+      payload.task === RecordingTasks.STOP ||
       payload.task === RecordingTasks.STOP_RECORDING ||
       payload.task === RecordingTasks.STOP_RTMP
     ) {
-      let serviceType = RecorderServiceType.RECORDING;
-      if (payload.task === RecordingTasks.STOP_RTMP) {
-        serviceType = RecorderServiceType.RTMP;
-      }
-      const child = childProcessesMapByRoomSid.get(
-        serviceType + ':' + payload.roomSid,
-      );
-
-      if (child) {
-        const recordInfo = childProcessesInfoMapByChildPid.get(child.pid);
-        if (recordInfo) {
-          const toChild = new FromParentToChild({
-            task: payload.task,
-            recordingId: recordInfo.recording_id,
-            roomId: recordInfo.room_id,
-            roomSid: recordInfo.sid,
-          });
-          child?.send(toChild);
-        }
+      // for any stop task when meeting will end or have stop request
+      if (
+        childProcessesMapByRoomSid.has(
+          RecorderServiceType.RECORDING + ':' + payload.roomSid,
+        )
+      ) {
+        handleStopProcess(
+          RecordingTasks.STOP_RECORDING,
+          RecorderServiceType.RECORDING,
+          payload.roomSid,
+        );
+      } else if (
+        childProcessesMapByRoomSid.has(
+          RecorderServiceType.RTMP + ':' + payload.roomSid,
+        )
+      ) {
+        handleStopProcess(
+          RecordingTasks.STOP_RTMP,
+          RecorderServiceType.RTMP,
+          payload.roomSid,
+        );
       }
     }
   });
+
+  const handleStopProcess = (
+    task: RecordingTasks,
+    serviceType: RecorderServiceType,
+    roomSid: string,
+  ) => {
+    const child = childProcessesMapByRoomSid.get(serviceType + ':' + roomSid);
+    if (child) {
+      const recordInfo = childProcessesInfoMapByChildPid.get(child.pid);
+      if (recordInfo) {
+        const toChild = new FromParentToChild({
+          task: task,
+          recordingId: recordInfo.recording_id,
+          roomId: recordInfo.room_id,
+          roomSid: recordInfo.sid,
+        });
+        child?.send(toChild);
+      }
+    }
+  };
 
   const handleStartRequest = (payload: PlugNmeetToRecorder) => {
     const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.roomId}&room_sid=${payload.roomSid}&recording_id=${payload.recordingId}`;
