@@ -44,6 +44,11 @@ export enum RecordingTasks {
    * @generated from enum value: RECORDING_PROCEEDED = 6;
    */
   RECORDING_PROCEEDED = 6,
+
+  /**
+   * @generated from enum value: STOP = 7;
+   */
+  STOP = 7,
 }
 // Retrieve enum metadata with: proto3.getEnumType(RecordingTasks)
 proto3.util.setEnumType(RecordingTasks, "plugnmeet.RecordingTasks", [
@@ -54,6 +59,7 @@ proto3.util.setEnumType(RecordingTasks, "plugnmeet.RecordingTasks", [
   { no: 4, name: "END_RECORDING" },
   { no: 5, name: "END_RTMP" },
   { no: 6, name: "RECORDING_PROCEEDED" },
+  { no: 7, name: "STOP" },
 ]);
 
 /**
