@@ -1,9 +1,12 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 
-import { PlugNmeetInfo, Recorder, RecorderResp } from './interfaces';
+import { PlugNmeetInfo, Recorder } from './interfaces';
 import { logger, notify } from './helper';
-import {RecorderToPlugNmeet, RecordingTasks} from "../proto/plugnmeet_recorder_pb";
+import {
+  RecorderToPlugNmeet,
+  RecordingTasks,
+} from '../proto/plugnmeet_recorder_pb';
 
 export default class RecordingService {
   private ws: any;

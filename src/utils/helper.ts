@@ -2,7 +2,7 @@ import { createLogger, transports, format } from 'winston';
 import axios from 'axios';
 
 import { PlugNmeetInfo } from './interfaces';
-import {RecorderToPlugNmeet} from "../proto/plugnmeet_recorder_pb";
+import { RecorderToPlugNmeet } from '../proto/plugnmeet_recorder_pb';
 const { combine, timestamp, printf } = format;
 
 const logFormat = printf(({ level, message, timestamp }) => {
@@ -33,6 +33,6 @@ export const notify = async (
     });
     return res.data;
   } catch (e: any) {
-    logger.error(JSON.parse(e.response));
+    logger.error(e.response.data);
   }
 };
