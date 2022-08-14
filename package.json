@@ -9,7 +9,7 @@
     "start": "npm run build && concurrently -c \"red,green\" --kill-others \"node ./dist/index.js\" \"sleep 1 && node ./dist/websocketServer.js\"",
     "dev": "concurrently -c \"red,green,blue\" --kill-others \"ts-node-dev src/index.ts\" \"sleep 1 && npm run websocket-server && esw -w --ext '.ts','.js' --fix\"",
     "websocket-server": "ts-node-dev src/websocketServer.ts",
-    "build": "rm -rf ./dist && tsc -p . --outDir ./dist && cp -rf ./src/chrome-extension ./dist/chrome-extension && cp -rf ",
+    "build": "rm -rf ./dist && tsc -p . --outDir ./dist && cp -rf ./src/chrome-extension ./dist/chrome-extension",
     "proto": "protoc --es_opt=target=ts --plugin=protoc-gen-es=./node_modules/.bin/protoc-gen-es --es_out=./src/proto --proto_path=./protocol/proto_files plugnmeet_recorder.proto"
   },
   "dependencies": {
