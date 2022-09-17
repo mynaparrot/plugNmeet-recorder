@@ -1,4 +1,5 @@
 import { createLogger, transports, format } from 'winston';
+import { createHmac } from 'crypto';
 import axios from 'axios';
 
 import { PlugNmeetInfo } from './interfaces';
@@ -23,11 +24,16 @@ export const notify = async (
   body: RecorderToPlugNmeet,
 ) => {
   try {
+    const b = body.toBinary();
+    const signature = createHmac('sha256', plugNmeetInfo.api_secret)
+      .update(b)
+      .digest('hex');
+
     const url = plugNmeetInfo.host + '/auth/recorder/notify';
-    const res = await axios.post(url, body.toBinary(), {
+    const res = await axios.post(url, b, {
       headers: {
         'API-KEY': plugNmeetInfo.api_key,
-        'API-SECRET': plugNmeetInfo.api_secret,
+        'HASH-SIGNATURE': signature,
         'Content-Type': 'application/protobuf',
       },
     });
