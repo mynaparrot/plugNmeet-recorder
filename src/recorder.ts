@@ -2,6 +2,8 @@ import puppeteer, {
   BrowserConnectOptions,
   BrowserLaunchArgumentOptions,
   LaunchOptions,
+  Browser,
+  Page
 } from 'puppeteer';
 import os from 'os';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -20,7 +22,7 @@ import {
 const args: any = process.argv.slice(2),
   platform = os.platform();
 
-let browser: puppeteer.Browser, page: puppeteer.Page, xvfb: any;
+let browser: Browser, page: Page, xvfb: any;
 let hasError = false,
   errorMessage: any,
   closedBycmd = false,
@@ -62,7 +64,7 @@ const closeConnection = async (hasError: boolean, msg: string) => {
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  process.send(toParent);
+  process.send(toParent.toJsonString());
 };
 
 const recordingStartedMsg = async (msg: string) => {
@@ -81,7 +83,7 @@ const recordingStartedMsg = async (msg: string) => {
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  process.send(toParent);
+  process.send(toParent.toJsonString());
 };
 
 const stopRecorder = async () => {
@@ -151,7 +153,8 @@ process.on('SIGINT', async () => {
   }
 });
 
-process.on('message', async (msg: FromParentToChild) => {
+process.on('message', async (m: string) => {
+  const msg = FromParentToChild.fromJsonString(m);
   if (
     msg.task === RecordingTasks.STOP_RECORDING ||
     msg.task === RecordingTasks.STOP_RTMP
