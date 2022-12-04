@@ -145,7 +145,7 @@ process.on('SIGINT', async () => {
           roomId: recordInfo.room_id,
           roomSid: recordInfo.sid,
         });
-        child?.send(toChild);
+        child?.send(toChild.toJsonString());
       }
     }
   };
@@ -210,7 +210,7 @@ process.on('SIGINT', async () => {
       );
     }
 
-    child.on('message', (msg: FromChildToParent) => {
+    child.on('message', (msg: string) => {
       if (child.pid) {
         handleMsgFromChild(msg, child.pid);
       }
@@ -233,14 +233,16 @@ process.on('SIGINT', async () => {
             roomId: recordInfo.room_id,
             roomSid: recordInfo.sid,
           });
-          handleMsgFromChild(toChild, child.pid);
+          handleMsgFromChild(toChild.toJsonString(), child.pid);
         }
       }
     });
   };
 
-  const handleMsgFromChild = async (msg: FromChildToParent, pid: number) => {
+  const handleMsgFromChild = async (m: string, pid: number) => {
+    const msg = FromChildToParent.fromJsonString(m);
     let increment = true;
+
     const payload = new RecorderToPlugNmeet({
       from: 'recorder',
       status: msg.status,

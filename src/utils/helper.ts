@@ -39,6 +39,6 @@ export const notify = async (
     });
     return res.data;
   } catch (e: any) {
-    logger.error(e.response.data);
+    logger.error(e);
   }
 };
