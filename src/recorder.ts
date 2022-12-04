@@ -3,7 +3,7 @@ import puppeteer, {
   BrowserLaunchArgumentOptions,
   LaunchOptions,
   Browser,
-  Page
+  Page,
 } from 'puppeteer';
 import os from 'os';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
