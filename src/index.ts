@@ -101,10 +101,28 @@ process.on('SIGINT', async () => {
     ) {
       handleStartRequest(payload);
     } else if (
-      payload.task === RecordingTasks.STOP ||
-      payload.task === RecordingTasks.STOP_RECORDING ||
-      payload.task === RecordingTasks.STOP_RTMP
+      payload.task === RecordingTasks.STOP_RECORDING &&
+      childProcessesMapByRoomSid.has(
+        RecorderServiceType.RECORDING + ':' + payload.roomSid,
+      )
     ) {
+      handleStopProcess(
+        RecordingTasks.STOP_RECORDING,
+        RecorderServiceType.RECORDING,
+        payload.roomSid,
+      );
+    } else if (
+      payload.task === RecordingTasks.STOP_RTMP &&
+      childProcessesMapByRoomSid.has(
+        RecorderServiceType.RTMP + ':' + payload.roomSid,
+      )
+    ) {
+      handleStopProcess(
+        RecordingTasks.STOP_RTMP,
+        RecorderServiceType.RTMP,
+        payload.roomSid,
+      );
+    } else if (payload.task === RecordingTasks.STOP) {
       // for any stop task when meeting will end or have stop request
       if (
         childProcessesMapByRoomSid.has(
@@ -116,7 +134,8 @@ process.on('SIGINT', async () => {
           RecorderServiceType.RECORDING,
           payload.roomSid,
         );
-      } else if (
+      }
+      if (
         childProcessesMapByRoomSid.has(
           RecorderServiceType.RTMP + ':' + payload.roomSid,
         )
