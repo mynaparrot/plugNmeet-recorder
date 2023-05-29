@@ -36,14 +36,16 @@ if (!args) {
 const width = 1800;
 const height = 900;
 
-if (platform === 'linux') {
+if (
+  platform === 'linux'
+) {
   // prettier-ignore
-  xvfb = new Xvfb({
+  /*xvfb = new Xvfb({
     silent: true,
     xvfb_args: [
       '-screen', '0', `${width}x${height}x24`, '-ac', '-nolisten', 'tcp', '-dpi', '200', '+extension', 'RANDR',
     ],
-  });
+  });*/
 }
 
 const recorderArgs = StartRecorderChildArgs.fromJsonString(args);
@@ -58,8 +60,7 @@ const closeConnection = async (hasError: boolean, msg: string) => {
     status: true,
     task,
     msg,
-    roomSid: recorderArgs.roomSid,
-    roomId: recorderArgs.roomId,
+    roomTableId: recorderArgs.roomTableId,
     recordingId: recorderArgs.recordingId,
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -77,8 +78,7 @@ const recordingStartedMsg = async (msg: string) => {
     status: true,
     task,
     msg,
-    roomSid: recorderArgs.roomSid,
-    roomId: recorderArgs.roomId,
+    roomTableId: recorderArgs.roomTableId,
     recordingId: recorderArgs.recordingId,
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -131,7 +131,7 @@ const closeBrowser = async () => {
 
   if (platform === 'linux') {
     try {
-      xvfb.stopSync();
+      //xvfb.stopSync();
     } catch (e) {
       logger.error('Error during stop xvfb');
     }
@@ -159,7 +159,7 @@ process.on('message', async (m: string) => {
     msg.task === RecordingTasks.STOP_RECORDING ||
     msg.task === RecordingTasks.STOP_RTMP
   ) {
-    logger.info('Child: ' + msg.task + ' sid: ' + msg.roomSid);
+    logger.info('Child: ' + msg.task + ' sid: ' + msg.roomTableId);
     closedBycmd = true;
     await stopRecorder();
   }
@@ -181,9 +181,9 @@ const options:
     '--disable-dev-shm-usage',
     '--no-sandbox',
     '--no-zygote',
-    '--start-fullscreen',
+    //'--start-fullscreen',
     '--app=https://www.google.com/',
-    `--window-size=${width},${height}`,
+    //`--window-size=${width},${height}`,
   ],
   executablePath: '/usr/bin/google-chrome',
   defaultViewport: null,
@@ -212,7 +212,7 @@ if (recorderArgs.customChromePath) {
   try {
     if (platform == 'linux') {
       try {
-        xvfb.startSync();
+        //xvfb.startSync();
       } catch (e: any) {
         await closeConnection(true, e.message);
         process.exit(1);

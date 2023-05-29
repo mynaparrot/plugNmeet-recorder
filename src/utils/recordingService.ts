@@ -11,17 +11,17 @@ import {
 export default class RecordingService {
   private ws: any;
   private recorder: Recorder;
-  private plugNmeetInfo: PlugNmeetInfo;
-  private roomId: string;
-  private roomSid: string;
-  private recordId: string;
-  private ffmpegThreads: string;
+  private readonly plugNmeetInfo: PlugNmeetInfo;
+  private readonly roomTableId: bigint;
+  private readonly roomSid: string;
+  private readonly recordId: string;
+  private readonly ffmpegThreads: string;
 
   constructor(
     ws: any,
     recorder: Recorder,
     plugNmeetInfo: PlugNmeetInfo,
-    roomId: any,
+    roomTableId: bigint,
     roomSid: any,
     recordId: any,
     ffmpegThreads = '4',
@@ -29,7 +29,7 @@ export default class RecordingService {
     this.ws = ws;
     this.recorder = recorder;
     this.plugNmeetInfo = plugNmeetInfo;
-    this.roomId = roomId;
+    this.roomTableId = roomTableId;
     this.roomSid = roomSid;
     this.recordId = recordId;
     this.ffmpegThreads = ffmpegThreads;
@@ -145,8 +145,7 @@ export default class RecordingService {
       task: RecordingTasks.RECORDING_PROCEEDED,
       msg: 'process completed',
       recordingId: this.recordId,
-      roomSid: this.roomSid,
-      roomId: this.roomId,
+      roomTableId: this.roomTableId,
       filePath: filePath,
       fileSize: file_size,
       recorderId: this.recorder.id,

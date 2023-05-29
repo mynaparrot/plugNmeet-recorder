@@ -45,22 +45,8 @@ export interface RedisInfo {
   sentinel_password?: string;
 }
 
-export interface RecorderResp {
-  from: string;
-  task: string;
-  status: boolean;
-  msg: string;
-  record_id: string;
-  sid: string;
-  room_id: string;
-  recorder_id?: string;
-  file_path?: string;
-  file_size?: number;
-}
-
 export interface ChildProcessInfoMap {
   serviceType: number;
   recording_id: string;
-  sid: string;
-  room_id: string;
+  room_table_id: bigint;
 }
