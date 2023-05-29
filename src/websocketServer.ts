@@ -40,7 +40,7 @@ wss.on('connection', function connection(ws, req) {
   const params = new URLSearchParams(req.url.replace('/?', ''));
   const auth_token = params.get('auth_token');
   const service = params.get('service');
-  const room_id = params.get('room_id');
+  const room_table_id = params.get('room_table_id');
   const room_sid = params.get('room_sid');
   const recording_id = params.get('recording_id');
 
@@ -56,7 +56,7 @@ wss.on('connection', function connection(ws, req) {
       ws,
       recorder,
       plugNmeetInfo,
-      room_id,
+      BigInt(room_table_id ?? 1),
       room_sid,
       recording_id,
       websocketServerInfo.ffmpeg_threads,

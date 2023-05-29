@@ -58,8 +58,7 @@ const closeConnection = async (hasError: boolean, msg: string) => {
     status: true,
     task,
     msg,
-    roomSid: recorderArgs.roomSid,
-    roomId: recorderArgs.roomId,
+    roomTableId: recorderArgs.roomTableId,
     recordingId: recorderArgs.recordingId,
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -77,8 +76,7 @@ const recordingStartedMsg = async (msg: string) => {
     status: true,
     task,
     msg,
-    roomSid: recorderArgs.roomSid,
-    roomId: recorderArgs.roomId,
+    roomTableId: recorderArgs.roomTableId,
     recordingId: recorderArgs.recordingId,
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -159,7 +157,7 @@ process.on('message', async (m: string) => {
     msg.task === RecordingTasks.STOP_RECORDING ||
     msg.task === RecordingTasks.STOP_RTMP
   ) {
-    logger.info('Child: ' + msg.task + ' sid: ' + msg.roomSid);
+    logger.info('Child: ' + msg.task + ' sid: ' + msg.roomTableId);
     closedBycmd = true;
     await stopRecorder();
   }

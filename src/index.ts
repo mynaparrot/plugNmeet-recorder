@@ -103,47 +103,47 @@ process.on('SIGINT', async () => {
     } else if (
       payload.task === RecordingTasks.STOP_RECORDING &&
       childProcessesMapByRoomSid.has(
-        RecorderServiceType.RECORDING + ':' + payload.roomSid,
+        RecorderServiceType.RECORDING + ':' + payload.roomTableId,
       )
     ) {
       handleStopProcess(
         RecordingTasks.STOP_RECORDING,
         RecorderServiceType.RECORDING,
-        payload.roomSid,
+        payload.roomTableId,
       );
     } else if (
       payload.task === RecordingTasks.STOP_RTMP &&
       childProcessesMapByRoomSid.has(
-        RecorderServiceType.RTMP + ':' + payload.roomSid,
+        RecorderServiceType.RTMP + ':' + payload.roomTableId,
       )
     ) {
       handleStopProcess(
         RecordingTasks.STOP_RTMP,
         RecorderServiceType.RTMP,
-        payload.roomSid,
+        payload.roomTableId,
       );
     } else if (payload.task === RecordingTasks.STOP) {
       // for any stop task when meeting will end or have stop request
       if (
         childProcessesMapByRoomSid.has(
-          RecorderServiceType.RECORDING + ':' + payload.roomSid,
+          RecorderServiceType.RECORDING + ':' + payload.roomTableId,
         )
       ) {
         handleStopProcess(
           RecordingTasks.STOP_RECORDING,
           RecorderServiceType.RECORDING,
-          payload.roomSid,
+          payload.roomTableId,
         );
       }
       if (
         childProcessesMapByRoomSid.has(
-          RecorderServiceType.RTMP + ':' + payload.roomSid,
+          RecorderServiceType.RTMP + ':' + payload.roomTableId,
         )
       ) {
         handleStopProcess(
           RecordingTasks.STOP_RTMP,
           RecorderServiceType.RTMP,
-          payload.roomSid,
+          payload.roomTableId,
         );
       }
     }
@@ -152,17 +152,18 @@ process.on('SIGINT', async () => {
   const handleStopProcess = (
     task: RecordingTasks,
     serviceType: RecorderServiceType,
-    roomSid: string,
+    roomTableId: bigint,
   ) => {
-    const child = childProcessesMapByRoomSid.get(serviceType + ':' + roomSid);
+    const child = childProcessesMapByRoomSid.get(
+      serviceType + ':' + roomTableId,
+    );
     if (child) {
       const recordInfo = childProcessesInfoMapByChildPid.get(child.pid);
       if (recordInfo) {
         const toChild = new FromParentToChild({
           task: task,
           recordingId: recordInfo.recording_id,
-          roomId: recordInfo.room_id,
-          roomSid: recordInfo.sid,
+          roomTableId: recordInfo.room_table_id,
         });
         child?.send(toChild.toJsonString());
       }
@@ -170,12 +171,11 @@ process.on('SIGINT', async () => {
   };
 
   const handleStartRequest = (payload: PlugNmeetToRecorder) => {
-    const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_id=${payload.roomId}&room_sid=${payload.roomSid}&recording_id=${payload.recordingId}`;
+    const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_table_id=${payload.roomTableId}&room_sid=${payload.roomSid}&recording_id=${payload.recordingId}`;
 
     const toSend = new StartRecorderChildArgs({
-      roomId: payload.roomId,
+      roomTableId: payload.roomTableId,
       recordingId: payload.recordingId,
-      roomSid: payload.roomSid,
       accessToken: payload.accessToken,
       plugNMeetInfo: {
         host: plugNmeetInfo.host,
@@ -219,12 +219,11 @@ process.on('SIGINT', async () => {
       const childProcessInfo: ChildProcessInfoMap = {
         serviceType: toSend.serviceType,
         recording_id: toSend.recordingId,
-        room_id: toSend.roomId,
-        sid: toSend.roomSid,
+        room_table_id: toSend.roomTableId,
       };
       childProcessesInfoMapByChildPid.set(child.pid, childProcessInfo);
       childProcessesMapByRoomSid.set(
-        toSend.serviceType + ':' + payload.roomSid,
+        toSend.serviceType + ':' + payload.roomTableId,
         child,
       );
     }
@@ -249,8 +248,7 @@ process.on('SIGINT', async () => {
                 ? RecordingTasks.END_RECORDING
                 : RecordingTasks.END_RTMP,
             recordingId: recordInfo.recording_id,
-            roomId: recordInfo.room_id,
-            roomSid: recordInfo.sid,
+            roomTableId: recordInfo.room_table_id,
           });
           handleMsgFromChild(toChild.toJsonString(), child.pid);
         }
@@ -268,8 +266,7 @@ process.on('SIGINT', async () => {
       task: msg.task,
       msg: msg.msg,
       recordingId: msg.recordingId,
-      roomSid: msg.roomSid,
-      roomId: msg.roomId,
+      roomTableId: msg.roomTableId,
       recorderId: recorder.id, // this recorder ID
     });
 
