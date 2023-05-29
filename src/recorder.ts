@@ -36,16 +36,14 @@ if (!args) {
 const width = 1800;
 const height = 900;
 
-if (
-  platform === 'linux'
-) {
+if (platform === 'linux') {
   // prettier-ignore
-  /*xvfb = new Xvfb({
+  xvfb = new Xvfb({
     silent: true,
     xvfb_args: [
       '-screen', '0', `${width}x${height}x24`, '-ac', '-nolisten', 'tcp', '-dpi', '200', '+extension', 'RANDR',
     ],
-  });*/
+  });
 }
 
 const recorderArgs = StartRecorderChildArgs.fromJsonString(args);
@@ -131,7 +129,7 @@ const closeBrowser = async () => {
 
   if (platform === 'linux') {
     try {
-      //xvfb.stopSync();
+      xvfb.stopSync();
     } catch (e) {
       logger.error('Error during stop xvfb');
     }
@@ -181,9 +179,9 @@ const options:
     '--disable-dev-shm-usage',
     '--no-sandbox',
     '--no-zygote',
-    //'--start-fullscreen',
+    '--start-fullscreen',
     '--app=https://www.google.com/',
-    //`--window-size=${width},${height}`,
+    `--window-size=${width},${height}`,
   ],
   executablePath: '/usr/bin/google-chrome',
   defaultViewport: null,
@@ -212,7 +210,7 @@ if (recorderArgs.customChromePath) {
   try {
     if (platform == 'linux') {
       try {
-        //xvfb.startSync();
+        xvfb.startSync();
       } catch (e: any) {
         await closeConnection(true, e.message);
         process.exit(1);
