@@ -1,10 +1,13 @@
 import { createLogger, transports, format } from 'winston';
 import { createHmac } from 'crypto';
 import axios from 'axios';
+import axiosRetry from 'axios-retry';
 
 import { PlugNmeetInfo } from './interfaces';
 import { RecorderToPlugNmeet } from '../proto/plugnmeet_recorder_pb';
 const { combine, timestamp, printf } = format;
+
+axiosRetry(axios, { retryDelay: axiosRetry.exponentialDelay, retries: 4 });
 
 const logFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} ${level}: ${message}`;
