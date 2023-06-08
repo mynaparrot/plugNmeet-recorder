@@ -185,6 +185,7 @@ const options:
   ],
   executablePath: '/usr/bin/google-chrome',
   defaultViewport: null,
+  protocolTimeout: 0,
 };
 
 if (platform == 'darwin') {
