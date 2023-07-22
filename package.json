@@ -19,7 +19,7 @@
     "axios-retry": "3.5.1",
     "ioredis": "5.3.2",
     "js-yaml": "4.1.0",
-    "puppeteer": "20.8.3",
+    "puppeteer": "20.9.0",
     "winston": "3.10.0",
     "ws": "8.13.0",
     "xvfb": "0.4.0"
