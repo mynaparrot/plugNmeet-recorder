@@ -6,6 +6,13 @@ recorder:
   post_mp4_convert: true
   # use it if you want to use custom chrome
   custom_chrome_path: ""
+  # this is optional. You can set the width and height of recorded virtual window which will result in
+  # recorded video with same resolution
+  width: 1800
+  height: 900
+  # this is optional. using this variable you can change the DPI for xvfb virtual window, change this to
+  # improve the picture clarity but with impact on performance and compatibility
+  xvfb_dpi: 200
   copy_to_path:
     # plugnmeet-server should have access this path otherwise user can't download recordings.
     # this path can be NSF or other network path too but make sure nodejs has permission
