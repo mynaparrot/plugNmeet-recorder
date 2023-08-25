@@ -47,7 +47,6 @@ if (platform === 'linux') {
   });
 }
 
-
 const closeConnection = async (hasError: boolean, msg: string) => {
   let task = RecordingTasks.END_RECORDING;
   if (recorderArgs.serviceType === RecorderServiceType.RTMP) {
