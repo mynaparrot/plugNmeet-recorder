@@ -32,21 +32,20 @@ if (!args) {
   logger.error('no args found, closing..');
   process.exit();
 }
+const recorderArgs = StartRecorderChildArgs.fromJsonString(args);
 
-const width = 1800;
-const height = 900;
-
+const width = recorderArgs.width || 1800;
+const height = recorderArgs.height || 900;
+const dpi = recorderArgs.xvfbDpi || 200;
 if (platform === 'linux') {
   // prettier-ignore
   xvfb = new Xvfb({
     silent: true,
     xvfb_args: [
-      '-screen', '0', `${width}x${height}x24`, '-ac', '-nolisten', 'tcp', '-dpi', '200', '+extension', 'RANDR',
+      '-screen', '0', `${width}x${height}x24`, '-ac', '-nolisten', 'tcp', '-dpi', `${dpi}`, '+extension', 'RANDR',
     ],
   });
 }
-
-const recorderArgs = StartRecorderChildArgs.fromJsonString(args);
 
 const closeConnection = async (hasError: boolean, msg: string) => {
   let task = RecordingTasks.END_RECORDING;
