@@ -18,8 +18,8 @@ const transportFile: DailyRotateFile = new DailyRotateFile({
   filename: './logs/recorder-%DATE%.log',
   datePattern: 'YYYY-MM-DD',
   zippedArchive: false,
-  maxSize: '20m',
-  maxFiles: '14d',
+  maxSize: '10m',
+  maxFiles: '7d',
 });
 
 export const logger = createLogger({
