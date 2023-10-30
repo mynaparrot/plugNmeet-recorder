@@ -52,7 +52,7 @@ export interface ChildProcessInfoMap {
 }
 
 export interface FFMPEGOptions {
-  recorder: {
+  recording: {
     pre_input: string;
     post_input: string;
   };

@@ -88,11 +88,11 @@ export default class RecordingService {
     const to = `${saveToPath}/${mp4File}`;
 
     const options = ['-y'];
-    if (this.ffmpegOptions.recorder.pre_input !== '') {
-      options.push(...this.ffmpegOptions.recorder.pre_input.split(' '));
+    if (this.ffmpegOptions.recording.pre_input !== '') {
+      options.push(...this.ffmpegOptions.recording.pre_input.split(' '));
     }
     options.push('-i ', from);
-    options.push(...this.ffmpegOptions.recorder.post_input.split(' '));
+    options.push(...this.ffmpegOptions.recording.post_input.split(' '));
     options.push(to);
     logger.info('ffmpeg options: ' + options);
 

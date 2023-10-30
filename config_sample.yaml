@@ -24,7 +24,7 @@ recorder:
     sub_path: "node_01"
 # here you can set your custom ffmpeg options
 ffmpeg_options:
-  recorder:
+  recording:
     # any option to set before -i
     pre_input: ""
     post_input: "-movflags faststart -c:v copy -preset veryfast"

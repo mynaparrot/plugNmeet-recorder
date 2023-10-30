@@ -57,7 +57,7 @@ export const notify = async (
 
 export const getDefaultFFMPEGOptions = (): FFMPEGOptions => {
   return {
-    recorder: {
+    recording: {
       pre_input: '',
       post_input: '-movflags faststart -c:v copy -preset veryfast', // we can copy as Chrome will record in h264 codec
     },
