@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 
-import { PlugNmeetInfo, Recorder } from './interfaces';
+import { FFMPEGOptions, PlugNmeetInfo, Recorder } from './interfaces';
 import { logger, notify } from './helper';
 import {
   RecorderToPlugNmeet,
@@ -16,11 +16,13 @@ export default class RecordingService {
   private readonly roomSid: string;
   private readonly recordId: string;
   private readonly ffmpegThreads: string;
+  private readonly ffmpegOptions: FFMPEGOptions;
 
   constructor(
     ws: any,
     recorder: Recorder,
     plugNmeetInfo: PlugNmeetInfo,
+    ffmpegOptions: FFMPEGOptions,
     roomTableId: bigint,
     roomSid: any,
     recordId: any,
@@ -29,6 +31,7 @@ export default class RecordingService {
     this.ws = ws;
     this.recorder = recorder;
     this.plugNmeetInfo = plugNmeetInfo;
+    this.ffmpegOptions = ffmpegOptions;
     this.roomTableId = roomTableId;
     this.roomSid = roomSid;
     this.recordId = recordId;
@@ -40,7 +43,7 @@ export default class RecordingService {
     const copy_to_dir = this.recorder.copy_to_path.main_path;
     let sub_path = '';
     if (this.recorder.copy_to_path.sub_path) {
-      // don't forget to add tailing "/"
+      // remember to add tailing "/"
       sub_path = `${this.recorder.copy_to_path.sub_path}/`;
     }
     const saveToPath = `${copy_to_dir}/${sub_path}${this.roomSid}`;
@@ -63,7 +66,7 @@ export default class RecordingService {
       this.ws.terminate();
 
       if (this.recorder.post_mp4_convert) {
-        this.convertToMp4(file, saveToPath, sub_path);
+        await this.convertToMp4(file, saveToPath, sub_path);
       } else {
         const stat = await fs.promises.stat(file);
         const fileSize = (stat.size / (1024 * 1024)).toFixed(2);
@@ -71,7 +74,7 @@ export default class RecordingService {
         // format: sub_path/roomSid/filename
         const storeFilePath = `${sub_path}${this.roomSid}/${this.recordId}.webm`;
         // now notify to plugNmeet
-        this.notifyRecordingTask(storeFilePath, Number(fileSize));
+        await this.notifyRecordingTask(storeFilePath, Number(fileSize));
       }
     });
   };
@@ -84,23 +87,19 @@ export default class RecordingService {
     const mp4File = `${this.recordId}.mp4`;
     const to = `${saveToPath}/${mp4File}`;
 
-    // prettier-ignore
-    const ffmpeg = spawn(
-      'ffmpeg',
-      [
-        '-y',
-        '-i ', from,
-        '-threads', this.ffmpegThreads,
-        '-movflags faststart',
-        '-c:v copy', // we can copy as Chrome will record in h264 codec
-        '-preset veryfast',
-        '-vsync vfr',
-        to,
-      ],
-      {
-        shell: true,
-      },
-    );
+    const options = ['-y'];
+    if (this.ffmpegOptions.recorder.pre_input !== '') {
+      options.push(...this.ffmpegOptions.recorder.pre_input.split(' '));
+    }
+    options.push('-i ', from);
+    options.push(...this.ffmpegOptions.recorder.post_input.split(' '));
+    options.push(to);
+    logger.info('ffmpeg options: ' + options);
+
+    const ffmpeg = spawn('ffmpeg', options, {
+      shell: true,
+      stdio: 'ignore', // if we don't ignore, then the process will freeze if too many errors
+    });
 
     ffmpeg.on('close', async (code) => {
       if (code == 0) {

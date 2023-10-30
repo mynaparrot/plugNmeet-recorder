@@ -1,46 +1,31 @@
 import { spawn } from 'child_process';
+
 import { logger } from './helper';
+import { FFMPEGOptions } from './interfaces';
 
 export default class RtmpService {
   private ws: any;
   private rtmpUrl: string;
+  private readonly ffmpegOptions: FFMPEGOptions;
 
-  constructor(ws: any, rtmpUrl: any) {
+  constructor(ws: any, ffmpegOptions: FFMPEGOptions, rtmpUrl: any) {
     this.ws = ws;
+    this.ffmpegOptions = ffmpegOptions;
     this.rtmpUrl = rtmpUrl;
     this.startService();
   }
 
   private startService = async () => {
-    // prettier-ignore
-    const ffmpeg = spawn('ffmpeg', [
-      // FFmpeg will read input video from STDIN
-      '-i', '-',
+    const options = [];
+    if (this.ffmpegOptions.rtmp.pre_input !== '') {
+      options.push(...this.ffmpegOptions.rtmp.pre_input.split(' '));
+    }
+    options.push('-i', '-');
+    options.push(...this.ffmpegOptions.rtmp.post_input.split(' '));
+    options.push('-f', 'flv', this.rtmpUrl);
+    logger.info('ffmpeg options: ' + options);
 
-      '-c:v', 'libx264',
-      '-x264-params', 'keyint=120:scenecut=0',
-      '-b:v', '2500k',
-      '-video_size', '1280x720',
-      '-c:a', 'aac',
-      '-b:a', '128k',
-      '-ar', '44100',
-      '-af', 'highpass=f=200,lowpass=f=2000,afftdn', //https://superuser.com/a/835585
-      // '-maxrate', '2000k',
-      // '-bufsize', '2000k',
-      // '-framerate', '30',
-      // '-g', '60',
-      '-preset', 'ultrafast',
-      '-crf', '5',
-      '-vf', 'format=yuv420p',
-      '-tune', 'zerolatency',
-
-      // FLV is the container format used in conjunction with RTMP
-      '-f', 'flv',
-      // The output RTMP URL.
-      // For debugging, you could set this to a filename like 'test.flv', and play
-      // the resulting file with VLC.
-      this.rtmpUrl,
-    ]);
+    const ffmpeg = spawn('ffmpeg', options);
 
     // If FFmpeg stops for any reason, close the WebSocket connection.
     ffmpeg.on('close', (code, signal) => {

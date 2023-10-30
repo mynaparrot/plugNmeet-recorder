@@ -71,6 +71,12 @@ process.on('SIGINT', async () => {
   }
   const subNode = redis.duplicate();
 
+  // check for logs directory
+  const logDir = './logs';
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir);
+  }
+
   subNode.subscribe('plug-n-meet-recorder', async (err) => {
     if (err) {
       logger.error('Failed to subscribe: %s', err.message);

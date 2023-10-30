@@ -22,6 +22,16 @@ recorder:
     # and store in database. This path should be inside main_path. Sometime user want to
     # use specific recording directory for this particular recorder.
     sub_path: "node_01"
+# here you can set your custom ffmpeg options
+ffmpeg_options:
+  recorder:
+    # any option to set before -i
+    pre_input: ""
+    post_input: "-movflags faststart -c:v copy -preset veryfast"
+  rtmp:
+    # any option to set before -i
+    pre_input: ""
+    post_input: "-c:v libx264 -x264-params keyint=120:scenecut=0 -b:v 2500k -video_size 1280x720 -c:a aac -b:a 128k -ar 44100 -af highpass=f=200,lowpass=f=2000,afftdn -preset ultrafast -crf 5 -vf format=yuv420p -tune zerolatency"
 plugNmeet_info:
   # http://localhost:8080
   host: PLUG_N_MEET_SERVER_DOMAIN

@@ -2,8 +2,9 @@ import { createLogger, transports, format } from 'winston';
 import { createHmac } from 'crypto';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
-import { PlugNmeetInfo } from './interfaces';
+import { FFMPEGOptions, PlugNmeetInfo } from './interfaces';
 import { RecorderToPlugNmeet } from '../proto/plugnmeet_recorder_pb';
 const { combine, timestamp, printf } = format;
 
@@ -13,9 +14,17 @@ const logFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} ${level}: ${message}`;
 });
 
+const transportFile: DailyRotateFile = new DailyRotateFile({
+  filename: './logs/recorder-%DATE%.log',
+  datePattern: 'YYYY-MM-DD',
+  zippedArchive: false,
+  maxSize: '20m',
+  maxFiles: '14d',
+});
+
 export const logger = createLogger({
   format: combine(timestamp(), logFormat),
-  transports: [new transports.Console()],
+  transports: [new transports.Console(), transportFile],
 });
 
 export const sleep = (ms: number) => {
@@ -44,4 +53,18 @@ export const notify = async (
   } catch (e: any) {
     logger.error(e);
   }
+};
+
+export const getDefaultFFMPEGOptions = (): FFMPEGOptions => {
+  return {
+    recorder: {
+      pre_input: '',
+      post_input: '-movflags faststart -c:v copy -preset veryfast', // we can copy as Chrome will record in h264 codec
+    },
+    rtmp: {
+      pre_input: '',
+      post_input:
+        '-c:v libx264 -x264-params keyint=120:scenecut=0 -b:v 2500k -video_size 1280x720 -c:a aac -b:a 128k -ar 44100 -af highpass=f=200,lowpass=f=2000,afftdn -preset ultrafast -crf 5 -vf format=yuv420p -tune zerolatency',
+    },
+  };
 };

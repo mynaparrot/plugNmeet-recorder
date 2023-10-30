@@ -2,27 +2,42 @@ import { Server as WebSocketServer } from 'ws';
 import http from 'http';
 import yaml from 'js-yaml';
 import fs from 'fs';
+
 import {
+  FFMPEGOptions,
   PlugNmeetInfo,
   Recorder,
   WebsocketServerInfo,
 } from './utils/interfaces';
 import RecordingService from './utils/recordingService';
 import RtmpService from './utils/rtmpService';
-import { logger } from './utils/helper';
+import { getDefaultFFMPEGOptions, logger, sleep } from './utils/helper';
 
-let websocketServerInfo: WebsocketServerInfo;
-let recorder: Recorder;
-let plugNmeetInfo: PlugNmeetInfo;
+let websocketServerInfo: WebsocketServerInfo,
+  recorder: Recorder,
+  plugNmeetInfo: PlugNmeetInfo,
+  ffmpegOptions: FFMPEGOptions = getDefaultFFMPEGOptions();
 try {
   const config: any = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
   websocketServerInfo = config.websocket_server;
   plugNmeetInfo = config.plugNmeet_info;
   recorder = config.recorder;
+  if (typeof config.ffmpeg_options !== 'undefined') {
+    ffmpegOptions = config.ffmpeg_options;
+  }
 } catch (e) {
   console.log('Error: ', e);
   process.exit();
 }
+
+const killProcess = async () => {
+  logger.info('websocketServer: got SIGINT, cleaning up');
+  // we can wait before closing everything
+  await sleep(10 * 1000); // 10 seconds
+  process.exit();
+};
+process.on('SIGTERM', killProcess);
+process.on('SIGINT', killProcess);
 
 const server = http.createServer().listen(websocketServerInfo.port, () => {
   logger.info('websocket listening port: ' + websocketServerInfo.port);
@@ -56,6 +71,7 @@ wss.on('connection', function connection(ws, req) {
       ws,
       recorder,
       plugNmeetInfo,
+      ffmpegOptions,
       BigInt(room_table_id ?? 1),
       room_sid,
       recording_id,
@@ -63,6 +79,6 @@ wss.on('connection', function connection(ws, req) {
     );
   } else if (service === 'rtmp') {
     const rtmpUrl = params.get('rtmp_url');
-    new RtmpService(ws, rtmpUrl);
+    new RtmpService(ws, ffmpegOptions, rtmpUrl);
   }
 });
