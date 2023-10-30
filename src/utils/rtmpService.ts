@@ -18,10 +18,10 @@ export default class RtmpService {
   private startService = async () => {
     const options = [];
     if (this.ffmpegOptions.rtmp.pre_input !== '') {
-      options.push(this.ffmpegOptions.rtmp.pre_input);
+      options.push(...this.ffmpegOptions.rtmp.pre_input.split(' '));
     }
     options.push('-i', '-');
-    options.push(this.ffmpegOptions.rtmp.post_input);
+    options.push(...this.ffmpegOptions.rtmp.post_input.split(' '));
     options.push('-f', 'flv', this.rtmpUrl);
     const ffmpeg = spawn('ffmpeg', options);
 

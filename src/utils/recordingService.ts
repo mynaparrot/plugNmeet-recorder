@@ -89,10 +89,10 @@ export default class RecordingService {
 
     const options = ['-y'];
     if (this.ffmpegOptions.recorder.pre_input !== '') {
-      options.push(this.ffmpegOptions.recorder.pre_input);
+      options.push(...this.ffmpegOptions.recorder.pre_input.split(' '));
     }
     options.push('-i ', from);
-    options.push(this.ffmpegOptions.recorder.post_input);
+    options.push(...this.ffmpegOptions.recorder.post_input.split(' '));
     options.push(to);
 
     const ffmpeg = spawn('ffmpeg', options, {
