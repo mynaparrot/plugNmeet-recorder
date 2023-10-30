@@ -50,3 +50,14 @@ export interface ChildProcessInfoMap {
   recording_id: string;
   room_table_id: bigint;
 }
+
+export interface FFMPEGOptions {
+  recorder: {
+    pre_input: string;
+    post_input: string;
+  };
+  rtmp: {
+    pre_input: string;
+    post_input: string;
+  };
+}
