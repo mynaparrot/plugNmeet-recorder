@@ -94,6 +94,7 @@ export default class RecordingService {
     options.push('-i ', from);
     options.push(...this.ffmpegOptions.recorder.post_input.split(' '));
     options.push(to);
+    logger.info('ffmpeg options: ' + options);
 
     const ffmpeg = spawn('ffmpeg', options, {
       shell: true,

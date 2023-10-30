@@ -23,6 +23,8 @@ export default class RtmpService {
     options.push('-i', '-');
     options.push(...this.ffmpegOptions.rtmp.post_input.split(' '));
     options.push('-f', 'flv', this.rtmpUrl);
+    logger.info('ffmpeg options: ' + options);
+
     const ffmpeg = spawn('ffmpeg', options);
 
     // If FFmpeg stops for any reason, close the WebSocket connection.
