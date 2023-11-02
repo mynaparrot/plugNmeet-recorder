@@ -37,16 +37,14 @@ const recorderArgs = StartRecorderChildArgs.fromJsonString(args);
 const width = recorderArgs.width || 1800;
 const height = recorderArgs.height || 900;
 const dpi = recorderArgs.xvfbDpi || 200;
-if (
-  platform === 'linux'
-) {
+if (platform === 'linux') {
   // prettier-ignore
-  /*xvfb = new Xvfb({
+  xvfb = new Xvfb({
     silent: true,
     xvfb_args: [
       '-screen', '0', `${width}x${height}x24`, '-ac', '-nolisten', 'tcp', '-dpi', `${dpi}`, '+extension', 'RANDR',
     ],
-  });*/
+  });
 }
 
 const closeConnection = async (hasError: boolean, msg: string) => {
@@ -130,7 +128,7 @@ const closeBrowser = async () => {
 
   if (platform === 'linux') {
     try {
-      //xvfb.stopSync();
+      xvfb.stopSync();
     } catch (e) {
       logger.error('Error during stop xvfb');
     }
@@ -212,7 +210,7 @@ if (recorderArgs.customChromePath) {
   try {
     if (platform == 'linux') {
       try {
-        //xvfb.startSync();
+        xvfb.startSync();
       } catch (e: any) {
         await closeConnection(true, e.message);
         process.exit(1);
