@@ -23,7 +23,6 @@ export interface WebsocketServerInfo {
   port: number;
   host: string;
   auth_token: string;
-  ffmpeg_threads: string;
 }
 
 export interface PlugNmeetInfo {
