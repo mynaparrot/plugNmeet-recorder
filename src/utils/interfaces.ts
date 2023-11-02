@@ -4,6 +4,7 @@ export interface Recorder {
   post_mp4_convert: boolean;
   custom_chrome_path?: string;
   copy_to_path: CopyToPath;
+  post_processing_scripts?: string[];
 }
 
 export interface RecorderRedisHashInfo {
@@ -60,4 +61,13 @@ export interface FFMPEGOptions {
     pre_input: string;
     post_input: string;
   };
+}
+
+export interface PostProcessScriptData {
+  recording_id: string;
+  room_table_id: number;
+  room_sid: string;
+  file_path: string; // this will be the full path of the file
+  file_size: number;
+  recorder_id: string;
 }

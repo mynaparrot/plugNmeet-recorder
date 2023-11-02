@@ -9,8 +9,8 @@ import {
   Recorder,
   WebsocketServerInfo,
 } from './utils/interfaces';
-import RecordingService from './utils/recordingService';
-import RtmpService from './utils/rtmpService';
+import RecordingService from './services/recordingService';
+import RtmpService from './services/rtmpService';
 import { getDefaultFFMPEGOptions, logger, sleep } from './utils/helper';
 
 let websocketServerInfo: WebsocketServerInfo,
@@ -75,7 +75,6 @@ wss.on('connection', function connection(ws, req) {
       BigInt(room_table_id ?? 1),
       room_sid,
       recording_id,
-      websocketServerInfo.ffmpeg_threads,
     );
   } else if (service === 'rtmp') {
     const rtmpUrl = params.get('rtmp_url');

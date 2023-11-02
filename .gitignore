@@ -6,3 +6,5 @@ config.yaml
 dist/
 node_modules/
 recording_files/
+post_processing_scripts/*
+!post_processing_scripts/example.js
