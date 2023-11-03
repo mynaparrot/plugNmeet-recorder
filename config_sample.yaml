@@ -22,6 +22,11 @@ recorder:
     # and store in database. This path should be inside main_path. Sometime user want to
     # use specific recording directory for this particular recorder.
     sub_path: "node_01"
+  # You can use post-processing scripts for a further process the recording
+  # you can find example from post_processing_scripts/example.js
+  #post_processing_scripts:
+  # should be a full path & make sure nodejs has permission to access
+  #  - "./post_processing_scripts/example.js"
 # here you can set your custom ffmpeg options
 ffmpeg_options:
   recording:
@@ -48,8 +53,6 @@ websocket_server:
   # OR
   # cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1
   auth_token: WEBSOCKET_AUTH_TOKEN
-  # the number of CPU ffmpeg will use during conversion. Default: 4
-  ffmpeg_threads: 4
 redis_info:
   host: localhost
   port: 6379

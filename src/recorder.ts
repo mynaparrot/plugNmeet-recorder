@@ -93,8 +93,6 @@ const stopRecorder = async () => {
   } catch (e) {
     logger.error('Error during stopRecorder');
   }
-
-  return;
 };
 
 const onCloseOrErrorEvent = async () => {
@@ -113,7 +111,7 @@ const onCloseOrErrorEvent = async () => {
   // clear everything else
   await closeBrowser();
 
-  // wait few moments
+  // wait a few moments
   await sleep(1500);
   process.exit();
 };
@@ -136,8 +134,6 @@ const closeBrowser = async () => {
     // sometime xvfb requite time to close
     await sleep(1000);
   }
-
-  return;
 };
 
 process.on('SIGINT', async () => {
@@ -221,7 +217,7 @@ if (recorderArgs.customChromePath) {
     browser = await puppeteer.launch(options);
     browser.on('disconnected', () => {
       logger.info('browser on disconnected');
-      // this is just for safety
+      // this is just for safety,
       // in any case it wasn't run page close event
       onCloseOrErrorEvent();
     });
@@ -261,7 +257,7 @@ if (recorderArgs.customChromePath) {
         });
       }, type);
     }
-    // we'll listen websocket message
+    // we'll listen to the websocket message
     await listenFor('message');
 
     await page.goto(url, {
@@ -300,6 +296,6 @@ if (recorderArgs.customChromePath) {
     }
   } finally {
     // we'll close everything
-    onCloseOrErrorEvent();
+    await onCloseOrErrorEvent();
   }
 })();

@@ -1,8 +1,13 @@
-import { spawn } from 'child_process';
+import { fork, spawn } from 'child_process';
 import fs from 'fs';
 
-import { FFMPEGOptions, PlugNmeetInfo, Recorder } from './interfaces';
-import { logger, notify } from './helper';
+import {
+  FFMPEGOptions,
+  PlugNmeetInfo,
+  PostProcessScriptData,
+  Recorder,
+} from '../utils/interfaces';
+import { logger, notify } from '../utils/helper';
 import {
   RecorderToPlugNmeet,
   RecordingTasks,
@@ -15,7 +20,6 @@ export default class RecordingService {
   private readonly roomTableId: bigint;
   private readonly roomSid: string;
   private readonly recordId: string;
-  private readonly ffmpegThreads: string;
   private readonly ffmpegOptions: FFMPEGOptions;
 
   constructor(
@@ -26,7 +30,6 @@ export default class RecordingService {
     roomTableId: bigint,
     roomSid: any,
     recordId: any,
-    ffmpegThreads = '4',
   ) {
     this.ws = ws;
     this.recorder = recorder;
@@ -35,7 +38,6 @@ export default class RecordingService {
     this.roomTableId = roomTableId;
     this.roomSid = roomSid;
     this.recordId = recordId;
-    this.ffmpegThreads = ffmpegThreads;
     this.startService();
   }
 
@@ -137,7 +139,43 @@ export default class RecordingService {
     });
   };
 
-  private notifyRecordingTask = async (filePath: string, file_size: number) => {
+  private postProcess = async (filePath: string, file_size: number) => {
+    if (
+      !this.recorder.post_processing_scripts ||
+      !this.recorder.post_processing_scripts.length
+    ) {
+      return;
+    }
+    filePath = `${this.recorder.copy_to_path.main_path}/${filePath}`;
+
+    const data: PostProcessScriptData = {
+      recording_id: this.recordId,
+      room_table_id: Number(this.roomTableId),
+      room_sid: this.roomSid,
+      file_path: filePath, // this will be the full path of the file
+      file_size: file_size,
+      recorder_id: this.recorder.id,
+    };
+    const toSend = JSON.stringify(data);
+
+    for (let i = 0; i < this.recorder.post_processing_scripts.length; i++) {
+      const script = this.recorder.post_processing_scripts[i];
+      if (fs.existsSync(script)) {
+        if (typeof process.env.TS_NODE_DEV !== 'undefined') {
+          fork(script, [toSend], {
+            execArgv: ['-r', 'ts-node/register'],
+          });
+        } else {
+          fork(toSend, [toSend]);
+        }
+      }
+    }
+  };
+
+  private notifyRecordingTask = async (
+    file_path: string,
+    file_size: number,
+  ) => {
     const payload = new RecorderToPlugNmeet({
       from: 'recorder',
       status: true,
@@ -145,11 +183,13 @@ export default class RecordingService {
       msg: 'process completed',
       recordingId: this.recordId,
       roomTableId: this.roomTableId,
-      filePath: filePath,
+      filePath: file_path,
       fileSize: file_size,
       recorderId: this.recorder.id,
     });
 
     await notify(this.plugNmeetInfo, payload);
+    // run post-processing scripts, if any
+    await this.postProcess(file_path, file_size);
   };
 }

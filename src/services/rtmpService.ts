@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 
-import { logger } from './helper';
-import { FFMPEGOptions } from './interfaces';
+import { logger } from '../utils/helper';
+import { FFMPEGOptions } from '../utils/interfaces';
 
 export default class RtmpService {
   private ws: any;

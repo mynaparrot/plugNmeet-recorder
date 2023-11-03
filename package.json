@@ -11,7 +11,7 @@
     "websocket-server": "ts-node-dev src/websocketServer.ts",
     "build": "rm -rf ./dist && tsc -p . --outDir ./dist && cp -rf ./src/chrome-extension ./dist/chrome-extension",
     "proto": "protoc --es_opt=target=ts,import_extension=.ts --plugin=protoc-gen-es=./node_modules/.bin/protoc-gen-es --es_out=./src/proto --proto_path=./protocol/proto_files plugnmeet_recorder.proto",
-    "lint": "prettier --write \"./src/**/*.{ts,js}\" && eslint --fix --ext .js,.ts src/"
+    "lint": "prettier --write \"./src/**/*.{ts,js}\" && eslint --fix ./src/**/*.{ts,js}"
   },
   "dependencies": {
     "@bufbuild/protobuf": "1.4.1",
