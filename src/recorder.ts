@@ -19,7 +19,7 @@ import {
   StartRecorderChildArgs,
 } from './proto/plugnmeet_recorder_pb';
 
-const args: any = process.argv.slice(2),
+const args = process.argv.slice(2),
   platform = os.platform();
 
 let browser: Browser, page: Page, xvfb: any;
@@ -28,11 +28,11 @@ let hasError = false,
   closedBycmd = false,
   wasCalledClose = false;
 
-if (!args) {
+if (!args.length) {
   logger.error('no args found, closing..');
   process.exit();
 }
-const recorderArgs = StartRecorderChildArgs.fromJsonString(args);
+const recorderArgs = StartRecorderChildArgs.fromJsonString(args[0]);
 
 const width = recorderArgs.width || 1800;
 const height = recorderArgs.height || 900;
