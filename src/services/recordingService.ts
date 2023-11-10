@@ -166,7 +166,7 @@ export default class RecordingService {
             execArgv: ['-r', 'ts-node/register'],
           });
         } else {
-          fork(toSend, [toSend]);
+          fork(script, [toSend]);
         }
       }
     }
