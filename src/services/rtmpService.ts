@@ -25,7 +25,11 @@ export default class RtmpService {
     options.push('-f', 'flv', this.rtmpUrl);
     logger.info('ffmpeg options: ' + options);
 
-    const ffmpeg = spawn('ffmpeg', options);
+    const ffmpeg = spawn('ffmpeg', options, {
+      // important, otherwise will hang the process
+      // https://nodejs.org/api/child_process.html#optionsstdio
+      stdio: ['pipe', 'ignore', 'ignore'],
+    });
 
     // If FFmpeg stops for any reason, close the WebSocket connection.
     ffmpeg.on('close', (code, signal) => {
