@@ -12,6 +12,7 @@ import {
   RecorderToPlugNmeet,
   RecordingTasks,
 } from '../proto/plugnmeet_recorder_pb';
+import * as path from 'path';
 
 export default class RecordingService {
   private ws: any;
@@ -159,14 +160,19 @@ export default class RecordingService {
     const toSend = JSON.stringify(data);
 
     for (let i = 0; i < this.recorder.post_processing_scripts.length; i++) {
-      const script = this.recorder.post_processing_scripts[i];
-      if (fs.existsSync(script)) {
+      const scriptPath = path.resolve(this.recorder.post_processing_scripts[i]);
+      const scriptDir = path.dirname(scriptPath);
+
+      if (fs.existsSync(scriptPath)) {
         if (typeof process.env.TS_NODE_DEV !== 'undefined') {
-          fork(script, [toSend], {
+          fork(scriptPath, [toSend], {
             execArgv: ['-r', 'ts-node/register'],
+            cwd: scriptDir
           });
         } else {
-          fork(toSend, [toSend]);
+          fork(scriptPath, [toSend], {
+            cwd: scriptDir
+          });
         }
       }
     }
