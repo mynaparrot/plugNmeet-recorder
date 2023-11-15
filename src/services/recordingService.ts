@@ -167,11 +167,11 @@ export default class RecordingService {
         if (typeof process.env.TS_NODE_DEV !== 'undefined') {
           fork(scriptPath, [toSend], {
             execArgv: ['-r', 'ts-node/register'],
-            cwd: scriptDir
+            cwd: scriptDir,
           });
         } else {
           fork(scriptPath, [toSend], {
-            cwd: scriptDir
+            cwd: scriptDir,
           });
         }
       }
