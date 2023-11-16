@@ -65,6 +65,7 @@ export interface FFMPEGOptions {
 export interface PostProcessScriptData {
   recording_id: string;
   room_table_id: number;
+  room_id: string;
   room_sid: string;
   file_path: string; // this will be the full path of the file
   file_size: number;

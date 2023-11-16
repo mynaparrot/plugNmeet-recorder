@@ -1,5 +1,6 @@
 import { fork, spawn } from 'child_process';
 import fs from 'fs';
+import { resolve, dirname } from 'path';
 
 import {
   FFMPEGOptions,
@@ -12,13 +13,13 @@ import {
   RecorderToPlugNmeet,
   RecordingTasks,
 } from '../proto/plugnmeet_recorder_pb';
-import * as path from 'path';
 
 export default class RecordingService {
   private ws: any;
   private recorder: Recorder;
   private readonly plugNmeetInfo: PlugNmeetInfo;
   private readonly roomTableId: bigint;
+  private readonly roomId: string;
   private readonly roomSid: string;
   private readonly recordId: string;
   private readonly ffmpegOptions: FFMPEGOptions;
@@ -29,6 +30,7 @@ export default class RecordingService {
     plugNmeetInfo: PlugNmeetInfo,
     ffmpegOptions: FFMPEGOptions,
     roomTableId: bigint,
+    roomId: string,
     roomSid: any,
     recordId: any,
   ) {
@@ -37,6 +39,7 @@ export default class RecordingService {
     this.plugNmeetInfo = plugNmeetInfo;
     this.ffmpegOptions = ffmpegOptions;
     this.roomTableId = roomTableId;
+    this.roomId = roomId;
     this.roomSid = roomSid;
     this.recordId = recordId;
     this.startService();
@@ -152,6 +155,7 @@ export default class RecordingService {
     const data: PostProcessScriptData = {
       recording_id: this.recordId,
       room_table_id: Number(this.roomTableId),
+      room_id: this.roomId,
       room_sid: this.roomSid,
       file_path: filePath, // this will be the full path of the file
       file_size: file_size,
@@ -160,10 +164,12 @@ export default class RecordingService {
     const toSend = JSON.stringify(data);
 
     for (let i = 0; i < this.recorder.post_processing_scripts.length; i++) {
-      const scriptPath = path.resolve(this.recorder.post_processing_scripts[i]);
-      const scriptDir = path.dirname(scriptPath);
+      const script = this.recorder.post_processing_scripts[i];
 
-      if (fs.existsSync(scriptPath)) {
+      if (fs.existsSync(script)) {
+        const scriptPath = resolve(script);
+        const scriptDir = dirname(scriptPath);
+
         if (typeof process.env.TS_NODE_DEV !== 'undefined') {
           fork(scriptPath, [toSend], {
             execArgv: ['-r', 'ts-node/register'],

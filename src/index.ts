@@ -177,7 +177,7 @@ process.on('SIGINT', async () => {
   };
 
   const handleStartRequest = (payload: PlugNmeetToRecorder) => {
-    const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_table_id=${payload.roomTableId}&room_sid=${payload.roomSid}&recording_id=${payload.recordingId}`;
+    const websocket_url = `${websocketServerInfo.host}:${websocketServerInfo.port}?auth_token=${websocketServerInfo.auth_token}&room_table_id=${payload.roomTableId}&room_id=${payload.roomId}&room_sid=${payload.roomSid}&recording_id=${payload.recordingId}`;
 
     const toSend = new StartRecorderChildArgs({
       roomTableId: payload.roomTableId,
