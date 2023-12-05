@@ -126,7 +126,7 @@ const closeBrowser = async () => {
 
   if (platform === 'linux') {
     try {
-      xvfb.stopSync();
+      //xvfb.stopSync();
     } catch (e) {
       logger.error('Error during stop xvfb');
     }
@@ -206,7 +206,7 @@ if (recorderArgs.customChromePath) {
   try {
     if (platform == 'linux') {
       try {
-        xvfb.startSync();
+        // xvfb.startSync();
       } catch (e: any) {
         await closeConnection(true, e.message);
         process.exit(1);
@@ -269,6 +269,19 @@ if (recorderArgs.customChromePath) {
     });
     await page.click('button[id=listenOnlyJoin]');
     await page.waitForSelector('div[id=main-area]', { timeout: 20 * 1000 });
+
+    await page.evaluate((url) => {
+      window.postMessage(
+        {
+          type: 'REC_CLIENT_PLAY',
+          data: { url: url },
+        },
+        '*',
+      );
+    }, url);
+
+    // need to wait few seconds for recorder to be ready
+    await sleep(5000);
 
     await page.evaluate((websocket_url) => {
       window.postMessage(

@@ -1,12 +1,10 @@
 {
   "name": "Recorder and RTMP",
   "description": "Simple extension to record screen with audio",
-  "version": "0.0.1",
-  "manifest_version": 2,
+  "version": "1.0.0",
+  "manifest_version": 3,
   "background": {
-    "scripts": [
-      "background.js"
-    ]
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
@@ -20,9 +18,7 @@
     }
   ],
   "permissions": [
-    "desktopCapture",
-    "<all_urls>",
-    "downloads"
+    "<all_urls>", "tabs", "activeTab", "desktopCapture"
   ]
 }
   
