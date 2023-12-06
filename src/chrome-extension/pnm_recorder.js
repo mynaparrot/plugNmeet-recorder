@@ -72,7 +72,11 @@ const prepareRecorder = async (url) => {
           console.log('Unable to get user media', error);
           setTimeout(async () => {
             await chrome.tabs.sendMessage(currentTab.id, {
-              tabCaptureError: 'unable to start tabCapture: ' + error,
+              tabCaptureError:
+                'unable to start tabCapture: ' +
+                error +
+                '. ID: ' +
+                chrome.runtime.id,
             });
           }, 1000);
         },
