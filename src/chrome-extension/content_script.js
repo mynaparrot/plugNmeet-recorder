@@ -10,14 +10,6 @@ window.onload = () => {
     // Relay client messages
     if (event.source === window && event.data.type) {
       port.postMessage(event.data);
-
-      if (event.data.type === 'REC_CLIENT_PLAY') {
-        // important otherwise won't be auto selected
-        setTimeout(() => {
-          document.title = 'recorder';
-          console.log(document.title);
-        }, 500);
-      }
     }
 
     if (event.data.websocketError) {

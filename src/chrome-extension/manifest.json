@@ -3,6 +3,7 @@
   "description": "Simple extension to record screen with audio",
   "version": "1.0.0",
   "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA25OR3ECcGIRPbHArHPBE8jw+Ltm/R7eHgSCmnLD5cDk+7yNG/L4InYcsSgS5rgzbI+I29lhcf/zS3vdrHQChNkuU+3CgD0hYnSBIkvwwQTGn/KmjOzH/gVptmfp3fWfSI9q3Fn6/7AjsuaIIIaC08h2+2v2eWrB2+E43Pol1c4acIMn07HtjTSa6BdRHYg7G5LOFCaB24VndTlcmKDDd+bvWVA2PA4yF3LI0+4Mu3kvgMFrbNBnWSe2GgbPP7O22MxvdVTwSGa1aU3M9/Bm/BXv2WR3Ip8G3tVZc1WnK3eOWO+cGCgFcZYutrlkgEmDSmc2jgcXyZOMadfVYKz03bQIDAQAB",
   "background": {
     "service_worker": "background.js"
   },
@@ -18,7 +19,7 @@
     }
   ],
   "permissions": [
-    "<all_urls>", "tabs", "activeTab", "desktopCapture"
+    "<all_urls>", "tabs", "activeTab", "tabCapture"
   ]
 }
   

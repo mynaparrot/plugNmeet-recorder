@@ -126,7 +126,7 @@ const closeBrowser = async () => {
 
   if (platform === 'linux') {
     try {
-      //xvfb.stopSync();
+      xvfb.stopSync();
     } catch (e) {
       logger.error('Error during stop xvfb');
     }
@@ -165,6 +165,7 @@ const options:
   headless: false,
   args: [
     '--enable-usermedia-screen-capturing',
+    '--allowlisted-extension-id=mnmdjhffoplafleohlnjcghmaoohmdok',
     '--allow-http-screen-capture',
     '--auto-select-desktop-capture-source=recorder',
     '--load-extension=' + __dirname + '/chrome-extension',
@@ -175,7 +176,6 @@ const options:
     '--no-sandbox',
     '--no-zygote',
     '--start-fullscreen',
-    '--app=https://www.google.com/',
     `--window-size=${width},${height}`,
   ],
   executablePath: '/usr/bin/google-chrome',
@@ -206,7 +206,7 @@ if (recorderArgs.customChromePath) {
   try {
     if (platform == 'linux') {
       try {
-        // xvfb.startSync();
+        xvfb.startSync();
       } catch (e: any) {
         await closeConnection(true, e.message);
         process.exit(1);
@@ -281,7 +281,7 @@ if (recorderArgs.customChromePath) {
     }, url);
 
     // need to wait few seconds for recorder to be ready
-    await sleep(5000);
+    await sleep(3000);
 
     await page.evaluate((websocket_url) => {
       window.postMessage(
