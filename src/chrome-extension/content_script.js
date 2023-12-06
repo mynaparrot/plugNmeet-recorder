@@ -5,26 +5,28 @@ window.onload = () => {
   // listen for messages & post
   chrome.runtime.onMessage.addListener((msg) => window.postMessage(msg, '*'));
 
-  let hasWebsocketError = false;
+  let senErrorMsg = false;
   window.addEventListener('message', (event) => {
     // Relay client messages
     if (event.source === window && event.data.type) {
       port.postMessage(event.data);
     }
-    console.log(event.data);
     if (event.data.websocketError) {
-      if (!hasWebsocketError) {
+      if (!senErrorMsg) {
         window.postMessage({
           type: 'WEBSOCKET_ERROR',
           msg: event.data.websocketError,
         });
       }
-      hasWebsocketError = true;
+      senErrorMsg = true;
     } else if (event.data.tabCaptureError) {
-      window.postMessage({
-        type: 'TAB_CAPTURE_ERROR',
-        msg: event.data.tabCaptureError,
-      });
+      if (!senErrorMsg) {
+        window.postMessage({
+          type: 'TAB_CAPTURE_ERROR',
+          msg: event.data.tabCaptureError,
+        });
+      }
+      senErrorMsg = true;
     }
   });
 
