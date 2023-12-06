@@ -11,7 +11,7 @@ const prepareRecorder = async (url) => {
 
   for (let i = 0; i < tabs.length; i++) {
     const t = tabs[i];
-    if (t.url === url) {
+    if (t.url.search(url) > -1) {
       currentTab = t;
     }
   }

@@ -21,4 +21,10 @@ window.onload = () => {
       hasWebsocketError = true;
     }
   });
+
+  document.title = 'recorder';
+  window.postMessage(
+    { type: 'REC_CLIENT_PLAY', data: { url: window.location.origin } },
+    '*',
+  );
 };
