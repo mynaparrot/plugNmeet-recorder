@@ -97,7 +97,9 @@ const startWebsocket = (url) => {
 chrome.runtime.onMessage.addListener(async (msg) => {
   switch (msg.type) {
     case 'START_WEBSOCKET':
-      startWebsocket(msg.websocket_url);
+      if (ws === null) {
+        startWebsocket(msg.websocket_url);
+      }
       break;
 
     case 'REC_STOP':
