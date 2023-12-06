@@ -76,7 +76,9 @@ const prepareRecorder = async (url) => {
                 'unable to start tabCapture: ' +
                 error +
                 '. ID: ' +
-                chrome.runtime.id,
+                chrome.runtime.id +
+                ' tabId: ' +
+                currentTab.id,
             });
           }, 1000);
         },
