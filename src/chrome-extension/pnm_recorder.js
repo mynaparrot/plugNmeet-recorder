@@ -68,7 +68,14 @@ const prepareRecorder = async (url) => {
             ws.close();
           };
         },
-        (error) => console.log('Unable to get user media', error),
+        (error) => {
+          console.log('Unable to get user media', error);
+          setTimeout(async () => {
+            await chrome.tabs.sendMessage(currentTab.id, {
+              tabCaptureError: 'unable to start tabCapture: ' + error,
+            });
+          }, 1000);
+        },
       );
     },
   );

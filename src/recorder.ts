@@ -240,11 +240,14 @@ if (recorderArgs.customChromePath) {
     });
 
     await page.exposeFunction('onMessageReceivedEvent', (e: any) => {
-      if (e.data.type === 'WEBSOCKET_ERROR') {
-        logger.error('on WEBSOCKET_ERROR');
+      if (
+        e.data.type === 'WEBSOCKET_ERROR' ||
+        e.data.type === 'TAB_CAPTURE_ERROR'
+      ) {
+        logger.error(e.data.type + ' error: ' + e.data.msg);
         // we'll stop recorder
         hasError = true;
-        errorMessage = 'WEBSOCKET_ERROR';
+        errorMessage = e.data.type + ' error: ' + e.data.msg;
         onCloseOrErrorEvent();
       }
     });

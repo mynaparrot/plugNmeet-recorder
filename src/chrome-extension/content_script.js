@@ -11,14 +11,20 @@ window.onload = () => {
     if (event.source === window && event.data.type) {
       port.postMessage(event.data);
     }
-
+    console.log(event.data);
     if (event.data.websocketError) {
       if (!hasWebsocketError) {
         window.postMessage({
           type: 'WEBSOCKET_ERROR',
+          msg: event.data.websocketError,
         });
       }
       hasWebsocketError = true;
+    } else if (event.data.tabCaptureError) {
+      window.postMessage({
+        type: 'TAB_CAPTURE_ERROR',
+        msg: event.data.tabCaptureError,
+      });
     }
   });
 
