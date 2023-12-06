@@ -178,7 +178,7 @@ const options:
     '--start-fullscreen',
     `--window-size=${width},${height}`,
   ],
-  //executablePath: '/usr/bin/google-chrome',
+  executablePath: '/usr/bin/google-chrome',
   defaultViewport: null,
   protocolTimeout: 0,
 };
