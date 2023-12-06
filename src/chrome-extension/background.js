@@ -3,6 +3,13 @@
 let recordingTabId = null;
 
 const prepareTab = async (msg) => {
+  const tabs = await chrome.tabs.query({
+    active: true,
+    lastFocusedWindow: true,
+    currentWindow: true,
+  });
+  const currentTab = tabs[0];
+
   const tab = await chrome.tabs.create({
     url: chrome.runtime.getURL('pnm_recorder.html'),
     pinned: true,
@@ -14,7 +21,11 @@ const prepareTab = async (msg) => {
       chrome.tabs.onUpdated.removeListener(listener);
 
       recordingTabId = tabId;
-      await chrome.tabs.sendMessage(tabId, msg);
+      await chrome.tabs.sendMessage(tabId, {
+        type: msg.type,
+        data: msg.data,
+        currentTabId: currentTab.id,
+      });
     }
   });
 };

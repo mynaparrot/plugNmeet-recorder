@@ -19,7 +19,7 @@
     }
   ],
   "permissions": [
-    "<all_urls>", "tabs", "activeTab", "tabCapture"
+    "<all_urls>", "tabs", "tabCapture"
   ]
 }
   
