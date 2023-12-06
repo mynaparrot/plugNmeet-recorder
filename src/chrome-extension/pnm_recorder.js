@@ -24,7 +24,7 @@ const prepareRecorder = async (url) => {
   chrome.tabCapture.getMediaStreamId(
     { targetTabId: currentTab.id },
     async (id) => {
-      navigator.webkitGetUserMedia(
+      navigator.mediaDevices.getUserMedia(
         {
           audio: {
             mandatory: {
