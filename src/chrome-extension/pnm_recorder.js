@@ -21,11 +21,11 @@ const prepareRecorder = async (url) => {
     highlighted: true,
   });
 
-  chrome.tabCapture.getMediaStreamId(
-    { targetTabId: currentTab.id },
-    async (id) => {
-      navigator.mediaDevices.getUserMedia(
-        {
+  try {
+    chrome.tabCapture.getMediaStreamId(
+      { targetTabId: currentTab.id },
+      async (id) => {
+        const media = await navigator.mediaDevices.getUserMedia({
           audio: {
             mandatory: {
               chromeMediaSource: 'tab',
@@ -44,47 +44,45 @@ const prepareRecorder = async (url) => {
             },
           },
           preferCurrentTab: true,
-        },
-        (stream) => {
-          recorder = new MediaRecorder(stream, {
-            width: { min: 1280, ideal: 1920, max: 1920 },
-            height: { min: 720, ideal: 1080, max: 1080 },
-            frameRate: { min: 30, ideal: 30 },
-            videoBitsPerSecond: 3000000,
-            audioBitsPerSecond: 128000,
-            ignoreMutedMedia: true,
-            mimeType: 'video/webm;codecs=h264',
-          });
+        });
 
-          recorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-              if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(event.data);
-              }
+        recorder = new MediaRecorder(media, {
+          width: { min: 1280, ideal: 1920, max: 1920 },
+          height: { min: 720, ideal: 1080, max: 1080 },
+          frameRate: { min: 30, ideal: 30 },
+          videoBitsPerSecond: 3000000,
+          audioBitsPerSecond: 128000,
+          ignoreMutedMedia: true,
+          mimeType: 'video/webm;codecs=h264',
+        });
+
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(event.data);
             }
-          };
+          }
+        };
 
-          recorder.onstop = () => {
-            ws.close();
-          };
-        },
-        (error) => {
-          console.log('Unable to get user media', error);
-          setTimeout(async () => {
-            await chrome.tabs.sendMessage(currentTab.id, {
-              tabCaptureError:
-                'unable to start tabCapture: ' +
-                error +
-                '. ID: ' +
-                chrome.runtime.id +
-                ' tabId: ' +
-                currentTab.id,
-            });
-          }, 1000);
-        },
-      );
-    },
-  );
+        recorder.onstop = () => {
+          ws.close();
+        };
+      },
+    );
+  } catch (error) {
+    console.log('Unable to get user media', error);
+    setTimeout(async () => {
+      await chrome.tabs.sendMessage(currentTab.id, {
+        tabCaptureError:
+          'unable to start tabCapture: ' +
+          error +
+          '. ID: ' +
+          chrome.runtime.id +
+          ' tabId: ' +
+          currentTab.id,
+      });
+    }, 1000);
+  }
 };
 
 const startWebsocket = (url) => {
