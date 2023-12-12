@@ -273,20 +273,17 @@ if (recorderArgs.customChromePath) {
     await page.click('button[id=listenOnlyJoin]');
     await page.waitForSelector('div[id=main-area]', { timeout: 20 * 1000 });
 
-    /*
-    await page.evaluate((url) => {
+    await page.evaluate(() => {
       window.postMessage(
         {
           type: 'REC_CLIENT_PLAY',
-          data: { url: url },
         },
         '*',
       );
-    }, url);
+    });
 
     // need to wait few seconds for recorder to be ready
     await sleep(3000);
-*/
 
     await page.evaluate((websocket_url) => {
       window.postMessage(

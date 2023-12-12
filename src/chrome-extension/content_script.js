@@ -31,8 +31,8 @@ window.onload = () => {
   });
 
   document.title = 'recorder';
-  window.postMessage(
+  /*window.postMessage(
     { type: 'REC_CLIENT_PLAY', data: { url: window.location.origin } },
     '*',
-  );
+  );*/
 };
