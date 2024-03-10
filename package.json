@@ -22,14 +22,14 @@
     "puppeteer": "21.5.2",
     "winston": "3.11.0",
     "winston-daily-rotate-file": "4.7.1",
-    "ws": "8.14.2",
+    "ws": "8.16.0",
     "xvfb": "0.4.0"
   },
   "devDependencies": {
     "@bufbuild/protoc-gen-es": "1.4.2",
     "@types/ioredis": "4.28.10",
     "@types/js-yaml": "4.0.9",
-    "@types/ws": "8.5.9",
+    "@types/ws": "8.5.10",
     "@typescript-eslint/eslint-plugin": "6.11.0",
     "@typescript-eslint/parser": "6.11.0",
     "concurrently": "8.2.2",
