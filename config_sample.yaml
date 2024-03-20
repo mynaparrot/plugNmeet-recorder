@@ -32,7 +32,7 @@ ffmpeg_options:
   recording:
     # any option to set before -i
     pre_input: ""
-    post_input: "-movflags faststart -c:v copy -preset veryfast"
+    post_input: "-movflags faststart -preset veryfast"
   rtmp:
     # any option to set before -i
     pre_input: ""

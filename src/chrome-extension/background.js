@@ -65,7 +65,6 @@ function startScreenSharing(msg, port) {
           videoBitsPerSecond: 3000000,
           audioBitsPerSecond: 128000,
           ignoreMutedMedia: true,
-          mimeType: 'video/webm;codecs=h264',
         });
 
         recorder.ondataavailable = (event) => {
