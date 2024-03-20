@@ -178,15 +178,10 @@ const options:
     '--app=https://www.google.com/',
     `--window-size=${width},${height}`,
   ],
-  executablePath: '/usr/bin/google-chrome',
   defaultViewport: null,
   protocolTimeout: 0,
 };
 
-if (platform == 'darwin') {
-  (options as any).executablePath =
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-}
 // override with custom_chrome_path
 if (recorderArgs.customChromePath) {
   (options as any).executablePath = recorderArgs.customChromePath;
