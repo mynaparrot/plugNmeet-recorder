@@ -8,7 +8,7 @@ the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script 
 **Requirements**
 
 1) Nodejs
-2) Google Chrome
+2) Chromium
 3) xvfb
 4) ffmpeg
 
@@ -25,16 +25,17 @@ sudo echo "deb [arch=amd64 signed-by=/usr/share/keyrings/nodesource.gpg] https:/
 sudo apt -y update
 sudo apt -y install nodejs
 
+## xvfb & ffmpeg
+sudo apt install -y xvfb ffmpeg
 
-## Google Chrome
+## Google Chrome (optional)
+By default recorder will use Chromium browser but if you want then you can use Google chrome too.
+
 curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg
 sudo echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" >/etc/apt/sources.list.d/google-chrome.list
 
 sudo apt -y update
 sudo apt -y install google-chrome-stable
-
-## xvfb & ffmpeg
-sudo apt install -y xvfb ffmpeg
 
 ## optional
 sudo apt install -y fonts-noto fonts-liberation
@@ -56,7 +57,7 @@ cp config_sample.yaml config.yaml
 
 5) Change `plugNmeet_info` with correct information.
 
-6) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose appropriate one
+6) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose the appropriate one
    based on availability. In that case change value of `id` inside `config.yaml` file. Make sure that value is unique,
    example: `node_01`, `node_02` ... You can also set the value of `max_limit` based on the server's capacity.
 
