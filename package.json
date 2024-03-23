@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@bufbuild/protoc-gen-es": "1.8.0",
-    "@types/ioredis": "4.28.10",
+    "@types/ioredis": "5.0.0",
     "@types/js-yaml": "4.0.9",
     "@types/ws": "8.5.10",
     "@typescript-eslint/eslint-plugin": "7.3.1",
