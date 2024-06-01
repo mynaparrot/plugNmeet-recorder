@@ -14,7 +14,7 @@
     "lint": "prettier --write \"./src/**/*.{ts,js}\" && eslint --fix ./src/**/*.{ts,js}"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "1.8.0",
+    "@bufbuild/protobuf": "1.10.0",
     "axios": "1.7.2",
     "axios-retry": "4.3.0",
     "ioredis": "5.3.2",
