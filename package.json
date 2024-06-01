@@ -17,7 +17,7 @@
     "@bufbuild/protobuf": "1.10.0",
     "axios": "1.7.2",
     "axios-retry": "4.3.0",
-    "ioredis": "5.3.2",
+    "ioredis": "5.4.1",
     "js-yaml": "4.1.0",
     "puppeteer": "22.10.0",
     "winston": "3.13.0",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@bufbuild/protoc-gen-es": "1.10.0",
-    "@types/ioredis": "4.28.10",
+    "@types/ioredis": "5.0.0",
     "@types/js-yaml": "4.0.9",
     "@types/ws": "8.5.10",
     "@typescript-eslint/eslint-plugin": "7.3.1",
