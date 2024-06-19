@@ -19,7 +19,7 @@
     "axios-retry": "4.4.0",
     "ioredis": "5.4.1",
     "js-yaml": "4.1.0",
-    "puppeteer": "22.10.0",
+    "puppeteer": "22.11.2",
     "winston": "3.13.0",
     "winston-daily-rotate-file": "5.0.0",
     "ws": "8.17.1",
