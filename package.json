@@ -16,7 +16,7 @@
   "dependencies": {
     "@bufbuild/protobuf": "1.10.0",
     "axios": "1.7.2",
-    "axios-retry": "4.4.0",
+    "axios-retry": "4.4.1",
     "ioredis": "5.4.1",
     "js-yaml": "4.1.0",
     "puppeteer": "22.11.2",
