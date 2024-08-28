@@ -36,15 +36,18 @@ import {
 } from './proto/plugnmeet_recorder_pb';
 
 const PING_INTERVAL = 3 * 1000;
+
 export default class PNMRecorder {
   private readonly _natsInfo: NatsInfo;
   private readonly _recorder: Recorder;
   private readonly _plugNmeetInfo: PlugNmeetInfo;
   private readonly _websocketServerInfo: WebsocketServerInfo;
+
   private _nc: NatsConnection | undefined;
   private _js: JetStreamClient | undefined;
   private _jsm: JetStreamManager | undefined;
   private _kvm: Kvm | undefined;
+
   private readonly _childProcessesInfoMapByChildPid = new Map<
     number,
     ChildProcessInfoMap
