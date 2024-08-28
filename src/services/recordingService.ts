@@ -10,9 +10,10 @@ import {
 } from '../utils/interfaces';
 import { logger, notify } from '../utils/helper';
 import {
-  RecorderToPlugNmeet,
+  RecorderToPlugNmeetSchema,
   RecordingTasks,
 } from '../proto/plugnmeet_recorder_pb';
+import { create } from '@bufbuild/protobuf';
 
 export default class RecordingService {
   private ws: any;
@@ -188,7 +189,7 @@ export default class RecordingService {
     file_path: string,
     file_size: number,
   ) => {
-    const payload = new RecorderToPlugNmeet({
+    const payload = create(RecorderToPlugNmeetSchema, {
       from: 'recorder',
       status: true,
       task: RecordingTasks.RECORDING_PROCEEDED,

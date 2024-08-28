@@ -45,6 +45,17 @@ export interface RedisInfo {
   sentinel_password?: string;
 }
 
+export interface NatsInfo {
+  nats_urls: string[];
+  user: string;
+  password: string;
+  subjects: NatsSubjects;
+}
+
+export interface NatsSubjects {
+  recorder_js_worker: string;
+}
+
 export interface ChildProcessInfoMap {
   serviceType: number;
   recording_id: string;

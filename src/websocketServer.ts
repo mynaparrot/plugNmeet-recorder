@@ -33,7 +33,7 @@ try {
 const killProcess = async () => {
   logger.info('websocketServer: got SIGINT, cleaning up');
   // we can wait before closing everything
-  await sleep(10 * 1000); // 10 seconds
+  //await sleep(10 * 1000); // 10 seconds
   process.exit();
 };
 process.on('SIGTERM', killProcess);
