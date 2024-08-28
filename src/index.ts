@@ -1,10 +1,10 @@
 import yaml from 'js-yaml';
 import * as fs from 'fs';
-import { fork } from 'child_process';
-import { logger, sleep } from './utils/helper';
+
+import { logger } from './utils/helper';
 import PNMRecorder from './PNMRecorder';
 
-let config: any;
+let config: any, pnm: PNMRecorder;
 try {
   config = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
 } catch (e) {
@@ -14,23 +14,27 @@ try {
 
 process.on('SIGINT', async () => {
   logger.info('Caught interrupt signal, cleaning up');
-
-  /*childProcessesMapByRoomSid.forEach((c) => c.kill('SIGINT'));
-  await sleep(5000);
-
-  if (redis && redis.status === 'connect') {
-    redis.disconnect();
-    subNode.disconnect();
+  if (typeof pnm === 'undefined') {
+    process.exit();
   }
+
+  pnm.childProcessesMapByRoomSid.forEach((c) => c.kill('SIGINT'));
+  //await sleep(5000);
+
   // clear everything
-  childProcessesMapByRoomSid.clear();
-  childProcessesInfoMapByChildPid.clear();*/
+  pnm.childProcessesMapByRoomSid.clear();
+  pnm.childProcessesInfoMapByChildPid.clear();
   // now end the process
   process.exit();
 });
 
 (async () => {
-  console.log(config);
-  const pnm = new PNMRecorder(config);
+  // check for logs directory
+  const logDir = './logs';
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir);
+  }
+
+  pnm = new PNMRecorder(config);
   await pnm.openNatsConnection();
 })();

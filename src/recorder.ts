@@ -9,14 +9,15 @@ import os from 'os';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Xvfb from 'xvfb';
+import { create, fromJsonString, toJsonString } from '@bufbuild/protobuf';
 
 import { logger, sleep } from './utils/helper';
 import {
-  FromChildToParent,
-  FromParentToChild,
+  FromChildToParentSchema,
+  FromParentToChildSchema,
   RecorderServiceType,
   RecordingTasks,
-  StartRecorderChildArgs,
+  StartRecorderChildArgsSchema,
 } from './proto/plugnmeet_recorder_pb';
 
 const args = process.argv.slice(2),
@@ -32,7 +33,7 @@ if (!args.length) {
   logger.error('no args found, closing..');
   process.exit();
 }
-const recorderArgs = StartRecorderChildArgs.fromJsonString(args[0]);
+const recorderArgs = fromJsonString(StartRecorderChildArgsSchema, args[0]);
 
 const width = recorderArgs.width || 1800;
 const height = recorderArgs.height || 900;
@@ -53,16 +54,17 @@ const closeConnection = async (hasError: boolean, msg: string) => {
     task = RecordingTasks.END_RTMP;
   }
 
-  const toParent = new FromChildToParent({
+  const toParent = create(FromChildToParentSchema, {
     status: true,
     task,
     msg,
     roomTableId: recorderArgs.roomTableId,
     recordingId: recorderArgs.recordingId,
   });
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  process.send(toParent.toJsonString());
+  // @ts-expect-error
+  process.send(toJsonString(FromChildToParentSchema, toParent));
 };
 
 const recordingStartedMsg = async (msg: string) => {
@@ -71,7 +73,7 @@ const recordingStartedMsg = async (msg: string) => {
     task = RecordingTasks.START_RTMP;
   }
 
-  const toParent = new FromChildToParent({
+  const toParent = create(FromChildToParentSchema, {
     status: true,
     task,
     msg,
@@ -80,7 +82,7 @@ const recordingStartedMsg = async (msg: string) => {
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  process.send(toParent.toJsonString());
+  process.send(toJsonString(FromChildToParentSchema, toParent));
 };
 
 const stopRecorder = async () => {
@@ -147,7 +149,7 @@ process.on('SIGINT', async () => {
 });
 
 process.on('message', async (m: string) => {
-  const msg = FromParentToChild.fromJsonString(m);
+  const msg = fromJsonString(FromParentToChildSchema, m);
   if (
     msg.task === RecordingTasks.STOP_RECORDING ||
     msg.task === RecordingTasks.STOP_RTMP
