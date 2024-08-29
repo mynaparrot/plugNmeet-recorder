@@ -142,58 +142,18 @@ export default class PNMRecorder {
       }
       logger.info('Main: ' + payload.task);
 
-      if (
-        (payload.task === RecordingTasks.START_RECORDING ||
-          payload.task === RecordingTasks.START_RTMP) &&
-        payload.recorderId === this._recorder.id
-      ) {
-        this.handleStartRequest(payload);
-      } else if (
-        payload.task === RecordingTasks.STOP_RECORDING &&
-        this._childProcessesMapByRoomSid.has(
-          RecorderServiceType.RECORDING + ':' + payload.roomTableId,
-        )
-      ) {
-        this.handleStopProcess(
-          RecordingTasks.STOP_RECORDING,
-          RecorderServiceType.RECORDING,
-          payload.roomTableId,
-        );
-      } else if (
-        payload.task === RecordingTasks.STOP_RTMP &&
-        this._childProcessesMapByRoomSid.has(
-          RecorderServiceType.RTMP + ':' + payload.roomTableId,
-        )
-      ) {
-        this.handleStopProcess(
-          RecordingTasks.STOP_RTMP,
-          RecorderServiceType.RTMP,
-          payload.roomTableId,
-        );
-      } else if (payload.task === RecordingTasks.STOP) {
-        // for any stop task when meeting will end or have stop request
-        if (
-          this._childProcessesMapByRoomSid.has(
-            RecorderServiceType.RECORDING + ':' + payload.roomTableId,
-          )
-        ) {
-          this.handleStopProcess(
-            RecordingTasks.STOP_RECORDING,
-            RecorderServiceType.RECORDING,
-            payload.roomTableId,
-          );
-        }
-        if (
-          this._childProcessesMapByRoomSid.has(
-            RecorderServiceType.RTMP + ':' + payload.roomTableId,
-          )
-        ) {
-          this.handleStopProcess(
-            RecordingTasks.STOP_RTMP,
-            RecorderServiceType.RTMP,
-            payload.roomTableId,
-          );
-        }
+      switch (payload.task) {
+        case RecordingTasks.START_RECORDING:
+        case RecordingTasks.START_RTMP:
+          if (payload.recorderId === this._recorder.id) {
+            this.handleStartRequest(payload);
+          }
+          break;
+        case RecordingTasks.STOP_RECORDING:
+        case RecordingTasks.STOP_RTMP:
+        case RecordingTasks.STOP:
+          // stop task do not need to verify recorder id
+          this.handleStopProcess(payload.roomTableId);
       }
 
       m.ack();
@@ -203,36 +163,27 @@ export default class PNMRecorder {
   private handleStartRequest(payload: PlugNmeetToRecorder) {
     const websocket_url = `${this._websocketServerInfo.host}:${this._websocketServerInfo.port}?auth_token=${this._websocketServerInfo.auth_token}&room_table_id=${payload.roomTableId}&room_id=${payload.roomId}&room_sid=${payload.roomSid}&recording_id=${payload.recordingId}`;
 
-    const toSend = create(StartRecorderChildArgsSchema, {
+    const sendToChild = create(StartRecorderChildArgsSchema, {
+      serviceType: RecorderServiceType.RECORDING,
       roomTableId: payload.roomTableId,
       recordingId: payload.recordingId,
       accessToken: payload.accessToken,
-      plugNMeetInfo: {
-        host: this._plugNmeetInfo.host,
-        apiKey: this._plugNmeetInfo.api_key,
-        apiSecret: this._plugNmeetInfo.api_secret,
-        joinHost: this._plugNmeetInfo.join_host,
-      },
-      postMp4Convert: this._recorder.post_mp4_convert,
-      copyToPath: {
-        mainPath: this._recorder.copy_to_path.main_path,
-        subPath: this._recorder.copy_to_path.sub_path,
-      },
-      recorderId: this._recorder.id,
-      serviceType: RecorderServiceType.RECORDING,
+      pnmHost: this._plugNmeetInfo.host,
+      pnmJoinHost: this._plugNmeetInfo.join_host,
       websocketUrl: websocket_url,
+      width: this._recorder.width,
+      height: this._recorder.height,
+      xvfbDpi: this._recorder.xvfb_dpi,
+      customChromePath: this._recorder.custom_chrome_path,
     });
 
-    if (this._recorder.custom_chrome_path) {
-      toSend.customChromePath = this._recorder.custom_chrome_path;
-    }
-
     if (payload.task === RecordingTasks.START_RECORDING) {
-      toSend.websocketUrl = toSend.websocketUrl + '&service=recording';
+      sendToChild.websocketUrl =
+        sendToChild.websocketUrl + '&service=recording';
     } else if (payload.task === RecordingTasks.START_RTMP) {
-      toSend.websocketUrl =
-        toSend.websocketUrl + '&service=rtmp&rtmp_url=' + payload.rtmpUrl;
-      toSend.serviceType = RecorderServiceType.RTMP;
+      sendToChild.websocketUrl =
+        sendToChild.websocketUrl + '&service=rtmp&rtmp_url=' + payload.rtmpUrl;
+      sendToChild.serviceType = RecorderServiceType.RTMP;
     }
 
     let child: ChildProcess;
@@ -240,26 +191,26 @@ export default class PNMRecorder {
     if (typeof process.env.TS_NODE_DEV !== 'undefined') {
       child = fork(
         'src/recorder',
-        [toJsonString(StartRecorderChildArgsSchema, toSend)],
+        [toJsonString(StartRecorderChildArgsSchema, sendToChild)],
         {
           execArgv: ['-r', 'ts-node/register'],
         },
       );
     } else {
       child = fork('dist/recorder', [
-        toJsonString(StartRecorderChildArgsSchema, toSend),
+        toJsonString(StartRecorderChildArgsSchema, sendToChild),
       ]);
     }
 
     if (child.pid) {
       const childProcessInfo: ChildProcessInfoMap = {
-        serviceType: toSend.serviceType,
-        recording_id: toSend.recordingId,
-        room_table_id: toSend.roomTableId,
+        serviceType: sendToChild.serviceType,
+        recording_id: sendToChild.recordingId,
+        room_table_id: sendToChild.roomTableId,
       };
       this._childProcessesInfoMapByChildPid.set(child.pid, childProcessInfo);
       this._childProcessesMapByRoomSid.set(
-        toSend.serviceType + ':' + payload.roomTableId,
+        sendToChild.serviceType + ':' + payload.roomTableId,
         child,
       );
     }
@@ -276,7 +227,7 @@ export default class PNMRecorder {
 
         if (typeof recordInfo !== 'undefined') {
           // we can use same as FromChildToParent message format.
-          const toChild = create(FromChildToParentSchema, {
+          const fromChild = create(FromChildToParentSchema, {
             msg: code === 0 ? 'no error' : 'had error',
             status: code === 0,
             task:
@@ -287,7 +238,7 @@ export default class PNMRecorder {
             roomTableId: recordInfo.room_table_id,
           });
           await this.handleMsgFromChild(
-            toJsonString(FromChildToParentSchema, toChild),
+            toJsonString(FromChildToParentSchema, fromChild),
             child.pid,
           );
         }
@@ -295,11 +246,29 @@ export default class PNMRecorder {
     });
   }
 
-  private handleStopProcess(
-    task: RecordingTasks,
-    serviceType: RecorderServiceType,
-    roomTableId: bigint,
-  ) {
+  private handleStopProcess(roomTableId: bigint) {
+    let serviceType: RecorderServiceType | undefined = undefined;
+    let task: RecordingTasks | undefined = undefined;
+    if (
+      this._childProcessesMapByRoomSid.has(
+        RecorderServiceType.RTMP + ':' + roomTableId,
+      )
+    ) {
+      serviceType = RecorderServiceType.RTMP;
+      task = RecordingTasks.STOP_RTMP;
+    } else if (
+      this._childProcessesMapByRoomSid.has(
+        RecorderServiceType.RECORDING + ':' + roomTableId,
+      )
+    ) {
+      serviceType = RecorderServiceType.RECORDING;
+      task = RecordingTasks.STOP_RECORDING;
+    }
+
+    if (typeof serviceType === 'undefined' || typeof task === 'undefined') {
+      return;
+    }
+
     const child = this._childProcessesMapByRoomSid.get(
       serviceType + ':' + roomTableId,
     );
@@ -311,7 +280,7 @@ export default class PNMRecorder {
           recordingId: recordInfo.recording_id,
           roomTableId: recordInfo.room_table_id,
         });
-        child?.send(toJsonString(FromParentToChildSchema, toChild));
+        child.send(toJsonString(FromParentToChildSchema, toChild));
       }
     }
   }

@@ -4,6 +4,9 @@ export interface Recorder {
   post_mp4_convert: boolean;
   custom_chrome_path?: string;
   copy_to_path: CopyToPath;
+  width: number;
+  height: number;
+  xvfb_dpi: number;
   post_processing_scripts?: string[];
 }
 

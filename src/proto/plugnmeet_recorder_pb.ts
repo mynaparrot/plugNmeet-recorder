@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file plugnmeet_recorder.proto.
  */
 export const file_plugnmeet_recorder: GenFile = /*@__PURE__*/
-  fileDesc("ChhwbHVnbm1lZXRfcmVjb3JkZXIucHJvdG8SCXBsdWdubWVldCLrAQoTUGx1Z05tZWV0VG9SZWNvcmRlchIMCgRmcm9tGAEgASgJEicKBHRhc2sYAiABKA4yGS5wbHVnbm1lZXQuUmVjb3JkaW5nVGFza3MSFQoNcm9vbV90YWJsZV9pZBgDIAEoAxIPCgdyb29tX2lkGAQgASgJEhAKCHJvb21fc2lkGAUgASgJEhQKDHJlY29yZGluZ19pZBgGIAEoCRITCgtyZWNvcmRlcl9pZBgHIAEoCRIUCgxhY2Nlc3NfdG9rZW4YCCABKAkSFQoIcnRtcF91cmwYCSABKAlIAIgBAUILCglfcnRtcF91cmwi9AEKE1JlY29yZGVyVG9QbHVnTm1lZXQSDAoEZnJvbRgBIAEoCRInCgR0YXNrGAIgASgOMhkucGx1Z25tZWV0LlJlY29yZGluZ1Rhc2tzEg4KBnN0YXR1cxgDIAEoCBILCgNtc2cYBCABKAkSFAoMcmVjb3JkaW5nX2lkGAUgASgJEhUKDXJvb21fdGFibGVfaWQYCyABKAMSDwoHcm9vbV9pZBgGIAEoCRIQCghyb29tX3NpZBgHIAEoCRITCgtyZWNvcmRlcl9pZBgIIAEoCRIRCglmaWxlX3BhdGgYCSABKAkSEQoJZmlsZV9zaXplGAogASgCImkKEUZyb21QYXJlbnRUb0NoaWxkEicKBHRhc2sYASABKA4yGS5wbHVnbm1lZXQuUmVjb3JkaW5nVGFza3MSFAoMcmVjb3JkaW5nX2lkGAIgASgJEhUKDXJvb21fdGFibGVfaWQYAyABKAMihgEKEUZyb21DaGlsZFRvUGFyZW50EicKBHRhc2sYASABKA4yGS5wbHVnbm1lZXQuUmVjb3JkaW5nVGFza3MSDgoGc3RhdHVzGAIgASgIEgsKA21zZxgDIAEoCRIUCgxyZWNvcmRpbmdfaWQYBCABKAkSFQoNcm9vbV90YWJsZV9pZBgFIAEoAyKKBAoWU3RhcnRSZWNvcmRlckNoaWxkQXJncxIVCg1yb29tX3RhYmxlX2lkGAEgASgDEhQKDHJlY29yZGluZ19pZBgCIAEoCRIUCgxhY2Nlc3NfdG9rZW4YBCABKAkSMgoQcGx1Z19uX21lZXRfaW5mbxgFIAEoCzIYLnBsdWdubWVldC5QbHVnTm1lZXRJbmZvEhgKEHBvc3RfbXA0X2NvbnZlcnQYBiABKAgSKwoMY29weV90b19wYXRoGAcgASgLMhUucGx1Z25tZWV0LkNvcHlUb1BhdGgSMwoLc2VydmljZVR5cGUYCCABKA4yHi5wbHVnbm1lZXQuUmVjb3JkZXJTZXJ2aWNlVHlwZRIYCgtyZWNvcmRlcl9pZBgJIAEoCUgAiAEBEhUKCHJ0bXBfdXJsGAogASgJSAGIAQESFQoNd2Vic29ja2V0X3VybBgLIAEoCRIfChJjdXN0b21fY2hyb21lX3BhdGgYDCABKAlIAogBARISCgV3aWR0aBgNIAEoDUgDiAEBEhMKBmhlaWdodBgOIAEoDUgEiAEBEhUKCHh2ZmJfZHBpGA8gASgNSAWIAQFCDgoMX3JlY29yZGVyX2lkQgsKCV9ydG1wX3VybEIVChNfY3VzdG9tX2Nocm9tZV9wYXRoQggKBl93aWR0aEIJCgdfaGVpZ2h0QgsKCV94dmZiX2RwaSJoCg1QbHVnTm1lZXRJbmZvEgwKBGhvc3QYASABKAkSDwoHYXBpX2tleRgCIAEoCRISCgphcGlfc2VjcmV0GAMgASgJEhYKCWpvaW5faG9zdBgEIAEoCUgAiAEBQgwKCl9qb2luX2hvc3QiQwoKQ29weVRvUGF0aBIRCgltYWluX3BhdGgYASABKAkSFQoIc3ViX3BhdGgYAiABKAlIAIgBAUILCglfc3ViX3BhdGgqnAEKDlJlY29yZGluZ1Rhc2tzEhMKD1NUQVJUX1JFQ09SRElORxAAEhIKDlNUT1BfUkVDT1JESU5HEAESDgoKU1RBUlRfUlRNUBACEg0KCVNUT1BfUlRNUBADEhEKDUVORF9SRUNPUkRJTkcQBBIMCghFTkRfUlRNUBAFEhcKE1JFQ09SRElOR19QUk9DRUVERUQQBhIICgRTVE9QEAcqLgoTUmVjb3JkZXJTZXJ2aWNlVHlwZRINCglSRUNPUkRJTkcQABIICgRSVE1QEAFCNFoyZ2l0aHViLmNvbS9teW5hcGFycm90L3BsdWdubWVldC1wcm90b2NvbC9wbHVnbm1lZXRiBnByb3RvMw");
+  fileDesc("ChhwbHVnbm1lZXRfcmVjb3JkZXIucHJvdG8SCXBsdWdubWVldCLrAQoTUGx1Z05tZWV0VG9SZWNvcmRlchIMCgRmcm9tGAEgASgJEicKBHRhc2sYAiABKA4yGS5wbHVnbm1lZXQuUmVjb3JkaW5nVGFza3MSFQoNcm9vbV90YWJsZV9pZBgDIAEoAxIPCgdyb29tX2lkGAQgASgJEhAKCHJvb21fc2lkGAUgASgJEhQKDHJlY29yZGluZ19pZBgGIAEoCRITCgtyZWNvcmRlcl9pZBgHIAEoCRIUCgxhY2Nlc3NfdG9rZW4YCCABKAkSFQoIcnRtcF91cmwYCSABKAlIAIgBAUILCglfcnRtcF91cmwi9AEKE1JlY29yZGVyVG9QbHVnTm1lZXQSDAoEZnJvbRgBIAEoCRInCgR0YXNrGAIgASgOMhkucGx1Z25tZWV0LlJlY29yZGluZ1Rhc2tzEg4KBnN0YXR1cxgDIAEoCBILCgNtc2cYBCABKAkSFAoMcmVjb3JkaW5nX2lkGAUgASgJEhUKDXJvb21fdGFibGVfaWQYCyABKAMSDwoHcm9vbV9pZBgGIAEoCRIQCghyb29tX3NpZBgHIAEoCRITCgtyZWNvcmRlcl9pZBgIIAEoCRIRCglmaWxlX3BhdGgYCSABKAkSEQoJZmlsZV9zaXplGAogASgCImkKEUZyb21QYXJlbnRUb0NoaWxkEicKBHRhc2sYASABKA4yGS5wbHVnbm1lZXQuUmVjb3JkaW5nVGFza3MSFAoMcmVjb3JkaW5nX2lkGAIgASgJEhUKDXJvb21fdGFibGVfaWQYAyABKAMihgEKEUZyb21DaGlsZFRvUGFyZW50EicKBHRhc2sYASABKA4yGS5wbHVnbm1lZXQuUmVjb3JkaW5nVGFza3MSDgoGc3RhdHVzGAIgASgIEgsKA21zZxgDIAEoCRIUCgxyZWNvcmRpbmdfaWQYBCABKAkSFQoNcm9vbV90YWJsZV9pZBgFIAEoAyKBAwoWU3RhcnRSZWNvcmRlckNoaWxkQXJncxIzCgtzZXJ2aWNlVHlwZRgBIAEoDjIeLnBsdWdubWVldC5SZWNvcmRlclNlcnZpY2VUeXBlEhUKDXJvb21fdGFibGVfaWQYAiABKAMSFAoMcmVjb3JkaW5nX2lkGAMgASgJEhQKDGFjY2Vzc190b2tlbhgEIAEoCRIQCghwbm1faG9zdBgFIAEoCRIaCg1wbm1fam9pbl9ob3N0GAYgASgJSACIAQESFQoNd2Vic29ja2V0X3VybBgHIAEoCRIfChJjdXN0b21fY2hyb21lX3BhdGgYCCABKAlIAYgBARISCgV3aWR0aBgJIAEoDUgCiAEBEhMKBmhlaWdodBgKIAEoDUgDiAEBEhUKCHh2ZmJfZHBpGAsgASgNSASIAQFCEAoOX3BubV9qb2luX2hvc3RCFQoTX2N1c3RvbV9jaHJvbWVfcGF0aEIICgZfd2lkdGhCCQoHX2hlaWdodEILCglfeHZmYl9kcGkiaAoNUGx1Z05tZWV0SW5mbxIMCgRob3N0GAEgASgJEg8KB2FwaV9rZXkYAiABKAkSEgoKYXBpX3NlY3JldBgDIAEoCRIWCglqb2luX2hvc3QYBCABKAlIAIgBAUIMCgpfam9pbl9ob3N0IkMKCkNvcHlUb1BhdGgSEQoJbWFpbl9wYXRoGAEgASgJEhUKCHN1Yl9wYXRoGAIgASgJSACIAQFCCwoJX3N1Yl9wYXRoKpwBCg5SZWNvcmRpbmdUYXNrcxITCg9TVEFSVF9SRUNPUkRJTkcQABISCg5TVE9QX1JFQ09SRElORxABEg4KClNUQVJUX1JUTVAQAhINCglTVE9QX1JUTVAQAxIRCg1FTkRfUkVDT1JESU5HEAQSDAoIRU5EX1JUTVAQBRIXChNSRUNPUkRJTkdfUFJPQ0VFREVEEAYSCAoEU1RPUBAHKi4KE1JlY29yZGVyU2VydmljZVR5cGUSDQoJUkVDT1JESU5HEAASCAoEUlRNUBABQjRaMmdpdGh1Yi5jb20vbXluYXBhcnJvdC9wbHVnbm1lZXQtcHJvdG9jb2wvcGx1Z25tZWV0YgZwcm90bzM");
 
 /**
  * @generated from message plugnmeet.PlugNmeetToRecorder
@@ -207,12 +207,17 @@ export const FromChildToParentSchema: GenMessage<FromChildToParent> = /*@__PURE_
  */
 export type StartRecorderChildArgs = Message<"plugnmeet.StartRecorderChildArgs"> & {
   /**
-   * @generated from field: int64 room_table_id = 1;
+   * @generated from field: plugnmeet.RecorderServiceType serviceType = 1;
+   */
+  serviceType: RecorderServiceType;
+
+  /**
+   * @generated from field: int64 room_table_id = 2;
    */
   roomTableId: bigint;
 
   /**
-   * @generated from field: string recording_id = 2;
+   * @generated from field: string recording_id = 3;
    */
   recordingId: string;
 
@@ -222,57 +227,37 @@ export type StartRecorderChildArgs = Message<"plugnmeet.StartRecorderChildArgs">
   accessToken: string;
 
   /**
-   * @generated from field: plugnmeet.PlugNmeetInfo plug_n_meet_info = 5;
+   * @generated from field: string pnm_host = 5;
    */
-  plugNMeetInfo?: PlugNmeetInfo;
+  pnmHost: string;
 
   /**
-   * @generated from field: bool post_mp4_convert = 6;
+   * @generated from field: optional string pnm_join_host = 6;
    */
-  postMp4Convert: boolean;
+  pnmJoinHost?: string;
 
   /**
-   * @generated from field: plugnmeet.CopyToPath copy_to_path = 7;
-   */
-  copyToPath?: CopyToPath;
-
-  /**
-   * @generated from field: plugnmeet.RecorderServiceType serviceType = 8;
-   */
-  serviceType: RecorderServiceType;
-
-  /**
-   * @generated from field: optional string recorder_id = 9;
-   */
-  recorderId?: string;
-
-  /**
-   * @generated from field: optional string rtmp_url = 10;
-   */
-  rtmpUrl?: string;
-
-  /**
-   * @generated from field: string websocket_url = 11;
+   * @generated from field: string websocket_url = 7;
    */
   websocketUrl: string;
 
   /**
-   * @generated from field: optional string custom_chrome_path = 12;
+   * @generated from field: optional string custom_chrome_path = 8;
    */
   customChromePath?: string;
 
   /**
-   * @generated from field: optional uint32 width = 13;
+   * @generated from field: optional uint32 width = 9;
    */
   width?: number;
 
   /**
-   * @generated from field: optional uint32 height = 14;
+   * @generated from field: optional uint32 height = 10;
    */
   height?: number;
 
   /**
-   * @generated from field: optional uint32 xvfb_dpi = 15;
+   * @generated from field: optional uint32 xvfb_dpi = 11;
    */
   xvfbDpi?: number;
 };

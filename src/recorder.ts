@@ -191,13 +191,10 @@ if (recorderArgs.customChromePath) {
 
 (async () => {
   let url;
-  if (recorderArgs.plugNMeetInfo?.joinHost) {
-    url = recorderArgs.plugNMeetInfo.joinHost + recorderArgs.accessToken;
+  if (recorderArgs.pnmJoinHost) {
+    url = recorderArgs.pnmJoinHost + recorderArgs.accessToken;
   } else {
-    url =
-      recorderArgs.plugNMeetInfo?.host +
-      '/?access_token=' +
-      recorderArgs.accessToken;
+    url = recorderArgs.pnmHost + '/?access_token=' + recorderArgs.accessToken;
   }
 
   try {

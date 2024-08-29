@@ -11,7 +11,7 @@ import {
 } from './utils/interfaces';
 import RecordingService from './services/recordingService';
 import RtmpService from './services/rtmpService';
-import { getDefaultFFMPEGOptions, logger, sleep } from './utils/helper';
+import { getDefaultFFMPEGOptions, logger } from './utils/helper';
 
 let websocketServerInfo: WebsocketServerInfo,
   recorder: Recorder,
