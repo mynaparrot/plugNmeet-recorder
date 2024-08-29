@@ -1,7 +1,7 @@
 import yaml from 'js-yaml';
 import * as fs from 'fs';
 
-import { logger } from './utils/helper';
+import { logger, sleep } from './utils/helper';
 import PNMRecorder from './PNMRecorder';
 
 let config: any, pnm: PNMRecorder;
@@ -19,7 +19,7 @@ process.on('SIGINT', async () => {
   }
 
   pnm.childProcessesMapByRoomSid.forEach((c) => c.kill('SIGINT'));
-  //await sleep(5000);
+  await sleep(5000);
 
   // clear everything
   pnm.childProcessesMapByRoomSid.clear();

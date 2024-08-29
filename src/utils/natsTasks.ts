@@ -1,17 +1,13 @@
 import { Kvm } from '@nats-io/kv';
+import { RecorderInfoKeys } from 'plugnmeet-protocol-js';
 import { logger } from './helper';
 
-const prefix = 'pnm-';
-const RecordersKvKey = prefix + 'recorders';
-const RecordersInfoKvkey = prefix + 'recorderInfo-';
-const RecorderMaxLimitKey = 'max_limit';
-const RecorderCurrenProgressKey = 'current_progress';
-
-export const sendPing = async (kvm: Kvm, recorderId: string) => {
+export const sendPing = async (kvm: Kvm, keyName: string) => {
+  //recorder.recorder_info_kv + '-' + recorderId
   try {
-    const kv = await kvm.create(RecordersKvKey);
-    const now = new Date().getUTCMilliseconds();
-    await kv.put(recorderId, `${now}`);
+    const kv = await kvm.create(keyName);
+    const now = Date.now();
+    await kv.put(RecorderInfoKeys.RECORDER_INFO_LAST_PING.toString(), `${now}`);
   } catch (error) {
     logger.error('Error: ', error);
   }
@@ -19,13 +15,24 @@ export const sendPing = async (kvm: Kvm, recorderId: string) => {
 
 export const addRecorder = async (
   kvm: Kvm,
-  recorderId: string,
+  keyName: string,
   max_limit: number,
 ) => {
   try {
-    const kv = await kvm.create(RecordersInfoKvkey + recorderId);
-    await kv.put(RecorderMaxLimitKey, `${max_limit}`);
-    await kv.put(RecorderCurrenProgressKey, `0`);
+    const kv = await kvm.create(keyName);
+    const now = Date.now();
+    await kv.put(
+      RecorderInfoKeys.RECORDER_INFO_MAX_LIMIT.toString(),
+      `${max_limit}`,
+    );
+    await kv.put(
+      RecorderInfoKeys.RECORDER_INFO_CURRENT_PROGRESS.toString(),
+      `0`,
+    );
+    await kv.put(
+      RecorderInfoKeys.RECORDER_INFO_LAST_PING.toString(),
+      now.toString(),
+    );
   } catch (error) {
     logger.error('Error: ', error);
   }
@@ -33,12 +40,14 @@ export const addRecorder = async (
 
 export const updateRecorderProgress = async (
   kvm: Kvm,
-  recorderId: string,
+  keyName: string,
   increment: boolean,
 ) => {
   try {
-    const kv = await kvm.open(RecordersInfoKvkey + recorderId);
-    const entry = await kv.get(RecorderCurrenProgressKey);
+    const kv = await kvm.open(keyName);
+    const entry = await kv.get(
+      RecorderInfoKeys.RECORDER_INFO_CURRENT_PROGRESS.toString(),
+    );
     if (entry) {
       let current = Number(entry.string());
       if (increment) {
@@ -46,7 +55,10 @@ export const updateRecorderProgress = async (
       } else {
         current--;
       }
-      await kv.put(RecorderCurrenProgressKey, `${current}`);
+      await kv.put(
+        RecorderInfoKeys.RECORDER_INFO_CURRENT_PROGRESS.toString(),
+        `${current}`,
+      );
     }
   } catch (error) {
     logger.error('Error: ', error);

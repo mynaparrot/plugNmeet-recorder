@@ -1,10 +1,4 @@
 import { NatsConnection } from '@nats-io/nats-core';
-import {
-  jetstream,
-  JetStreamClient,
-  JetStreamManager,
-  jetstreamManager,
-} from '@nats-io/jetstream';
 import { Kvm } from '@nats-io/kv';
 import { connect } from '@nats-io/transport-node/lib/connect';
 import { create, fromJsonString, toJsonString } from '@bufbuild/protobuf';
@@ -44,8 +38,6 @@ export default class PNMRecorder {
   private readonly _websocketServerInfo: WebsocketServerInfo;
 
   private _nc: NatsConnection | undefined;
-  private _js: JetStreamClient | undefined;
-  private _jsm: JetStreamManager | undefined;
   private _kvm: Kvm | undefined;
 
   private readonly _childProcessesInfoMapByChildPid = new Map<
@@ -89,43 +81,29 @@ export default class PNMRecorder {
       });
       logger.info(`connected to ${this._nc?.getServer()}`);
 
-      this._jsm = await jetstreamManager(this._nc);
-      this._js = jetstream(this._nc);
       this._kvm = new Kvm(this._nc);
 
       //subscriber for PNM events
-      this.subscriberToSysRecorder();
+      this.subscriberToRecorderChannel();
 
+      const keyName =
+        this._natsInfo.recorder.recorder_info_kv + '-' + this._recorder.id;
       // add this record
-      await addRecorder(this._kvm, this.recorder.id, this.recorder.max_limit);
+      await addRecorder(this._kvm, keyName, this.recorder.max_limit);
       // start ping
-      await this.startPing();
+      await this.startPing(keyName);
     } catch (_err) {
       logger.error(`error connecting to ${JSON.stringify(_err)}`);
       process.exit(1);
     }
   };
 
-  private async subscriberToSysRecorder() {
-    if (!this._jsm || !this._js) {
+  private async subscriberToRecorderChannel() {
+    if (!this._nc || this._nc.isClosed()) {
       return;
     }
+    const sub = this._nc.subscribe(this._natsInfo.recorder.recorder_channel);
 
-    await this._jsm.consumers.add(this._natsInfo.subjects.recorder_js_worker, {
-      durable_name: this._recorder.id,
-      filter_subjects: [
-        this._natsInfo.subjects.recorder_js_worker + '.' + this._recorder.id,
-      ],
-    });
-
-    const consumer = await this._js.consumers.get(
-      this._natsInfo.subjects.recorder_js_worker,
-      this._recorder.id,
-    );
-
-    const sub = await consumer.consume();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     for await (const m of sub) {
       console.log(m.string());
       let payload: PlugNmeetToRecorder;
@@ -133,20 +111,19 @@ export default class PNMRecorder {
         payload = fromJsonString(PlugNmeetToRecorderSchema, m.string());
       } catch (e) {
         logger.error(e);
-        m.ack();
         return;
       }
       if (payload.from !== 'plugnmeet') {
-        m.ack();
         return;
       }
-      logger.info('Main: ' + payload.task);
+      logger.info('Main: ' + payload.task.toString());
 
       switch (payload.task) {
         case RecordingTasks.START_RECORDING:
         case RecordingTasks.START_RTMP:
           if (payload.recorderId === this._recorder.id) {
             this.handleStartRequest(payload);
+            m.respond('success');
           }
           break;
         case RecordingTasks.STOP_RECORDING:
@@ -154,9 +131,8 @@ export default class PNMRecorder {
         case RecordingTasks.STOP:
           // stop task do not need to verify recorder id
           this.handleStopProcess(BigInt(payload.roomTableId));
+          m.respond('success');
       }
-
-      m.ack();
     }
   }
 
@@ -323,16 +299,16 @@ export default class PNMRecorder {
     }
   }
 
-  private async startPing() {
+  private async startPing(keyName: string) {
     if (!this._kvm) {
       return;
     }
     setInterval(async () => {
       if (this._kvm) {
-        await sendPing(this._kvm, this.recorder.id);
+        await sendPing(this._kvm, keyName);
       }
     }, PING_INTERVAL);
     // start immediately
-    await sendPing(this._kvm, this.recorder.id);
+    await sendPing(this._kvm, keyName);
   }
 }

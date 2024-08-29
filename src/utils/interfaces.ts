@@ -52,11 +52,12 @@ export interface NatsInfo {
   nats_urls: string[];
   user: string;
   password: string;
-  subjects: NatsSubjects;
+  recorder: NatsInfoRecorder;
 }
 
-export interface NatsSubjects {
-  recorder_js_worker: string;
+export interface NatsInfoRecorder {
+  recorder_channel: string;
+  recorder_info_kv: string;
 }
 
 export interface ChildProcessInfoMap {

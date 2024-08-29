@@ -11,7 +11,7 @@ import {
 } from './utils/interfaces';
 import RecordingService from './services/recordingService';
 import RtmpService from './services/rtmpService';
-import { getDefaultFFMPEGOptions, logger } from './utils/helper';
+import { getDefaultFFMPEGOptions, logger, sleep } from './utils/helper';
 
 let websocketServerInfo: WebsocketServerInfo,
   recorder: Recorder,
@@ -33,7 +33,7 @@ try {
 const killProcess = async () => {
   logger.info('websocketServer: got SIGINT, cleaning up');
   // we can wait before closing everything
-  //await sleep(10 * 1000); // 10 seconds
+  await sleep(10 * 1000); // 10 seconds
   process.exit();
 };
 process.on('SIGTERM', killProcess);
