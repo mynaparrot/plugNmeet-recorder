@@ -1,6 +1,11 @@
 import { fork, spawn } from 'child_process';
 import fs from 'fs';
 import { resolve, dirname } from 'path';
+import {
+  RecorderToPlugNmeetSchema,
+  RecordingTasks,
+} from 'plugnmeet-protocol-js';
+import { create } from '@bufbuild/protobuf';
 
 import {
   FFMPEGOptions,
@@ -9,11 +14,6 @@ import {
   Recorder,
 } from '../utils/interfaces';
 import { logger, notify } from '../utils/helper';
-import {
-  RecorderToPlugNmeetSchema,
-  RecordingTasks,
-} from '../proto/plugnmeet_recorder_pb';
-import { create } from '@bufbuild/protobuf';
 
 export default class RecordingService {
   private ws: any;
@@ -195,7 +195,7 @@ export default class RecordingService {
       task: RecordingTasks.RECORDING_PROCEEDED,
       msg: 'process completed',
       recordingId: this.recordId,
-      roomTableId: this.roomTableId,
+      roomTableId: String(this.roomTableId),
       filePath: file_path,
       fileSize: file_size,
       recorderId: this.recorder.id,

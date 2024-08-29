@@ -33,7 +33,7 @@ import {
   RecorderToPlugNmeetSchema,
   RecordingTasks,
   StartRecorderChildArgsSchema,
-} from './proto/plugnmeet_recorder_pb';
+} from 'plugnmeet-protocol-js';
 
 const PING_INTERVAL = 3 * 1000;
 
@@ -153,7 +153,7 @@ export default class PNMRecorder {
         case RecordingTasks.STOP_RTMP:
         case RecordingTasks.STOP:
           // stop task do not need to verify recorder id
-          this.handleStopProcess(payload.roomTableId);
+          this.handleStopProcess(BigInt(payload.roomTableId));
       }
 
       m.ack();
@@ -206,7 +206,7 @@ export default class PNMRecorder {
       const childProcessInfo: ChildProcessInfoMap = {
         serviceType: sendToChild.serviceType,
         recording_id: sendToChild.recordingId,
-        room_table_id: sendToChild.roomTableId,
+        room_table_id: BigInt(sendToChild.roomTableId),
       };
       this._childProcessesInfoMapByChildPid.set(child.pid, childProcessInfo);
       this._childProcessesMapByRoomSid.set(
@@ -235,7 +235,7 @@ export default class PNMRecorder {
                 ? RecordingTasks.END_RECORDING
                 : RecordingTasks.END_RTMP,
             recordingId: recordInfo.recording_id,
-            roomTableId: recordInfo.room_table_id,
+            roomTableId: String(recordInfo.room_table_id),
           });
           await this.handleMsgFromChild(
             toJsonString(FromChildToParentSchema, fromChild),
@@ -278,7 +278,7 @@ export default class PNMRecorder {
         const toChild = create(FromParentToChildSchema, {
           task: task,
           recordingId: recordInfo.recording_id,
-          roomTableId: recordInfo.room_table_id,
+          roomTableId: String(recordInfo.room_table_id),
         });
         child.send(toJsonString(FromParentToChildSchema, toChild));
       }

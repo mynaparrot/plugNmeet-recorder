@@ -4,11 +4,11 @@ import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import { toBinary } from '@bufbuild/protobuf';
-
 import {
   type RecorderToPlugNmeet,
   RecorderToPlugNmeetSchema,
-} from '../proto/plugnmeet_recorder_pb';
+} from 'plugnmeet-protocol-js';
+
 import { FFMPEGOptions, PlugNmeetInfo } from './interfaces';
 
 const { combine, timestamp, printf } = format;

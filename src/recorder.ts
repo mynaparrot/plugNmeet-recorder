@@ -18,7 +18,7 @@ import {
   RecorderServiceType,
   RecordingTasks,
   StartRecorderChildArgsSchema,
-} from './proto/plugnmeet_recorder_pb';
+} from 'plugnmeet-protocol-js';
 
 const args = process.argv.slice(2),
   platform = os.platform();
