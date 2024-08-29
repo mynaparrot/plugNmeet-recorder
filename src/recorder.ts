@@ -9,15 +9,16 @@ import os from 'os';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Xvfb from 'xvfb';
+import { create, fromJsonString, toJsonString } from '@bufbuild/protobuf';
 
 import { logger, sleep } from './utils/helper';
 import {
-  FromChildToParent,
-  FromParentToChild,
+  FromChildToParentSchema,
+  FromParentToChildSchema,
   RecorderServiceType,
   RecordingTasks,
-  StartRecorderChildArgs,
-} from './proto/plugnmeet_recorder_pb';
+  StartRecorderChildArgsSchema,
+} from 'plugnmeet-protocol-js';
 
 const args = process.argv.slice(2),
   platform = os.platform();
@@ -29,10 +30,10 @@ let hasError = false,
   wasCalledClose = false;
 
 if (!args.length) {
-  logger.error('no args found, closing..');
+  logger.error('Recorder: no args found, closing..');
   process.exit();
 }
-const recorderArgs = StartRecorderChildArgs.fromJsonString(args[0]);
+const recorderArgs = fromJsonString(StartRecorderChildArgsSchema, args[0]);
 
 const width = recorderArgs.width || 1800;
 const height = recorderArgs.height || 900;
@@ -53,16 +54,17 @@ const closeConnection = async (hasError: boolean, msg: string) => {
     task = RecordingTasks.END_RTMP;
   }
 
-  const toParent = new FromChildToParent({
+  const toParent = create(FromChildToParentSchema, {
     status: true,
     task,
     msg,
     roomTableId: recorderArgs.roomTableId,
     recordingId: recorderArgs.recordingId,
   });
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  process.send(toParent.toJsonString());
+  // @ts-expect-error
+  process.send(toJsonString(FromChildToParentSchema, toParent));
 };
 
 const recordingStartedMsg = async (msg: string) => {
@@ -71,7 +73,7 @@ const recordingStartedMsg = async (msg: string) => {
     task = RecordingTasks.START_RTMP;
   }
 
-  const toParent = new FromChildToParent({
+  const toParent = create(FromChildToParentSchema, {
     status: true,
     task,
     msg,
@@ -80,7 +82,7 @@ const recordingStartedMsg = async (msg: string) => {
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  process.send(toParent.toJsonString());
+  process.send(toJsonString(FromChildToParentSchema, toParent));
 };
 
 const stopRecorder = async () => {
@@ -91,7 +93,7 @@ const stopRecorder = async () => {
     await sleep(1000);
     await page.close();
   } catch (e) {
-    logger.error('Error during stopRecorder');
+    logger.error('Recorder: Error during stopRecorder');
   }
 };
 
@@ -121,14 +123,14 @@ const closeBrowser = async () => {
   try {
     await browser.close();
   } catch (e) {
-    logger.error('Error during closeBrowser');
+    logger.error('Recorder: Error during closeBrowser');
   }
 
   if (platform === 'linux') {
     try {
       xvfb.stopSync();
     } catch (e) {
-      logger.error('Error during stop xvfb');
+      logger.error('Recorder: Error during stop xvfb');
     }
 
     // sometime xvfb requite time to close
@@ -137,7 +139,7 @@ const closeBrowser = async () => {
 };
 
 process.on('SIGINT', async () => {
-  logger.info('Child: got SIGINT, cleaning up');
+  logger.info('Recorder Child: got SIGINT, cleaning up');
   if (!wasCalledClose) {
     await onCloseOrErrorEvent();
   } else {
@@ -147,12 +149,12 @@ process.on('SIGINT', async () => {
 });
 
 process.on('message', async (m: string) => {
-  const msg = FromParentToChild.fromJsonString(m);
+  const msg = fromJsonString(FromParentToChildSchema, m);
   if (
     msg.task === RecordingTasks.STOP_RECORDING ||
     msg.task === RecordingTasks.STOP_RTMP
   ) {
-    logger.info('Child: ' + msg.task + ' sid: ' + msg.roomTableId);
+    logger.info('Recorder Child: ' + msg.task + ' sid: ' + msg.roomTableId);
     closedBycmd = true;
     await stopRecorder();
   }
@@ -189,13 +191,10 @@ if (recorderArgs.customChromePath) {
 
 (async () => {
   let url;
-  if (recorderArgs.plugNMeetInfo?.joinHost) {
-    url = recorderArgs.plugNMeetInfo.joinHost + recorderArgs.accessToken;
+  if (recorderArgs.pnmJoinHost) {
+    url = recorderArgs.pnmJoinHost + recorderArgs.accessToken;
   } else {
-    url =
-      recorderArgs.plugNMeetInfo?.host +
-      '/?access_token=' +
-      recorderArgs.accessToken;
+    url = recorderArgs.pnmHost + '/?access_token=' + recorderArgs.accessToken;
   }
 
   try {
@@ -203,6 +202,7 @@ if (recorderArgs.customChromePath) {
       try {
         xvfb.startSync();
       } catch (e: any) {
+        logger.error('Recorder xvfb error', e);
         await closeConnection(true, e.message);
         process.exit(1);
       }
@@ -211,7 +211,7 @@ if (recorderArgs.customChromePath) {
 
     browser = await puppeteer.launch(options);
     browser.on('disconnected', () => {
-      logger.info('browser on disconnected');
+      logger.info('Recorder: browser on disconnected');
       // this is just for safety,
       // in any case it wasn't run page close event
       onCloseOrErrorEvent();
@@ -221,13 +221,13 @@ if (recorderArgs.customChromePath) {
     page = pages[0];
 
     page.on('close', () => {
-      logger.info('page on close');
+      logger.info('Recorder: page on close');
       // this should call first
       onCloseOrErrorEvent();
     });
 
     page.on('error', async (e) => {
-      logger.error('page on error');
+      logger.error('Recorder: page on error');
       hasError = true;
       errorMessage = e.message;
 
@@ -236,7 +236,7 @@ if (recorderArgs.customChromePath) {
 
     await page.exposeFunction('onMessageReceivedEvent', (e: any) => {
       if (e.data.type === 'WEBSOCKET_ERROR') {
-        logger.error('on WEBSOCKET_ERROR');
+        logger.error('Recorder: on WEBSOCKET_ERROR');
         // we'll stop recorder
         hasError = true;
         errorMessage = 'WEBSOCKET_ERROR';
@@ -287,7 +287,7 @@ if (recorderArgs.customChromePath) {
     hasError = true;
     errorMessage = e.message;
     if (!closedBycmd) {
-      logger.error(e.message);
+      logger.error('Recorder:' + e.message);
     }
   } finally {
     // we'll close everything

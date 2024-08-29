@@ -53,19 +53,11 @@ websocket_server:
   # OR
   # cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1
   auth_token: WEBSOCKET_AUTH_TOKEN
-redis_info:
-  host: localhost
-  port: 6379
-  username: ""
-  password: ""
-  db: 0
-#  use_tls: false
-#  To use sentinel remove the host key above and add the following
-#  sentinel_master_name: plugnmeet
-#  sentinel_addresses:
-#    - redis-sentinel-host-1:26379
-#    - redis-sentinel-host-2:26379
-#    - redis-sentinel-host-3:26379
-#  If you use a different set of credentials for sentinel add
-#  sentinel_username: user
-#  sentinel_password: pass
+nats_info:
+  nats_urls:
+    - "nats://127.0.0.1:4222"
+  user: auth
+  password: "LM(jTdsUGbB7M9y8^dNta1"
+  recorder:
+    recorder_channel: "recorderChannel"
+    recorder_info_kv: "pnm-recorderInfo"

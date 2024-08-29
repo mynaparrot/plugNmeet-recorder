@@ -50,18 +50,18 @@ sudo apt install -y fonts-noto fonts-liberation
 cp config_sample.yaml config.yaml
 ```
 
-4) Change the relevant information in the `config.yaml` file. Redis information should be the same as `plugnmeet-server`
+3) Change the relevant information in the `config.yaml` file. Redis information should be the same as `plugnmeet-server`
    . The `main_path` value should be same as `recording_files_path` value of `plugnmeet-server`'s `config.yaml` file. If
    you intend to use NFS, ensure that both the recorder and the plugnmeet-server can access this directory. Otherwise,
    the user will be unable to download recordings. Also, ensure that nodejs has write permissions on the path.
 
-5) Change `plugNmeet_info` with correct information.
+4) Change `plugNmeet_info` with correct information.
 
-6) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose the appropriate one
+5) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose the appropriate one
    based on availability. In that case change value of `id` inside `config.yaml` file. Make sure that value is unique,
    example: `node_01`, `node_02` ... You can also set the value of `max_limit` based on the server's capacity.
 
-7) Start server `npm start`
+6) Start server `npm start`
 
 **Development**
 

@@ -3,9 +3,14 @@ import { createHmac } from 'crypto';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import { toBinary } from '@bufbuild/protobuf';
+import {
+  type RecorderToPlugNmeet,
+  RecorderToPlugNmeetSchema,
+} from 'plugnmeet-protocol-js';
 
 import { FFMPEGOptions, PlugNmeetInfo } from './interfaces';
-import { RecorderToPlugNmeet } from '../proto/plugnmeet_recorder_pb';
+
 const { combine, timestamp, printf } = format;
 
 axiosRetry(axios, { retryDelay: axiosRetry.exponentialDelay, retries: 4 });
@@ -36,7 +41,7 @@ export const notify = async (
   body: RecorderToPlugNmeet,
 ) => {
   try {
-    const b = body.toBinary();
+    const b = toBinary(RecorderToPlugNmeetSchema, body);
     const signature = createHmac('sha256', plugNmeetInfo.api_secret)
       .update(b)
       .digest('hex');
@@ -51,7 +56,7 @@ export const notify = async (
     });
     return res.data;
   } catch (e: any) {
-    logger.error(e);
+    logger.error('Notify Err: ' + e);
   }
 };
 

@@ -4,6 +4,9 @@ export interface Recorder {
   post_mp4_convert: boolean;
   custom_chrome_path?: string;
   copy_to_path: CopyToPath;
+  width: number;
+  height: number;
+  xvfb_dpi: number;
   post_processing_scripts?: string[];
 }
 
@@ -43,6 +46,18 @@ export interface RedisInfo {
   sentinel_addresses?: Array<string>;
   sentinel_username?: string;
   sentinel_password?: string;
+}
+
+export interface NatsInfo {
+  nats_urls: string[];
+  user: string;
+  password: string;
+  recorder: NatsInfoRecorder;
+}
+
+export interface NatsInfoRecorder {
+  recorder_channel: string;
+  recorder_info_kv: string;
 }
 
 export interface ChildProcessInfoMap {
