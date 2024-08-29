@@ -3,7 +3,6 @@ import { RecorderInfoKeys } from 'plugnmeet-protocol-js';
 import { logger } from './helper';
 
 export const sendPing = async (kvm: Kvm, keyName: string) => {
-  //recorder.recorder_info_kv + '-' + recorderId
   try {
     const kv = await kvm.create(keyName);
     const now = Date.now();

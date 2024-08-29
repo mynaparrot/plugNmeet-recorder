@@ -82,7 +82,6 @@ export default class PNMRecorder {
       logger.info(`connected to ${this._nc?.getServer()}`);
 
       this._kvm = new Kvm(this._nc);
-
       //subscriber for PNM events
       this.subscriberToRecorderChannel();
 
