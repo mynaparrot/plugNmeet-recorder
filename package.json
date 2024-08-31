@@ -16,7 +16,7 @@
     "@bufbuild/protobuf": "2.0.0",
     "@nats-io/kv": "3.0.0-3",
     "@nats-io/transport-node": "3.0.0-6",
-    "axios": "1.7.5",
+    "axios": "1.7.6",
     "axios-retry": "4.5.0",
     "js-yaml": "4.1.0",
     "plugnmeet-protocol-js": "1.0.5-rc.2",
