@@ -1,4 +1,7 @@
 recorder:
+  ## Note: for any id should contain valid characters only
+  ## otherwise will be problem with nats (https://docs.nats.io/nats-concepts/subjects#characters-allowed-and-recommended-for-subject-names)
+  ## Allowed characters: (a - z),(A - Z), (0 - 9), - and _
   id: node_01
   max_limit: 10
   # you can set it true, if you want to get MP4 as output
