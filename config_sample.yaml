@@ -59,8 +59,8 @@ websocket_server:
 nats_info:
   nats_urls:
     - "nats://127.0.0.1:4222"
-  user: auth
-  password: "LM(jTdsUGbB7M9y8^dNta1"
+  user: NATS_USER
+  password: NATS_PASSWORD
   recorder:
     recorder_channel: "recorderChannel"
     recorder_info_kv: "pnm-recorderInfo"
