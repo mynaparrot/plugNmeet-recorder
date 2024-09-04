@@ -10,13 +10,6 @@ export interface Recorder {
   post_processing_scripts?: string[];
 }
 
-export interface RecorderRedisHashInfo {
-  maxLimit: number;
-  currentProgress: number;
-  lastPing: number;
-  created: number;
-}
-
 export interface CopyToPath {
   main_path: string;
   sub_path?: string;
@@ -33,19 +26,6 @@ export interface PlugNmeetInfo {
   api_key: string;
   api_secret: string;
   join_host?: string;
-}
-
-export interface RedisInfo {
-  host: string;
-  port: number;
-  username?: string;
-  password?: string;
-  db?: number;
-  use_tls?: boolean;
-  sentinel_master_name?: string;
-  sentinel_addresses?: Array<string>;
-  sentinel_username?: string;
-  sentinel_password?: string;
 }
 
 export interface NatsInfo {

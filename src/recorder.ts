@@ -49,6 +49,12 @@ if (platform === 'linux') {
 }
 
 const closeConnection = async (hasError: boolean, msg: string) => {
+  if (hasError) {
+    logger.warn(
+      `Recorder: process ended with error, roomTableId: \`${recorderArgs.roomTableId}\``,
+    );
+  }
+
   let task = RecordingTasks.END_RECORDING;
   if (recorderArgs.serviceType === RecorderServiceType.RTMP) {
     task = RecordingTasks.END_RTMP;
@@ -92,7 +98,7 @@ const stopRecorder = async () => {
     });
     await sleep(1000);
     await page.close();
-  } catch (e) {
+  } catch (e: any) {
     logger.error('Recorder: Error during stopRecorder');
   }
 };
@@ -226,7 +232,7 @@ if (recorderArgs.customChromePath) {
       onCloseOrErrorEvent();
     });
 
-    page.on('error', async (e) => {
+    page.on('error', (e) => {
       logger.error('Recorder: page on error');
       hasError = true;
       errorMessage = e.message;

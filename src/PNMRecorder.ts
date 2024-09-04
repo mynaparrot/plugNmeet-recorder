@@ -83,7 +83,7 @@ export default class PNMRecorder {
 
       this._kvm = new Kvm(this._nc);
       //subscriber for PNM events
-      this.subscriberToRecorderChannel();
+      this.subscriberToRecorderChannel().then();
 
       const keyName =
         this._natsInfo.recorder.recorder_info_kv + '-' + this._recorder.id;

@@ -5,14 +5,15 @@ import { FFMPEGOptions } from '../utils/interfaces';
 
 export default class RtmpService {
   private ws: any;
-  private rtmpUrl: string;
+  private readonly rtmpUrl: string;
   private readonly ffmpegOptions: FFMPEGOptions;
 
   constructor(ws: any, ffmpegOptions: FFMPEGOptions, rtmpUrl: any) {
     this.ws = ws;
     this.ffmpegOptions = ffmpegOptions;
     this.rtmpUrl = rtmpUrl;
-    this.startService();
+
+    this.startService().then();
   }
 
   private startService = async () => {
@@ -26,7 +27,7 @@ export default class RtmpService {
     logger.info('ffmpeg options: ' + options);
 
     const ffmpeg = spawn('ffmpeg', options, {
-      // important, otherwise will hang the process
+      // important, otherwise will this will froze the process
       // https://nodejs.org/api/child_process.html#optionsstdio
       stdio: ['pipe', 'ignore', 'ignore'],
     });

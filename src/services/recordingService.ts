@@ -43,7 +43,8 @@ export default class RecordingService {
     this.roomId = roomId;
     this.roomSid = roomSid;
     this.recordId = recordId;
-    this.startService();
+
+    this.startService().then();
   }
 
   private startService = async () => {
