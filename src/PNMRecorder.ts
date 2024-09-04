@@ -293,7 +293,9 @@ export default class PNMRecorder {
     if (payload) {
       await notify(this._plugNmeetInfo, payload);
       if (this._kvm) {
-        await updateRecorderProgress(this._kvm, this._recorder.id, increment);
+        const keyName =
+          this._natsInfo.recorder.recorder_info_kv + '-' + this._recorder.id;
+        await updateRecorderProgress(this._kvm, keyName, increment);
       }
     }
   }
