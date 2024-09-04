@@ -160,7 +160,9 @@ process.on('message', async (m: string) => {
     msg.task === RecordingTasks.STOP_RECORDING ||
     msg.task === RecordingTasks.STOP_RTMP
   ) {
-    logger.info('Recorder Child: ' + msg.task + ' sid: ' + msg.roomTableId);
+    logger.info(
+      'Recorder Child: ' + msg.task + ' roomTableId: ' + msg.roomTableId,
+    );
     closedBycmd = true;
     await stopRecorder();
   }
