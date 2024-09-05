@@ -61,7 +61,7 @@ const closeConnection = async (hasError: boolean, msg: string) => {
   }
 
   const toParent = create(FromChildToParentSchema, {
-    status: hasError,
+    status: !hasError,
     task,
     msg,
     roomTableId: recorderArgs.roomTableId,
