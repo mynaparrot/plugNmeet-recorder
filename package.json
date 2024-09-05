@@ -7,8 +7,8 @@
   "main": "src/index.ts",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "start": "npm run build && concurrently -c \"red,green\" --kill-others \"node ./dist/index.js\" \"sleep 1 && node ./dist/websocketServer.js\"",
-    "dev": "concurrently -c \"red,green,blue\" --kill-others \"ts-node-dev src/index.ts\" \"sleep 1 && npm run websocket-server && esw -w --ext '.ts','.js' --fix\"",
+    "start": "pnpm run build && concurrently -c \"red,green\" --kill-others \"node ./dist/index.js\" \"sleep 1 && node ./dist/websocketServer.js\"",
+    "dev": "concurrently -c \"red,green,blue\" --kill-others \"ts-node-dev src/index.ts\" \"sleep 1 && pnpm run websocket-server && esw -w --ext '.ts','.js' --fix\"",
     "websocket-server": "ts-node-dev src/websocketServer.ts",
     "build": "rm -rf ./dist && tsc -p . --outDir ./dist && cp -rf ./src/chrome-extension ./dist/chrome-extension",
     "lint": "prettier --write \"./src/**/*.{ts,js}\" && eslint --fix ./src/**/*.{ts,js}"
