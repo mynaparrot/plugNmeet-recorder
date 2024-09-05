@@ -51,7 +51,7 @@ if (platform === 'linux') {
 const closeConnection = async (hasError: boolean, msg: string) => {
   if (hasError) {
     logger.warn(
-      `Recorder: process ended with error, roomTableId: \`${recorderArgs.roomTableId}\``,
+      `Recorder: process ended with error, roomTableId: ${recorderArgs.roomTableId}, msg: ${msg}`,
     );
   }
 
@@ -61,7 +61,7 @@ const closeConnection = async (hasError: boolean, msg: string) => {
   }
 
   const toParent = create(FromChildToParentSchema, {
-    status: true,
+    status: hasError,
     task,
     msg,
     roomTableId: recorderArgs.roomTableId,
