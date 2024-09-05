@@ -61,7 +61,7 @@ cp config_sample.yaml config.yaml
    based on availability. In that case change value of `id` inside `config.yaml` file. Make sure that value is unique,
    example: `node_01`, `node_02` ... You can also set the value of `max_limit` based on the server's capacity.
 
-6) Start server `npm start`
+6) Start server `pnpm start`
 
 **Development**
 
@@ -76,8 +76,8 @@ cp config_sample.yaml config.yaml
 3) Now start server
 
 ```
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 // to build
-npm run build
+pnpm run build
 ```
