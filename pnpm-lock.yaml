@@ -12,8 +12,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       '@nats-io/kv':
-        specifier: 3.0.0-3
-        version: 3.0.0-3
+        specifier: 3.0.0-8
+        version: 3.0.0-8
       '@nats-io/nats-core':
         specifier: 3.0.0-17
         version: 3.0.0-17
@@ -161,17 +161,20 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@nats-io/jetstream@3.0.0-4':
-    resolution: {integrity: sha512-OgfcrfZxvs3xRhbdpysb8ddSmXE9TrCSLV3YRdVm48tKkQkJh+/Qh6cRb+uFgPWkuYBbiJPb+2w8SmmVGcxJ2w==}
+  '@nats-io/jetstream@3.0.0-10':
+    resolution: {integrity: sha512-FOdwBximucQszBAsSAckqhXxh0WZozKbRTMzODCudcHpOEv0jUwnoqFLG/8r607pJDX1gdiYADF5hpeV3gvh7A==}
 
-  '@nats-io/kv@3.0.0-3':
-    resolution: {integrity: sha512-c6FtUJsY3uARdCWTtb22SEaU6XZLZFjN1jckC9SsjZ5Wv/Sdii8N0dNp2yB5BVVgso/DbtfYxNsAKKPwMcWsng==}
+  '@nats-io/kv@3.0.0-8':
+    resolution: {integrity: sha512-hwG65AViKnx2LhnU0e+6qkbPIrbpLTUouvOL2eOv/oUIZszKD1YN6OBvKBWkYXFAssVmlk7BD/OuHTkCMcnH+w==}
 
   '@nats-io/nats-core@3.0.0-17':
     resolution: {integrity: sha512-H8PKUcvYJxrOEv0btzqsRfHCiTES0UdEQzAi6nEeL0B8gefZC5+3oBWg9uIXXTzw/71B9jqRkVZ0zUHRpxL1GA==}
 
   '@nats-io/nats-core@3.0.0-25':
     resolution: {integrity: sha512-IR6Ra8bq6uX7XixBPtMl3u6L5N7kSU1SUIm4NRAozaexwa9qYplHH7dzE31eKGQMw4Qvqe2+soXjwbuWMkiyYQ==}
+
+  '@nats-io/nats-core@3.0.0-26':
+    resolution: {integrity: sha512-fDNBVh0nRSKJAsGnlwyIQSlma1VHVSA/oWl5r3/ZAWPQRS/GPkZHuwz0TAXky8y5N8QXgT7lzFBqyktDldmGsQ==}
 
   '@nats-io/nkeys@1.2.0-4':
     resolution: {integrity: sha512-61R4SO9059AyZBhoZRECHobHsY6mBOGwB5ewBrbnDKVtTehnFwyMNaORHhksFmu9K0zyUtwBWyffzKpibp2Cew==}
@@ -694,6 +697,7 @@ packages:
   follow-redirects@1.15.8:
     resolution: {integrity: sha512-xgrmBhBToVKay1q2Tao5LI26B83UhrB/vM1avwVSDzt8rx3rO6AizBAaF46EgksTVr+rFTQaqZZ9MVBfUe4nig==}
     engines: {node: '>=4.0'}
+    deprecated: Browser detection issues fixed in v1.15.9
     peerDependencies:
       debug: '*'
     peerDependenciesMeta:
@@ -1554,14 +1558,14 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@nats-io/jetstream@3.0.0-4':
+  '@nats-io/jetstream@3.0.0-10':
     dependencies:
-      '@nats-io/nats-core': 3.0.0-25
+      '@nats-io/nats-core': 3.0.0-26
 
-  '@nats-io/kv@3.0.0-3':
+  '@nats-io/kv@3.0.0-8':
     dependencies:
-      '@nats-io/jetstream': 3.0.0-4
-      '@nats-io/nats-core': 3.0.0-25
+      '@nats-io/jetstream': 3.0.0-10
+      '@nats-io/nats-core': 3.0.0-26
 
   '@nats-io/nats-core@3.0.0-17':
     dependencies:
@@ -1571,6 +1575,11 @@ snapshots:
       typescript: 5.5.4
 
   '@nats-io/nats-core@3.0.0-25':
+    dependencies:
+      '@nats-io/nkeys': 1.2.0-4
+      '@nats-io/nuid': 2.0.1-2
+
+  '@nats-io/nats-core@3.0.0-26':
     dependencies:
       '@nats-io/nkeys': 1.2.0-4
       '@nats-io/nuid': 2.0.1-2
