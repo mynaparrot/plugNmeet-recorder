@@ -61,6 +61,7 @@ nats_info:
     - "nats://127.0.0.1:4222"
   user: NATS_USER
   password: NATS_PASSWORD
+  num_replicas: 1 # 1,3,or 5
   recorder:
     recorder_channel: "recorderChannel"
     recorder_info_kv: "pnm-recorderInfo"

@@ -32,6 +32,7 @@ export interface NatsInfo {
   nats_urls: string[];
   user: string;
   password: string;
+  num_replicas: number;
   recorder: NatsInfoRecorder;
 }
 

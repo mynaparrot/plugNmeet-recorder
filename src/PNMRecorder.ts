@@ -88,7 +88,12 @@ export default class PNMRecorder {
       const keyName =
         this._natsInfo.recorder.recorder_info_kv + '-' + this._recorder.id;
       // add this record
-      await addRecorder(this._kvm, keyName, this.recorder.max_limit);
+      await addRecorder(
+        this._kvm,
+        this._natsInfo.num_replicas,
+        keyName,
+        this.recorder.max_limit,
+      );
       // start ping
       await this.startPing(keyName);
     } catch (_err) {
@@ -306,10 +311,10 @@ export default class PNMRecorder {
     }
     setInterval(async () => {
       if (this._kvm) {
-        await sendPing(this._kvm, keyName);
+        await sendPing(this._kvm, this._natsInfo.num_replicas, keyName);
       }
     }, PING_INTERVAL);
     // start immediately
-    await sendPing(this._kvm, keyName);
+    await sendPing(this._kvm, this._natsInfo.num_replicas, keyName);
   }
 }

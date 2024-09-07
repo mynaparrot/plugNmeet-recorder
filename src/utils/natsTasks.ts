@@ -2,9 +2,9 @@ import { Kvm } from '@nats-io/kv';
 import { RecorderInfoKeys } from 'plugnmeet-protocol-js';
 import { logger } from './helper';
 
-export const sendPing = async (kvm: Kvm, keyName: string) => {
+export const sendPing = async (kvm: Kvm, replicas: number, keyName: string) => {
   try {
-    const kv = await kvm.create(keyName);
+    const kv = await kvm.create(keyName, { replicas });
     const now = Date.now();
     await kv.put(RecorderInfoKeys.RECORDER_INFO_LAST_PING.toString(), `${now}`);
   } catch (error) {
@@ -14,11 +14,12 @@ export const sendPing = async (kvm: Kvm, keyName: string) => {
 
 export const addRecorder = async (
   kvm: Kvm,
+  replicas: number,
   keyName: string,
   max_limit: number,
 ) => {
   try {
-    const kv = await kvm.create(keyName);
+    const kv = await kvm.create(keyName, { replicas });
     const now = Date.now();
     await kv.put(
       RecorderInfoKeys.RECORDER_INFO_MAX_LIMIT.toString(),

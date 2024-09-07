@@ -12,11 +12,11 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       '@nats-io/kv':
-        specifier: 3.0.0-3
-        version: 3.0.0-3
+        specifier: 3.0.0-8
+        version: 3.0.0-8
       '@nats-io/nats-core':
-        specifier: 3.0.0-17
-        version: 3.0.0-17
+        specifier: 3.0.0-26
+        version: 3.0.0-26
       '@nats-io/transport-node':
         specifier: 3.0.0-6
         version: 3.0.0-6
@@ -30,8 +30,8 @@ importers:
         specifier: 4.1.0
         version: 4.1.0
       plugnmeet-protocol-js:
-        specifier: 1.0.5-rc.5
-        version: 1.0.5-rc.5
+        specifier: 1.0.5-rc.6
+        version: 1.0.5-rc.6
       puppeteer:
         specifier: 23.3.0
         version: 23.3.0(typescript@5.5.4)
@@ -161,17 +161,14 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@nats-io/jetstream@3.0.0-4':
-    resolution: {integrity: sha512-OgfcrfZxvs3xRhbdpysb8ddSmXE9TrCSLV3YRdVm48tKkQkJh+/Qh6cRb+uFgPWkuYBbiJPb+2w8SmmVGcxJ2w==}
+  '@nats-io/jetstream@3.0.0-10':
+    resolution: {integrity: sha512-FOdwBximucQszBAsSAckqhXxh0WZozKbRTMzODCudcHpOEv0jUwnoqFLG/8r607pJDX1gdiYADF5hpeV3gvh7A==}
 
-  '@nats-io/kv@3.0.0-3':
-    resolution: {integrity: sha512-c6FtUJsY3uARdCWTtb22SEaU6XZLZFjN1jckC9SsjZ5Wv/Sdii8N0dNp2yB5BVVgso/DbtfYxNsAKKPwMcWsng==}
+  '@nats-io/kv@3.0.0-8':
+    resolution: {integrity: sha512-hwG65AViKnx2LhnU0e+6qkbPIrbpLTUouvOL2eOv/oUIZszKD1YN6OBvKBWkYXFAssVmlk7BD/OuHTkCMcnH+w==}
 
-  '@nats-io/nats-core@3.0.0-17':
-    resolution: {integrity: sha512-H8PKUcvYJxrOEv0btzqsRfHCiTES0UdEQzAi6nEeL0B8gefZC5+3oBWg9uIXXTzw/71B9jqRkVZ0zUHRpxL1GA==}
-
-  '@nats-io/nats-core@3.0.0-25':
-    resolution: {integrity: sha512-IR6Ra8bq6uX7XixBPtMl3u6L5N7kSU1SUIm4NRAozaexwa9qYplHH7dzE31eKGQMw4Qvqe2+soXjwbuWMkiyYQ==}
+  '@nats-io/nats-core@3.0.0-26':
+    resolution: {integrity: sha512-fDNBVh0nRSKJAsGnlwyIQSlma1VHVSA/oWl5r3/ZAWPQRS/GPkZHuwz0TAXky8y5N8QXgT7lzFBqyktDldmGsQ==}
 
   '@nats-io/nkeys@1.2.0-4':
     resolution: {integrity: sha512-61R4SO9059AyZBhoZRECHobHsY6mBOGwB5ewBrbnDKVtTehnFwyMNaORHhksFmu9K0zyUtwBWyffzKpibp2Cew==}
@@ -803,10 +800,6 @@ packages:
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
-  interpret@1.4.0:
-    resolution: {integrity: sha512-agE4QfB2Lkp9uICn7BAqoscw4SZP9kTE2hxiFI3jBPmXJfdqiahTbUuKGsMoN2GtqL9AxhYioAcVvgsb1HvRbA==}
-    engines: {node: '>= 0.10'}
-
   ip-address@9.0.5:
     resolution: {integrity: sha512-zHtQzGojZXTwZTHQqra+ETKd4Sn3vgi7uBmlPoXVWZqYvuKmtI0l/VZTjqGmJY9x88GGOaZ9+G9ES8hC4T4X8g==}
     engines: {node: '>= 12'}
@@ -993,10 +986,6 @@ packages:
     resolution: {integrity: sha512-dBpDMdxv9Irdq66304OLfEmQ9tbNRFnFTuZiLo+bD+r332bBmMJ8GBLXklIXXgxd3+v9+KUnZaUR5PJMa75Gsg==}
     engines: {node: '>= 0.4.0'}
 
-  nkeys.js@1.2.0-4:
-    resolution: {integrity: sha512-VLyOcyhYrQ7LN8jZhSaGtSVIy25h/Y+PFaKDbODW8nDgMcGyyjeUm7H02cssVqOVzmsEDh0Bq6BS9zXTXpKPUg==}
-    engines: {node: '>=16.0.0'}
-
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
@@ -1004,10 +993,6 @@ packages:
   npm-run-path@4.0.1:
     resolution: {integrity: sha512-S48WzZW777zhNIrn7gxOlISNAqi9ZC/uQFnRdbeIHhZhCA6UqpkOT8T1G7BvfdgP4Er8gF4sUbaS0i7QvIfCWw==}
     engines: {node: '>=8'}
-
-  nuid@2.0.1-2:
-    resolution: {integrity: sha512-zL7Z5+CivaZyUdBn76Ih8rffXABBSe3hzazHBk7qXsF4/o5DPDsblXjs5KQRlgjkeLa6XSCd5/GJaShArI2WMQ==}
-    engines: {node: '>= 18.x'}
 
   object-hash@3.0.0:
     resolution: {integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==}
@@ -1076,8 +1061,8 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  plugnmeet-protocol-js@1.0.5-rc.5:
-    resolution: {integrity: sha512-Zyd2EYcWkTu45hF9zSBMJ53H7v6ry+f1mjhuBdnzOVaQuy19ykYBMY8UgVv8CxXb/oGguujVW10GKzOsWy//cA==}
+  plugnmeet-protocol-js@1.0.5-rc.6:
+    resolution: {integrity: sha512-nycn/tijK7pirvbBQDE1+FF90duU9CfReS9vJwCVeDnH4fKOKP9Itth9fqHMx1h5hFZs7lZekY/5fjS+toaIwg==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -1132,10 +1117,6 @@ packages:
   readdirp@3.6.0:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
-
-  rechoir@0.6.2:
-    resolution: {integrity: sha512-HFM8rkZ+i3zrV+4LQjwQ0W+ez98pApMGM3HUrN04j3CqzPOzl9nmP15Y8YXNm8QHGv/eacOVEjqhmWpkRV0NAw==}
-    engines: {node: '>= 0.10'}
 
   regenerator-runtime@0.14.1:
     resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
@@ -1194,16 +1175,6 @@ packages:
 
   shell-quote@1.8.1:
     resolution: {integrity: sha512-6j1W9l1iAs/4xYBI1SYOVZyFcCis9b4KCLQ8fgAGG07QvzaRLVVRQvAy85yNmmZSjYjg4MWh4gNvlPujU/5LpA==}
-
-  shelljs@0.8.5:
-    resolution: {integrity: sha512-TiwcRcrkhHvbrZbnRcFYMLl30Dfov3HKqzp5tO5b4pt6G/SezKcYhmDg15zXVBswHmctSAQKznqNW2LO5tTDow==}
-    engines: {node: '>=4'}
-    hasBin: true
-
-  shx@0.3.4:
-    resolution: {integrity: sha512-N6A9MLVqjxZYcVn8hLmtneQWIJtp8IKzMP4eMnx+nqkvXoqinUPCbUFLp2UcWTEIUONhlk0ewxr/jaVGlc+J+g==}
-    engines: {node: '>=6'}
-    hasBin: true
 
   signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
@@ -1554,23 +1525,16 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@nats-io/jetstream@3.0.0-4':
+  '@nats-io/jetstream@3.0.0-10':
     dependencies:
-      '@nats-io/nats-core': 3.0.0-25
+      '@nats-io/nats-core': 3.0.0-26
 
-  '@nats-io/kv@3.0.0-3':
+  '@nats-io/kv@3.0.0-8':
     dependencies:
-      '@nats-io/jetstream': 3.0.0-4
-      '@nats-io/nats-core': 3.0.0-25
+      '@nats-io/jetstream': 3.0.0-10
+      '@nats-io/nats-core': 3.0.0-26
 
-  '@nats-io/nats-core@3.0.0-17':
-    dependencies:
-      nkeys.js: 1.2.0-4
-      nuid: 2.0.1-2
-      shx: 0.3.4
-      typescript: 5.5.4
-
-  '@nats-io/nats-core@3.0.0-25':
+  '@nats-io/nats-core@3.0.0-26':
     dependencies:
       '@nats-io/nkeys': 1.2.0-4
       '@nats-io/nuid': 2.0.1-2
@@ -1583,7 +1547,7 @@ snapshots:
 
   '@nats-io/transport-node@3.0.0-6':
     dependencies:
-      '@nats-io/nats-core': 3.0.0-25
+      '@nats-io/nats-core': 3.0.0-26
       '@nats-io/nkeys': 1.2.0-4
       '@nats-io/nuid': 2.0.1-2
 
@@ -2288,8 +2252,6 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  interpret@1.4.0: {}
-
   ip-address@9.0.5:
     dependencies:
       jsbn: 1.1.0
@@ -2437,17 +2399,11 @@ snapshots:
 
   netmask@2.0.2: {}
 
-  nkeys.js@1.2.0-4:
-    dependencies:
-      tweetnacl: 1.0.3
-
   normalize-path@3.0.0: {}
 
   npm-run-path@4.0.1:
     dependencies:
       path-key: 3.1.1
-
-  nuid@2.0.1-2: {}
 
   object-hash@3.0.0: {}
 
@@ -2523,7 +2479,7 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  plugnmeet-protocol-js@1.0.5-rc.5:
+  plugnmeet-protocol-js@1.0.5-rc.6:
     dependencies:
       '@bufbuild/protobuf': 2.0.0
 
@@ -2600,10 +2556,6 @@ snapshots:
     dependencies:
       picomatch: 2.3.1
 
-  rechoir@0.6.2:
-    dependencies:
-      resolve: 1.22.8
-
   regenerator-runtime@0.14.1: {}
 
   require-directory@2.1.1: {}
@@ -2647,17 +2599,6 @@ snapshots:
   shebang-regex@3.0.0: {}
 
   shell-quote@1.8.1: {}
-
-  shelljs@0.8.5:
-    dependencies:
-      glob: 7.2.3
-      interpret: 1.4.0
-      rechoir: 0.6.2
-
-  shx@0.3.4:
-    dependencies:
-      minimist: 1.2.8
-      shelljs: 0.8.5
 
   signal-exit@3.0.7: {}
 
