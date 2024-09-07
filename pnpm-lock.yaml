@@ -15,11 +15,11 @@ importers:
         specifier: 3.0.0-8
         version: 3.0.0-8
       '@nats-io/nats-core':
-        specifier: 3.0.0-26
-        version: 3.0.0-26
+        specifier: 3.0.0-27
+        version: 3.0.0-27
       '@nats-io/transport-node':
-        specifier: 3.0.0-6
-        version: 3.0.0-6
+        specifier: 3.0.0-12
+        version: 3.0.0-12
       axios:
         specifier: 1.7.7
         version: 1.7.7
@@ -167,8 +167,8 @@ packages:
   '@nats-io/kv@3.0.0-8':
     resolution: {integrity: sha512-hwG65AViKnx2LhnU0e+6qkbPIrbpLTUouvOL2eOv/oUIZszKD1YN6OBvKBWkYXFAssVmlk7BD/OuHTkCMcnH+w==}
 
-  '@nats-io/nats-core@3.0.0-26':
-    resolution: {integrity: sha512-fDNBVh0nRSKJAsGnlwyIQSlma1VHVSA/oWl5r3/ZAWPQRS/GPkZHuwz0TAXky8y5N8QXgT7lzFBqyktDldmGsQ==}
+  '@nats-io/nats-core@3.0.0-27':
+    resolution: {integrity: sha512-xJvUWoRvUTG/3K4Ppf5KXTZezicbvd2o/psMyI7YPtIxKZsZALXL/bLoNb7FB/Hw4jECioZE7LZCSK41npFD2A==}
 
   '@nats-io/nkeys@1.2.0-4':
     resolution: {integrity: sha512-61R4SO9059AyZBhoZRECHobHsY6mBOGwB5ewBrbnDKVtTehnFwyMNaORHhksFmu9K0zyUtwBWyffzKpibp2Cew==}
@@ -178,8 +178,8 @@ packages:
     resolution: {integrity: sha512-oXJiWXH87FjcPAXVVkoY+o7z9YFuOvsVlUlvB4h/QsoC1hp63lB18YOMHmKxVNO7BzvwzJh3SKLlIlsQrEwaxg==}
     engines: {node: '>= 18.x'}
 
-  '@nats-io/transport-node@3.0.0-6':
-    resolution: {integrity: sha512-pIUXHBZ0ikbvNMsw3paVbm508g+sAchKwdzPh21EwZlVwxI2dk5+D4fmtqCL9G60sdS7rSYkRuUdRqxtxpoJLg==}
+  '@nats-io/transport-node@3.0.0-12':
+    resolution: {integrity: sha512-TWBlZULn02iY3A3+MrC5CztQ4YclFQPiQrH56fToC68NA1rfqWw54RPWaUVrbjgg5u6dX1CH6yuNZImdZV5HGA==}
     engines: {node: '>= 18.0.0'}
 
   '@nodelib/fs.scandir@2.1.5':
@@ -1527,14 +1527,14 @@ snapshots:
 
   '@nats-io/jetstream@3.0.0-10':
     dependencies:
-      '@nats-io/nats-core': 3.0.0-26
+      '@nats-io/nats-core': 3.0.0-27
 
   '@nats-io/kv@3.0.0-8':
     dependencies:
       '@nats-io/jetstream': 3.0.0-10
-      '@nats-io/nats-core': 3.0.0-26
+      '@nats-io/nats-core': 3.0.0-27
 
-  '@nats-io/nats-core@3.0.0-26':
+  '@nats-io/nats-core@3.0.0-27':
     dependencies:
       '@nats-io/nkeys': 1.2.0-4
       '@nats-io/nuid': 2.0.1-2
@@ -1545,9 +1545,9 @@ snapshots:
 
   '@nats-io/nuid@2.0.1-2': {}
 
-  '@nats-io/transport-node@3.0.0-6':
+  '@nats-io/transport-node@3.0.0-12':
     dependencies:
-      '@nats-io/nats-core': 3.0.0-26
+      '@nats-io/nats-core': 3.0.0-27
       '@nats-io/nkeys': 1.2.0-4
       '@nats-io/nuid': 2.0.1-2
 
