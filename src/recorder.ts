@@ -10,8 +10,6 @@ import os from 'os';
 // @ts-ignore
 import Xvfb from 'xvfb';
 import { create, fromJsonString, toJsonString } from '@bufbuild/protobuf';
-
-import { logger, sleep } from './utils/helper';
 import {
   FromChildToParentSchema,
   FromParentToChildSchema,
@@ -19,6 +17,8 @@ import {
   RecordingTasks,
   StartRecorderChildArgsSchema,
 } from 'plugnmeet-protocol-js';
+
+import { logger, sleep } from './utils/helper';
 
 const args = process.argv.slice(2),
   platform = os.platform();

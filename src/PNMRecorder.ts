@@ -4,6 +4,16 @@ import { connect } from '@nats-io/transport-node/lib/connect';
 import { create, fromJsonString, toJsonString } from '@bufbuild/protobuf';
 import { ChildProcess } from 'concurrently/dist/src/command';
 import { fork } from 'child_process';
+import {
+  FromChildToParentSchema,
+  FromParentToChildSchema,
+  PlugNmeetToRecorder,
+  PlugNmeetToRecorderSchema,
+  RecorderServiceType,
+  RecorderToPlugNmeetSchema,
+  RecordingTasks,
+  StartRecorderChildArgsSchema,
+} from 'plugnmeet-protocol-js';
 
 import {
   ChildProcessInfoMap,
@@ -18,16 +28,6 @@ import {
   sendPing,
   updateRecorderProgress,
 } from './utils/natsTasks';
-import {
-  FromChildToParentSchema,
-  FromParentToChildSchema,
-  PlugNmeetToRecorder,
-  PlugNmeetToRecorderSchema,
-  RecorderServiceType,
-  RecorderToPlugNmeetSchema,
-  RecordingTasks,
-  StartRecorderChildArgsSchema,
-} from 'plugnmeet-protocol-js';
 
 const PING_INTERVAL = 3 * 1000;
 
@@ -109,7 +109,6 @@ export default class PNMRecorder {
     const sub = this._nc.subscribe(this._natsInfo.recorder.recorder_channel);
 
     for await (const m of sub) {
-      console.log(m.string());
       let payload: PlugNmeetToRecorder;
       try {
         payload = fromJsonString(PlugNmeetToRecorderSchema, m.string());
@@ -133,9 +132,12 @@ export default class PNMRecorder {
         case RecordingTasks.STOP_RECORDING:
         case RecordingTasks.STOP_RTMP:
         case RecordingTasks.STOP:
-          // stop task do not need to verify recorder id
+          // stop the task do not need to verify recorder id
           this.handleStopProcess(BigInt(payload.roomTableId));
           m.respond('success');
+          break;
+        default:
+          logger.error('invalid task');
       }
     }
   }
