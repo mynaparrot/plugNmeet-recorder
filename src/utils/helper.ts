@@ -16,7 +16,7 @@ const { combine, timestamp, printf } = format;
 axiosRetry(axios, { retryDelay: axiosRetry.exponentialDelay, retries: 4 });
 
 const logFormat = printf(({ level, message, timestamp }) => {
-  return `${timestamp} ${level}: ${message}`;
+  return `${timestamp} ${level}: ${message} \n`;
 });
 
 const transportFile: DailyRotateFile = new DailyRotateFile({
