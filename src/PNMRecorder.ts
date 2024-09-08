@@ -1,7 +1,12 @@
 import { NatsConnection } from '@nats-io/nats-core';
 import { Kvm } from '@nats-io/kv';
 import { connect } from '@nats-io/transport-node/lib/connect';
-import { create, fromJsonString, toJsonString } from '@bufbuild/protobuf';
+import {
+  create,
+  fromBinary,
+  fromJsonString,
+  toJsonString,
+} from '@bufbuild/protobuf';
 import { ChildProcess } from 'concurrently/dist/src/command';
 import { fork } from 'child_process';
 import {
@@ -111,7 +116,7 @@ export default class PNMRecorder {
     for await (const m of sub) {
       let payload: PlugNmeetToRecorder;
       try {
-        payload = fromJsonString(PlugNmeetToRecorderSchema, m.string());
+        payload = fromBinary(PlugNmeetToRecorderSchema, m.data);
       } catch (e) {
         logger.error(e);
         return;
@@ -119,7 +124,12 @@ export default class PNMRecorder {
       if (payload.from !== 'plugnmeet') {
         return;
       }
-      logger.info('Main: ' + payload.task.toString());
+      logger.info(
+        'Received new request: ' +
+          toJsonString(PlugNmeetToRecorderSchema, payload, {
+            alwaysEmitImplicit: true,
+          }),
+      );
 
       switch (payload.task) {
         case RecordingTasks.START_RECORDING:
@@ -169,31 +179,33 @@ export default class PNMRecorder {
     }
 
     let child: ChildProcess;
+    const data = toJsonString(StartRecorderChildArgsSchema, sendToChild, {
+      alwaysEmitImplicit: true,
+    });
+    logger.info(`creating recorder fork with data: ${data}`);
 
     if (typeof process.env.TS_NODE_DEV !== 'undefined') {
-      child = fork(
-        'src/recorder',
-        [toJsonString(StartRecorderChildArgsSchema, sendToChild)],
-        {
-          execArgv: ['-r', 'ts-node/register'],
-        },
-      );
+      child = fork('src/recorder', [data], {
+        execArgv: ['-r', 'ts-node/register'],
+      });
     } else {
-      child = fork('dist/recorder', [
-        toJsonString(StartRecorderChildArgsSchema, sendToChild),
-      ]);
+      child = fork('dist/recorder', [data]);
     }
 
     if (child.pid) {
       const childProcessInfo: ChildProcessInfoMap = {
         serviceType: sendToChild.serviceType,
         recording_id: sendToChild.recordingId,
-        room_table_id: BigInt(sendToChild.roomTableId),
+        room_table_id: sendToChild.roomTableId,
       };
       this._childProcessesInfoMapByChildPid.set(child.pid, childProcessInfo);
       this._childProcessesMapByRoomSid.set(
         sendToChild.serviceType + ':' + payload.roomTableId,
         child,
+      );
+
+      logger.info(
+        `started new recorder task with childId: ${child.pid}; processInfo: ${JSON.stringify(childProcessInfo)}`,
       );
     }
 

@@ -44,7 +44,7 @@ export interface NatsInfoRecorder {
 export interface ChildProcessInfoMap {
   serviceType: number;
   recording_id: string;
-  room_table_id: bigint;
+  room_table_id: string;
 }
 
 export interface FFMPEGOptions {

@@ -34,6 +34,7 @@ if (!args.length) {
   process.exit();
 }
 const recorderArgs = fromJsonString(StartRecorderChildArgsSchema, args[0]);
+logger.info(`Recorder: received recorderArgs: ${args[0]}`);
 
 const width = recorderArgs.width || 1800;
 const height = recorderArgs.height || 900;
@@ -51,7 +52,7 @@ if (platform === 'linux') {
 const closeConnection = async (hasError: boolean, msg: string) => {
   if (hasError) {
     logger.warn(
-      `Recorder: process ended with error, roomTableId: ${recorderArgs.roomTableId}, msg: ${msg}`,
+      `Recorder: process ended with error, serviceType:${recorderArgs.serviceType}; roomTableId: ${recorderArgs.roomTableId}; msg: ${msg}`,
     );
   }
 
