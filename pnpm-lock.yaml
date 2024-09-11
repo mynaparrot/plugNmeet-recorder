@@ -30,8 +30,8 @@ importers:
         specifier: 4.1.0
         version: 4.1.0
       plugnmeet-protocol-js:
-        specifier: 1.0.5-rc.6
-        version: 1.0.5-rc.6
+        specifier: 1.0.5-rc.12
+        version: 1.0.5-rc.12
       puppeteer:
         specifier: 23.3.0
         version: 23.3.0(typescript@5.5.4)
@@ -1061,8 +1061,8 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  plugnmeet-protocol-js@1.0.5-rc.6:
-    resolution: {integrity: sha512-nycn/tijK7pirvbBQDE1+FF90duU9CfReS9vJwCVeDnH4fKOKP9Itth9fqHMx1h5hFZs7lZekY/5fjS+toaIwg==}
+  plugnmeet-protocol-js@1.0.5-rc.12:
+    resolution: {integrity: sha512-GIYpoXNwIaQCwfRHSrHvOIlsNiWmSdM83RLvRA5u3aelsij+uFBD7svWHWqGhM2kK11GNDzvVY2ZWKPb1X07jQ==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -2479,7 +2479,7 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  plugnmeet-protocol-js@1.0.5-rc.6:
+  plugnmeet-protocol-js@1.0.5-rc.12:
     dependencies:
       '@bufbuild/protobuf': 2.0.0
 
