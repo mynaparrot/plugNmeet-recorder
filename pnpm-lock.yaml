@@ -30,8 +30,8 @@ importers:
         specifier: 4.1.0
         version: 4.1.0
       plugnmeet-protocol-js:
-        specifier: 1.0.5-rc.13
-        version: 1.0.5-rc.13
+        specifier: 1.0.5-rc.17
+        version: 1.0.5-rc.17
       puppeteer:
         specifier: 23.3.0
         version: 23.3.0(typescript@5.5.4)
@@ -108,6 +108,9 @@ packages:
 
   '@bufbuild/protobuf@2.0.0':
     resolution: {integrity: sha512-sw2JhwJyvyL0zlhG61aDzOVryEfJg2PDZFSV7i7IdC7nAE41WuXCru3QWLGiP87At0BMzKOoKO/FqEGoKygGZQ==}
+
+  '@bufbuild/protobuf@2.1.0':
+    resolution: {integrity: sha512-+2Mx67Y3skJ4NCD/qNSdBJNWtu6x6Qr53jeNg+QcwiL6mt0wK+3jwHH2x1p7xaYH6Ve2JKOVn0OxU35WsmqI9A==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -1062,8 +1065,8 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  plugnmeet-protocol-js@1.0.5-rc.13:
-    resolution: {integrity: sha512-1JAlNw6SkfmzosCRQrEBvPOH56zCoZUGY6w21ljNkxImGKh2f6wYEbY5kuLmSSsNs1IgTVD6KsRcInusZKMEFg==}
+  plugnmeet-protocol-js@1.0.5-rc.17:
+    resolution: {integrity: sha512-40qlR5lpPVf57CwAI8g08iWyhA/KGopqohpKqblHqR+cMdo330fhGdLESa5ZYLTImkjYU7AZpRZ29B7BZ7Vz+A==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -1469,6 +1472,8 @@ snapshots:
       regenerator-runtime: 0.14.1
 
   '@bufbuild/protobuf@2.0.0': {}
+
+  '@bufbuild/protobuf@2.1.0': {}
 
   '@colors/colors@1.6.0': {}
 
@@ -2480,9 +2485,9 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  plugnmeet-protocol-js@1.0.5-rc.13:
+  plugnmeet-protocol-js@1.0.5-rc.17:
     dependencies:
-      '@bufbuild/protobuf': 2.0.0
+      '@bufbuild/protobuf': 2.1.0
 
   prelude-ls@1.2.1: {}
 
