@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/js-yaml": "4.0.9",
-    "@types/ws": "8.5.12",
+    "@types/ws": "8.5.13",
     "@typescript-eslint/eslint-plugin": "8.8.0",
     "@typescript-eslint/parser": "8.8.0",
     "concurrently": "9.0.1",
