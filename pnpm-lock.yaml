@@ -30,8 +30,8 @@ importers:
         specifier: 4.1.0
         version: 4.1.0
       plugnmeet-protocol-js:
-        specifier: 1.0.7-rc.5
-        version: 1.0.7-rc.5
+        specifier: 1.0.7-rc.6
+        version: 1.0.7-rc.6
       puppeteer:
         specifier: 23.3.0
         version: 23.3.0(typescript@5.6.2)
@@ -600,6 +600,7 @@ packages:
   eslint@8.57.1:
     resolution: {integrity: sha512-ypowyDxpVSYpkXr9WPv2PAZCtNip1Mv5KTW0SCurXv/9iOpcrH9PaqUElksqEB6pChqHGDRCFTyrZlGhnLNGiA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -1063,8 +1064,8 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  plugnmeet-protocol-js@1.0.7-rc.5:
-    resolution: {integrity: sha512-gJtNLHpEoC7l7hyGfQTOwmrZv0+pDkfyOkl80mc+AgzD2/TSHxSUrGJy8wUtU97H+2+fKXkQD+jPqvDsKYslzw==}
+  plugnmeet-protocol-js@1.0.7-rc.6:
+    resolution: {integrity: sha512-i4XIfeDKaf0iBi+HsAfryyn2LNoA69f/32ykbU2cv35P75ysCVzc0zxLaWBGn5PtkITPZKS98d1Sp2B5DVFfVQ==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -2469,7 +2470,7 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  plugnmeet-protocol-js@1.0.7-rc.5:
+  plugnmeet-protocol-js@1.0.7-rc.6:
     dependencies:
       '@bufbuild/protobuf': 2.2.2
 
