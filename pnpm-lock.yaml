@@ -9,17 +9,17 @@ importers:
   .:
     dependencies:
       '@bufbuild/protobuf':
-        specifier: 2.1.0
-        version: 2.1.0
+        specifier: 2.2.2
+        version: 2.2.2
       '@nats-io/kv':
-        specifier: 3.0.0-8
-        version: 3.0.0-8
+        specifier: 3.0.0-16
+        version: 3.0.0-16
       '@nats-io/nats-core':
-        specifier: 3.0.0-27
-        version: 3.0.0-27
+        specifier: 3.0.0-34
+        version: 3.0.0-34
       '@nats-io/transport-node':
-        specifier: 3.0.0-12
-        version: 3.0.0-12
+        specifier: 3.0.0-20
+        version: 3.0.0-20
       axios:
         specifier: 1.7.7
         version: 1.7.7
@@ -30,8 +30,8 @@ importers:
         specifier: 4.1.0
         version: 4.1.0
       plugnmeet-protocol-js:
-        specifier: 1.0.5-rc.24
-        version: 1.0.5-rc.24
+        specifier: 1.0.7-rc.5
+        version: 1.0.7-rc.5
       puppeteer:
         specifier: 23.3.0
         version: 23.3.0(typescript@5.6.2)
@@ -102,8 +102,8 @@ packages:
     resolution: {integrity: sha512-EStJpq4OuY8xYfhGVXngigBJRWxftKX9ksiGDnmlY3o7B/V7KIAc9X4oiK87uPJSc/vs5L869bem5fhZa8caZw==}
     engines: {node: '>=6.9.0'}
 
-  '@bufbuild/protobuf@2.1.0':
-    resolution: {integrity: sha512-+2Mx67Y3skJ4NCD/qNSdBJNWtu6x6Qr53jeNg+QcwiL6mt0wK+3jwHH2x1p7xaYH6Ve2JKOVn0OxU35WsmqI9A==}
+  '@bufbuild/protobuf@2.2.2':
+    resolution: {integrity: sha512-UNtPCbrwrenpmrXuRwn9jYpPoweNXj8X5sMvYgsqYyaH8jQ6LfUJSk3dJLnBK+6sfYPrF4iAIo5sd5HQ+tg75A==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -157,25 +157,25 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@nats-io/jetstream@3.0.0-10':
-    resolution: {integrity: sha512-FOdwBximucQszBAsSAckqhXxh0WZozKbRTMzODCudcHpOEv0jUwnoqFLG/8r607pJDX1gdiYADF5hpeV3gvh7A==}
+  '@nats-io/jetstream@3.0.0-21':
+    resolution: {integrity: sha512-Q1v+SpcKXuq5u0klW6aOsnz3sJz+mvwPl6m4BhGHaTQln3Z6nY1+3uF6TrZumHbDZ2D6lgztAEjIwvcBM21FYg==}
 
-  '@nats-io/kv@3.0.0-8':
-    resolution: {integrity: sha512-hwG65AViKnx2LhnU0e+6qkbPIrbpLTUouvOL2eOv/oUIZszKD1YN6OBvKBWkYXFAssVmlk7BD/OuHTkCMcnH+w==}
+  '@nats-io/kv@3.0.0-16':
+    resolution: {integrity: sha512-EmwzzQJD06YvEoMkPT4PxLcfANjDeC0FvbrIH7rfxOAJrQWPv7zntvP6tQFeBU1QV6HSSrS42dPMv4n6WK/YEw==}
 
-  '@nats-io/nats-core@3.0.0-27':
-    resolution: {integrity: sha512-xJvUWoRvUTG/3K4Ppf5KXTZezicbvd2o/psMyI7YPtIxKZsZALXL/bLoNb7FB/Hw4jECioZE7LZCSK41npFD2A==}
+  '@nats-io/nats-core@3.0.0-34':
+    resolution: {integrity: sha512-G1ohebUQkq3fev5PT/Q79s6GchZir/d+af3DDeA0yk18413vZg5mnl0ERDcyRCOAy8dx8uG70qvefi7LoCTzWQ==}
 
-  '@nats-io/nkeys@1.2.0-4':
-    resolution: {integrity: sha512-61R4SO9059AyZBhoZRECHobHsY6mBOGwB5ewBrbnDKVtTehnFwyMNaORHhksFmu9K0zyUtwBWyffzKpibp2Cew==}
+  '@nats-io/nkeys@1.2.0-7':
+    resolution: {integrity: sha512-UJKHaua76paFfJfsQyg6Son4Rxj+3fGjsKF+CKUW/GjixJGOArPv51y5HZzpQed2nk0B4WP22rsDZ2xhTSsAGA==}
     engines: {node: '>=16.0.0'}
 
   '@nats-io/nuid@2.0.1-2':
     resolution: {integrity: sha512-oXJiWXH87FjcPAXVVkoY+o7z9YFuOvsVlUlvB4h/QsoC1hp63lB18YOMHmKxVNO7BzvwzJh3SKLlIlsQrEwaxg==}
     engines: {node: '>= 18.x'}
 
-  '@nats-io/transport-node@3.0.0-12':
-    resolution: {integrity: sha512-TWBlZULn02iY3A3+MrC5CztQ4YclFQPiQrH56fToC68NA1rfqWw54RPWaUVrbjgg5u6dX1CH6yuNZImdZV5HGA==}
+  '@nats-io/transport-node@3.0.0-20':
+    resolution: {integrity: sha512-/EGWkoGs5EuhW36uGz32qsCfQzfN7rrY2vzl/+btt49KGCYBjcY+8gG1kEBqWEW0+3cLVXWS6MVECDONbqgu1Q==}
     engines: {node: '>= 18.0.0'}
 
   '@nodelib/fs.scandir@2.1.5':
@@ -1063,8 +1063,8 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  plugnmeet-protocol-js@1.0.5-rc.24:
-    resolution: {integrity: sha512-Ol1vXKArtbYTudEAlVbVtVGu0qY5Bpigxsh8VEArEmabUy1aUoWNAxaIk3wVn0W/3KC//jVO3fAVLzBxboen4w==}
+  plugnmeet-protocol-js@1.0.7-rc.5:
+    resolution: {integrity: sha512-gJtNLHpEoC7l7hyGfQTOwmrZv0+pDkfyOkl80mc+AgzD2/TSHxSUrGJy8wUtU97H+2+fKXkQD+jPqvDsKYslzw==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -1459,7 +1459,7 @@ snapshots:
       js-tokens: 4.0.0
       picocolors: 1.1.0
 
-  '@bufbuild/protobuf@2.1.0': {}
+  '@bufbuild/protobuf@2.2.2': {}
 
   '@colors/colors@1.6.0': {}
 
@@ -1517,30 +1517,30 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@nats-io/jetstream@3.0.0-10':
+  '@nats-io/jetstream@3.0.0-21':
     dependencies:
-      '@nats-io/nats-core': 3.0.0-27
+      '@nats-io/nats-core': 3.0.0-34
 
-  '@nats-io/kv@3.0.0-8':
+  '@nats-io/kv@3.0.0-16':
     dependencies:
-      '@nats-io/jetstream': 3.0.0-10
-      '@nats-io/nats-core': 3.0.0-27
+      '@nats-io/jetstream': 3.0.0-21
+      '@nats-io/nats-core': 3.0.0-34
 
-  '@nats-io/nats-core@3.0.0-27':
+  '@nats-io/nats-core@3.0.0-34':
     dependencies:
-      '@nats-io/nkeys': 1.2.0-4
+      '@nats-io/nkeys': 1.2.0-7
       '@nats-io/nuid': 2.0.1-2
 
-  '@nats-io/nkeys@1.2.0-4':
+  '@nats-io/nkeys@1.2.0-7':
     dependencies:
       tweetnacl: 1.0.3
 
   '@nats-io/nuid@2.0.1-2': {}
 
-  '@nats-io/transport-node@3.0.0-12':
+  '@nats-io/transport-node@3.0.0-20':
     dependencies:
-      '@nats-io/nats-core': 3.0.0-27
-      '@nats-io/nkeys': 1.2.0-4
+      '@nats-io/nats-core': 3.0.0-34
+      '@nats-io/nkeys': 1.2.0-7
       '@nats-io/nuid': 2.0.1-2
 
   '@nodelib/fs.scandir@2.1.5':
@@ -2469,9 +2469,9 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  plugnmeet-protocol-js@1.0.5-rc.24:
+  plugnmeet-protocol-js@1.0.7-rc.5:
     dependencies:
-      '@bufbuild/protobuf': 2.1.0
+      '@bufbuild/protobuf': 2.2.2
 
   prelude-ls@1.2.1: {}
 
