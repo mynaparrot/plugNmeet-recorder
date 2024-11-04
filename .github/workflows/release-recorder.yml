@@ -1,23 +1,39 @@
 name: Build and release recorder
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  build:
+  release-please:
     runs-on: ubuntu-latest
     steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
       - name: Checkout
+        if: ${{ steps.release.outputs.release_created }}
         uses: actions/checkout@v4
       - name: setup node
+        if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
       - uses: pnpm/action-setup@v4
+        if: ${{ steps.release.outputs.release_created }}
         name: Install pnpm
         with:
           version: 9
       - name: Build project
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm install
           pnpm run build
@@ -25,14 +41,4 @@ jobs:
           rsync -ar dist package.json config_sample.yaml tmp/recorder/
           cd tmp
           zip -X -r recorder.zip recorder
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: upload recorder
-          path: tmp/recorder.zip
-      - name: Upload to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: tmp/recorder.zip application/zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh release upload ${{ steps.release.outputs.tag_name }} recorder.zip
