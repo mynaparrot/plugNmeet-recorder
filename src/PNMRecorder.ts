@@ -119,10 +119,10 @@ export default class PNMRecorder {
         payload = fromBinary(PlugNmeetToRecorderSchema, m.data);
       } catch (e) {
         logger.error(e);
-        return;
+        continue;
       }
       if (payload.from !== 'plugnmeet') {
-        return;
+        continue;
       }
       logger.info(
         'Received new request: ' +
