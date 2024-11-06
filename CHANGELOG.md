@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.4.1...v1.4.2) (2024-11-06)
+
+
+### Bug Fixes
+
+* **deps:** deps update ([71bb01e](https://github.com/mynaparrot/plugNmeet-recorder/commit/71bb01e74e604a864175e24a25363a47851bfc66))
+* should use `continue` not `return` ([67912c9](https://github.com/mynaparrot/plugNmeet-recorder/commit/67912c9cca3131b38b309e7b8ea8d7de4ad95750))
+
 ## [1.4.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.4.0...v1.4.1) (2024-11-04)
 
 
