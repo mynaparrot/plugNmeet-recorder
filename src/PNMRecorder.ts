@@ -102,7 +102,9 @@ export default class PNMRecorder {
       // start ping
       await this.startPing(keyName);
     } catch (_err) {
-      logger.error(`error connecting to ${JSON.stringify(_err)}`);
+      logger.error(
+        `nats server connection failed, msg: ${JSON.stringify(_err)}`,
+      );
       process.exit(1);
     }
   };
