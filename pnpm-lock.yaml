@@ -12,8 +12,8 @@ importers:
         specifier: 2.2.2
         version: 2.2.2
       '@nats-io/kv':
-        specifier: 3.0.0-17
-        version: 3.0.0-17
+        specifier: 3.0.0-28
+        version: 3.0.0-28
       '@nats-io/nats-core':
         specifier: 3.0.0-35
         version: 3.0.0-35
@@ -157,17 +157,24 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@nats-io/jetstream@3.0.0-23':
-    resolution: {integrity: sha512-MiUMWHrBi4/3ldZ66Dcl1NbetBhMA0717EmWqwJQS29tXvUKaWbJx6pliLx2F6Dn1Y7qUo9x4f2gJF70ToVy4g==}
+  '@nats-io/jetstream@3.0.0-34':
+    resolution: {integrity: sha512-DMyDSCW0WdKQE0/dCI6qZVTb+Gg3oFmEvtqG3Nhf5MpwTUG8X4EDaeYsK7zx+Hj/VfQCmkXX9vg02ewswNcX8A==}
 
-  '@nats-io/kv@3.0.0-17':
-    resolution: {integrity: sha512-d8ApPuWwHcz2452Tt0KS6fL/JyG8RMPKMUD3V2G5AWb25Ndx9FbVyShHLNnZ4h501vYi5qN2oiThhi34VYw+qA==}
+  '@nats-io/kv@3.0.0-28':
+    resolution: {integrity: sha512-iyiYL+4ZugAnnPFa9ItPzoUxaYY454HbBJe4yLDzzfOVbqUmtN+r+pCL0TYuDrD4OtD1cMB/ytcrJ2EGRhSVKw==}
 
   '@nats-io/nats-core@3.0.0-35':
     resolution: {integrity: sha512-2oaAd+kBRSW8w5SsyQbtSqfSZwOsU6av/8Nnrif3uEZXmkxZFO750F1lfH8/riGkRfWMLqFaYPAA1IkS86uAnQ==}
 
+  '@nats-io/nats-core@3.0.0-47':
+    resolution: {integrity: sha512-sh+SVmTTXv286EY/EioIHSuk2ZZRRwuOCZw0SoHxxokedHZaQsaBONAarK9I1foJ+mQXY/ZP0tGhkpt0GpBCpA==}
+
   '@nats-io/nkeys@1.2.0-7':
     resolution: {integrity: sha512-UJKHaua76paFfJfsQyg6Son4Rxj+3fGjsKF+CKUW/GjixJGOArPv51y5HZzpQed2nk0B4WP22rsDZ2xhTSsAGA==}
+    engines: {node: '>=16.0.0'}
+
+  '@nats-io/nkeys@2.0.0-3':
+    resolution: {integrity: sha512-ars24TseiM1v5JTdSl9lgFV5ayoq1nqYD5apDn3LoWZM5BFGve11cam2N6F/VVOENCZzuAkLtw/uTN5HDutkmA==}
     engines: {node: '>=16.0.0'}
 
   '@nats-io/nuid@2.0.1-2':
@@ -600,6 +607,7 @@ packages:
   eslint@8.57.1:
     resolution: {integrity: sha512-ypowyDxpVSYpkXr9WPv2PAZCtNip1Mv5KTW0SCurXv/9iOpcrH9PaqUElksqEB6pChqHGDRCFTyrZlGhnLNGiA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -1517,21 +1525,30 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@nats-io/jetstream@3.0.0-23':
+  '@nats-io/jetstream@3.0.0-34':
     dependencies:
-      '@nats-io/nats-core': 3.0.0-35
+      '@nats-io/nats-core': 3.0.0-47
 
-  '@nats-io/kv@3.0.0-17':
+  '@nats-io/kv@3.0.0-28':
     dependencies:
-      '@nats-io/jetstream': 3.0.0-23
-      '@nats-io/nats-core': 3.0.0-35
+      '@nats-io/jetstream': 3.0.0-34
+      '@nats-io/nats-core': 3.0.0-47
 
   '@nats-io/nats-core@3.0.0-35':
     dependencies:
       '@nats-io/nkeys': 1.2.0-7
       '@nats-io/nuid': 2.0.1-2
 
+  '@nats-io/nats-core@3.0.0-47':
+    dependencies:
+      '@nats-io/nkeys': 2.0.0-3
+      '@nats-io/nuid': 2.0.1-2
+
   '@nats-io/nkeys@1.2.0-7':
+    dependencies:
+      tweetnacl: 1.0.3
+
+  '@nats-io/nkeys@2.0.0-3':
     dependencies:
       tweetnacl: 1.0.3
 
