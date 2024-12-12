@@ -18,8 +18,8 @@ importers:
         specifier: 3.0.0-35
         version: 3.0.0-35
       '@nats-io/transport-node':
-        specifier: 3.0.0-21
-        version: 3.0.0-21
+        specifier: 3.0.0-33
+        version: 3.0.0-33
       axios:
         specifier: 1.7.7
         version: 1.7.7
@@ -166,16 +166,23 @@ packages:
   '@nats-io/nats-core@3.0.0-35':
     resolution: {integrity: sha512-2oaAd+kBRSW8w5SsyQbtSqfSZwOsU6av/8Nnrif3uEZXmkxZFO750F1lfH8/riGkRfWMLqFaYPAA1IkS86uAnQ==}
 
+  '@nats-io/nats-core@3.0.0-48':
+    resolution: {integrity: sha512-IGT2vGgDxPAXrGQqzpD27EYMoIUjU+Y3AOgecLIIouews0qv9Wh2vJ10QmRSdElVaDL6VZTY+pyU3BJUFhD4kQ==}
+
   '@nats-io/nkeys@1.2.0-7':
     resolution: {integrity: sha512-UJKHaua76paFfJfsQyg6Son4Rxj+3fGjsKF+CKUW/GjixJGOArPv51y5HZzpQed2nk0B4WP22rsDZ2xhTSsAGA==}
+    engines: {node: '>=16.0.0'}
+
+  '@nats-io/nkeys@2.0.0-3':
+    resolution: {integrity: sha512-ars24TseiM1v5JTdSl9lgFV5ayoq1nqYD5apDn3LoWZM5BFGve11cam2N6F/VVOENCZzuAkLtw/uTN5HDutkmA==}
     engines: {node: '>=16.0.0'}
 
   '@nats-io/nuid@2.0.1-2':
     resolution: {integrity: sha512-oXJiWXH87FjcPAXVVkoY+o7z9YFuOvsVlUlvB4h/QsoC1hp63lB18YOMHmKxVNO7BzvwzJh3SKLlIlsQrEwaxg==}
     engines: {node: '>= 18.x'}
 
-  '@nats-io/transport-node@3.0.0-21':
-    resolution: {integrity: sha512-R5PA2j3Mj9XMw3i94Evn4vSvUgPad2hdv0DqsNOutyKwlDoevvJRrXsTP0/roRf3IilfGaLs/zzm3pQjuyB/qw==}
+  '@nats-io/transport-node@3.0.0-33':
+    resolution: {integrity: sha512-eq3X6Z1pcdIWUZ57jKZay1J+RTQmvaNts2+GywPZVDX6uE/c8CQkdlqY+0SCUfbtiPjEt4TDtFs00IBvV84Q8w==}
     engines: {node: '>= 18.0.0'}
 
   '@nodelib/fs.scandir@2.1.5':
@@ -600,6 +607,7 @@ packages:
   eslint@8.57.1:
     resolution: {integrity: sha512-ypowyDxpVSYpkXr9WPv2PAZCtNip1Mv5KTW0SCurXv/9iOpcrH9PaqUElksqEB6pChqHGDRCFTyrZlGhnLNGiA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -1531,16 +1539,25 @@ snapshots:
       '@nats-io/nkeys': 1.2.0-7
       '@nats-io/nuid': 2.0.1-2
 
+  '@nats-io/nats-core@3.0.0-48':
+    dependencies:
+      '@nats-io/nkeys': 2.0.0-3
+      '@nats-io/nuid': 2.0.1-2
+
   '@nats-io/nkeys@1.2.0-7':
+    dependencies:
+      tweetnacl: 1.0.3
+
+  '@nats-io/nkeys@2.0.0-3':
     dependencies:
       tweetnacl: 1.0.3
 
   '@nats-io/nuid@2.0.1-2': {}
 
-  '@nats-io/transport-node@3.0.0-21':
+  '@nats-io/transport-node@3.0.0-33':
     dependencies:
-      '@nats-io/nats-core': 3.0.0-35
-      '@nats-io/nkeys': 1.2.0-7
+      '@nats-io/nats-core': 3.0.0-48
+      '@nats-io/nkeys': 2.0.0-3
       '@nats-io/nuid': 2.0.1-2
 
   '@nodelib/fs.scandir@2.1.5':
