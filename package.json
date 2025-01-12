@@ -14,33 +14,33 @@
     "lint": "prettier --write \"./src/**/*.{ts,js}\" && eslint --fix ./src/**/*.{ts,js}"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "2.2.2",
-    "@nats-io/kv": "3.0.0-17",
-    "@nats-io/nats-core": "3.0.0-35",
-    "@nats-io/transport-node": "3.0.0-21",
-    "axios": "1.7.7",
+    "@bufbuild/protobuf": "2.2.3",
+    "@nats-io/kv": "3.0.0-29",
+    "@nats-io/nats-core": "3.0.0-48",
+    "@nats-io/transport-node": "3.0.0-33",
+    "axios": "1.7.9",
     "axios-retry": "4.5.0",
     "js-yaml": "4.1.0",
-    "plugnmeet-protocol-js": "1.0.7-rc.6",
-    "puppeteer": "23.3.0",
-    "winston": "3.14.2",
+    "plugnmeet-protocol-js": "1.0.9",
+    "puppeteer": "23.5.3",
+    "winston": "3.17.0",
     "winston-daily-rotate-file": "5.0.0",
     "ws": "8.18.0",
     "xvfb": "0.4.0"
   },
   "devDependencies": {
     "@types/js-yaml": "4.0.9",
-    "@types/ws": "8.5.12",
+    "@types/ws": "8.5.13",
     "@typescript-eslint/eslint-plugin": "8.8.0",
     "@typescript-eslint/parser": "8.8.0",
-    "concurrently": "9.0.1",
+    "concurrently": "9.1.2",
     "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-prettier": "5.2.1",
     "eslint-watch": "8.0.0",
-    "prettier": "3.3.3",
+    "prettier": "3.4.2",
     "ts-node": "10.9.2",
     "ts-node-dev": "2.0.0",
-    "typescript": "5.6.3"
+    "typescript": "5.7.3"
   }
 }
