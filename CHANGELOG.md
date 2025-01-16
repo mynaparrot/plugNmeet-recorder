@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.3](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.4.2...v1.4.3) (2025-01-12)
+
+
+### Bug Fixes
+
+* backed to `23.3.1` ([bba01f6](https://github.com/mynaparrot/plugNmeet-recorder/commit/bba01f68e0d21f8fa0bbaf3f8088222e0ef0796e))
+* backed to `23.3.1` ([52e0e42](https://github.com/mynaparrot/plugNmeet-recorder/commit/52e0e42280972553a3cd951940ad69f3d8cc5309))
+* bump deps ([9b81357](https://github.com/mynaparrot/plugNmeet-recorder/commit/9b81357de692c3610f00d47bf83e072095a50a3b))
+* bump nodejs ([09c5b6e](https://github.com/mynaparrot/plugNmeet-recorder/commit/09c5b6e39771297c8fc121661d1b2ac48599047e))
+
 ## [1.4.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.4.1...v1.4.2) (2024-11-06)
 
 
