@@ -37,7 +37,7 @@ sudo apt install -y fonts-noto fonts-liberation
 
 **Install recorder**
 
-1) To download the latest version based on the type of your OS architecture, check [release page.](https://github.com/mynaparrot/plugNmeet-recorder/releases).
+1) To download the latest version based on the type of your OS architecture, check [release page,](https://github.com/mynaparrot/plugNmeet-recorder/releases) or can use [plugnmeet-recorder](https://hub.docker.com/repository/docker/mynaparrot/plugnmeet-recorder) docker image.
 2) Unzip the zip file and navigate to the directory from the terminal, then run.
 
 ```
