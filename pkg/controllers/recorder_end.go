@@ -19,21 +19,21 @@ func (c *RecorderController) handleStopTask(req *plugnmeet.PlugNmeetToRecorder) 
 	var process *recorder.Recorder
 	switch req.Task {
 	case plugnmeet.RecordingTasks_STOP_RECORDING:
-		ok, val := c.getRecordersInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RECORDING)
+		ok, val := c.getRecorderInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RECORDING)
 		if !ok {
 			return false
 		}
 		process = val
 	case plugnmeet.RecordingTasks_STOP_RTMP:
-		ok, val := c.getRecordersInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RTMP)
+		ok, val := c.getRecorderInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RTMP)
 		if !ok {
 			return false
 		}
 		process = val
 	case plugnmeet.RecordingTasks_STOP:
-		ok, val := c.getRecordersInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RECORDING)
+		ok, val := c.getRecorderInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RECORDING)
 		if !ok {
-			ok, val = c.getRecordersInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RTMP)
+			ok, val = c.getRecorderInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RTMP)
 			if !ok {
 				return false
 			}

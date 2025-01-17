@@ -25,8 +25,9 @@ func NewRecorderController() *RecorderController {
 	ns := natsservice.New(cnf)
 
 	return &RecorderController{
-		cnf: cnf,
-		ns:  ns,
+		cnf:         cnf,
+		ns:          ns,
+		closeTicker: make(chan bool),
 	}
 }
 
@@ -98,7 +99,7 @@ func (c *RecorderController) BootUp() {
 	fmt.Println("recorder is ready to accept tasks, recorderId:", c.cnf.Recorder.Id)
 }
 
-func (c *RecorderController) getRecordersInProgress(tableId int64, task plugnmeet.RecordingTasks) (bool, *recorder.Recorder) {
+func (c *RecorderController) getRecorderInProgress(tableId int64, task plugnmeet.RecordingTasks) (bool, *recorder.Recorder) {
 	id := fmt.Sprintf("%d-%d", tableId, task)
 	val, ok := c.recordersInProgress.Load(id)
 	if !ok {
@@ -114,12 +115,10 @@ func (c *RecorderController) CallEndToAll() {
 		process.Close(nil)
 		return true
 	})
+	close(c.closeTicker)
 }
 
 func (c *RecorderController) startPing() {
-	c.closeTicker = make(chan bool)
-	defer close(c.closeTicker)
-
 	ping := time.NewTicker(3 * time.Second)
 
 	for {
