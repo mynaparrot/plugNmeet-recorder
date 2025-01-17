@@ -7,35 +7,29 @@ the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script 
 
 **Requirements**
 
-1) Nodejs
-2) Chromium
-3) xvfb
-4) ffmpeg
+1) Linux system (Recommend: Ubuntu)
+2) Google Chrome
+3) pulseaudio
+4) xvfb
+5) ffmpeg
 
 **Install dependencies (Ubuntu)**
 
 ```
-## nodejs
-## https://github.com/nodesource/distributions#debian-and-ubuntu-based-distributions
+## To insall pulseaudio, xvfb & ffmpeg
+sudo apt install -y pulseaudio xvfb ffmpeg
 
-mkdir -p /usr/share/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
-sudo echo "deb [arch=amd64 signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-  
-sudo apt -y update
-sudo apt -y install nodejs
+## To start pulseaudio
+pulseaudio -D --verbose --exit-idle-time=-1 --disallow-exit
+# to start at boot
+systemctl --user enable pulseaudio
 
-## xvfb & ffmpeg
-sudo apt install -y xvfb ffmpeg
-
-## Google Chrome (optional)
-By default recorder will use Chromium browser but if you want then you can use Google chrome too.
+## Google Chrome
 
 curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg
 sudo echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" >/etc/apt/sources.list.d/google-chrome.list
 
-sudo apt -y update
-sudo apt -y install google-chrome-stable
+sudo apt -y update && apt -y install google-chrome-stable
 
 ## optional
 sudo apt install -y fonts-noto fonts-liberation
@@ -43,8 +37,8 @@ sudo apt install -y fonts-noto fonts-liberation
 
 **Install recorder**
 
-1) To download the latest version, check [release page.](https://github.com/mynaparrot/plugNmeet-recorder/releases)
-2) Unzip the recorder.zip file and navigate to the directory from the terminal, then run.
+1) To download the latest version based on the type of your OS architecture, check [release page.](https://github.com/mynaparrot/plugNmeet-recorder/releases).
+2) Unzip the zip file and navigate to the directory from the terminal, then run.
 
 ```
 cp config_sample.yaml config.yaml
@@ -53,31 +47,29 @@ cp config_sample.yaml config.yaml
 3) Change the relevant information in the `config.yaml` file. Redis information should be the same as `plugnmeet-server`
    . The `main_path` value should be same as `recording_files_path` value of `plugnmeet-server`'s `config.yaml` file. If
    you intend to use NFS, ensure that both the recorder and the plugnmeet-server can access this directory. Otherwise,
-   the user will be unable to download recordings. Also, ensure that nodejs has write permissions on the path.
+   the user will be unable to download recordings.
 
-4) Change `plugNmeet_info` with correct information.
+4) Change `plugNmeet_info` & `nats_info` with correct information.
 
 5) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose the appropriate one
    based on availability. In that case change value of `id` inside `config.yaml` file. Make sure that value is unique,
    example: `node_01`, `node_02` ... You can also set the value of `max_limit` based on the server's capacity.
 
-6) Start server `pnpm start`
+6) Start server `./plugnmeet-recorder-linux-[amd64|arm64]`
 
 **Development**
 
-1) Clone the project & navigate to the directory. Make sure you've nodejs install in your
-   PC. https://nodejs.org/en/download/
-2) Copy to rename this file:
+1) Clone the project & navigate to the directory. 
+2) Copy to rename the following files and update info:
 
 ```
 cp config_sample.yaml config.yaml
+cp docker-compose_sample.yaml docker-compose_sample.yaml
 ```
 
-3) Now start server
+3) Now start
 
 ```
-pnpm install
-pnpm run dev
-// to build
-pnpm run build
+docker compose build
+docker compose up
 ```

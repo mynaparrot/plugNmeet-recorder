@@ -1,10 +1,7 @@
-logs/
-*.log
-npm-debug.log*
 .idea
 config.yaml
-dist/
-node_modules/
+docker-compose.yaml
+logs/
 recording_files/
 post_processing_scripts/*
-!post_processing_scripts/example.js
+!post_processing_scripts/example.sh
