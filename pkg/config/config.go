@@ -111,19 +111,19 @@ func (a *AppConfig) setDefaultConfig() {
 	}
 
 	if a.FfmpegSettings == nil {
-		a.FfmpegSettings.Recording = FfmpegOptions{
-			PreInput:  "-loglevel error -thread_queue_size 512 -draw_mouse 0",
-			PostInput: "-c:v libx264 -x264-params keyint=120:scenecut=0 -preset ultrafast -crf 23 -c:a aac -af highpass=f=200,lowpass=f=2000,afftdn -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y",
-		}
-
-		a.FfmpegSettings.PostRecording = FfmpegOptions{
-			PreInput:  "-loglevel error",
-			PostInput: "-preset ultrafast -movflags faststart -y",
-		}
-
-		a.FfmpegSettings.Rtmp = FfmpegOptions{
-			PreInput:  "-loglevel error -draw_mouse 0",
-			PostInput: "-c:v libx264 -pix_fmt yuv420p -x264-params keyint=120:scenecut=0 -b:v 2500k -video_size 1280x720 -c:a aac -b:a 128k -ar 44100 -af highpass=f=200,lowpass=f=2000,afftdn -preset ultrafast -crf 23 -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -bufsize 512k -flush_packets 1 -tune zerolatency -f flv",
+		a.FfmpegSettings = &FfmpegSettings{
+			Recording: FfmpegOptions{
+				PreInput:  "-loglevel error -thread_queue_size 512 -draw_mouse 0",
+				PostInput: "-c:v libx264 -x264-params keyint=120:scenecut=0 -preset ultrafast -crf 23 -c:a aac -af highpass=f=200,lowpass=f=2000,afftdn -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y",
+			},
+			PostRecording: FfmpegOptions{
+				PreInput:  "-loglevel error",
+				PostInput: "-preset ultrafast -movflags faststart -y",
+			},
+			Rtmp: FfmpegOptions{
+				PreInput:  "-loglevel error -draw_mouse 0",
+				PostInput: "-c:v libx264 -pix_fmt yuv420p -x264-params keyint=120:scenecut=0 -b:v 2500k -video_size 1280x720 -c:a aac -b:a 128k -ar 44100 -af highpass=f=200,lowpass=f=2000,afftdn -preset ultrafast -crf 23 -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -bufsize 512k -flush_packets 1 -tune zerolatency -f flv",
+			},
 		}
 	}
 }

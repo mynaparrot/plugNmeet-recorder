@@ -64,7 +64,7 @@ cp config_sample.yaml config.yaml
 
 ```
 cp config_sample.yaml config.yaml
-cp docker-compose_sample.yaml docker-compose_sample.yaml
+cp docker-compose_sample.yaml docker-compose.yaml
 ```
 
 3) Now start

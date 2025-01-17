@@ -52,7 +52,7 @@ func (r *Recorder) Start() error {
 		if err != nil {
 			switch {
 			case errors.Is(err, os.ErrExist):
-				log.Infoln("%s already exists", r.filePath)
+				log.Infoln(fmt.Sprintf("%s already exists", r.filePath))
 			default:
 				return err
 			}
