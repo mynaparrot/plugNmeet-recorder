@@ -2,6 +2,7 @@
 config.yaml
 docker-compose.yaml
 logs/
+bin/
 recording_files/
 post_processing_scripts/*
 !post_processing_scripts/example.sh

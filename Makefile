@@ -13,8 +13,10 @@ linux-arm64:
 
 releases: linux-amd64 linux-arm64
 	chmod +x $(BINDIR)/$(NAME)-*
-	zip -m -j $(BINDIR)/$(NAME)-linux-amd64.zip $(BINDIR)/$(NAME)-linux-amd64
-	zip -m -j $(BINDIR)/$(NAME)-linux-arm64.zip $(BINDIR)/$(NAME)-linux-arm64
+	cp config_sample.yaml $(BINDIR)/
+	zip -m -j $(BINDIR)/$(NAME)-linux-amd64.zip $(BINDIR)/$(NAME)-linux-amd64 $(BINDIR)/config_sample.yaml
+	cp config_sample.yaml $(BINDIR)/
+	zip -m -j $(BINDIR)/$(NAME)-linux-arm64.zip $(BINDIR)/$(NAME)-linux-arm64 $(BINDIR)/config_sample.yaml
 
 clean:
 	rm $(BINDIR)/*
