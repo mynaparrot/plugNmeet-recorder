@@ -16,7 +16,7 @@
   "dependencies": {
     "@bufbuild/protobuf": "2.2.3",
     "@nats-io/kv": "3.0.0-29",
-    "@nats-io/nats-core": "3.0.0-48",
+    "@nats-io/nats-core": "3.0.0-49",
     "@nats-io/transport-node": "3.0.0-33",
     "axios": "1.7.9",
     "axios-retry": "4.5.0",
