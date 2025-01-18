@@ -92,7 +92,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, fi
 			switch {
 			case os.IsNotExist(err) && processErr != nil:
 				// in this case, not found error is expected so, don't need to log
-				// otherwise will make confusion
+				// otherwise will create confusion
 			default:
 				log.Errorln(err)
 			}

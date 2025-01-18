@@ -40,6 +40,13 @@ func (c *RecorderController) BootUp() {
 	// now start ping
 	go c.startPing()
 
+	// try to recover if panic happens
+	defer func() {
+		if r := recover(); r != nil {
+			log.Warnln("recovered from panic in", r)
+		}
+	}()
+
 	// subscribe to channel for receiving tasks
 	_, err = c.cnf.NatsConn.Subscribe(c.cnf.NatsInfo.Recorder.RecorderChannel, func(msg *nats.Msg) {
 		req := new(plugnmeet.PlugNmeetToRecorder)
