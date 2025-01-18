@@ -112,7 +112,11 @@ func (c *RecorderController) getRecorderInProgress(tableId int64, task plugnmeet
 	if !ok {
 		return false, nil
 	}
-	process := val.(*recorder.Recorder)
+	process, ok := val.(*recorder.Recorder)
+	if !ok {
+		log.Errorf("invalid type in recordersInProgress for id %s", id)
+		return false, nil
+	}
 	return true, process
 }
 
