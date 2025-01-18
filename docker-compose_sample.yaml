@@ -6,4 +6,4 @@ services:
     volumes:
       - .:/app
       - ../recording_files:/recording_files
-    command: --config "app/config.yaml"
+    #command: --config "/app/config.yaml"
