@@ -21,7 +21,7 @@
     "axios": "1.7.9",
     "axios-retry": "4.5.0",
     "js-yaml": "4.1.0",
-    "plugnmeet-protocol-js": "1.0.9",
+    "plugnmeet-protocol-js": "1.0.10",
     "puppeteer": "23.3.1",
     "winston": "3.17.0",
     "winston-daily-rotate-file": "5.0.0",
