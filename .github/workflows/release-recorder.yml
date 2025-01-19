@@ -16,29 +16,89 @@ jobs:
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: node
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
       - name: Checkout
-        if: ${{ steps.release.outputs.release_created }}
         uses: actions/checkout@v4
-      - name: setup node
-        if: ${{ steps.release.outputs.release_created }}
-        uses: actions/setup-node@v4
+      - name: Setup go
+        uses: actions/setup-go@v5
         with:
-          node-version: "lts/*"
-      - uses: pnpm/action-setup@v4
+          go-version-file: "go.mod"
+      - name: Download Go modules
+        run: go mod download
+      - name: Update beta version
+        if: ${{ ! steps.release.outputs.release_created }}
+        run: |
+          cp config_sample.yaml config.yaml
+          GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -s -buildid=' -o plugnmeet-recorder main.go
+          CURRENT_VERSION=$(./plugnmeet-recorder --version)
+          IFS='-' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          
+          if [ ! "${VERSION_PARTS[1]}" ]; then
+            # increment main part
+            NEXT_VERSION=$(echo "${VERSION_PARTS[0]}" | awk -F. -v OFS=. '{$NF += 1 ; print}')
+            NEXT_VERSION="${NEXT_VERSION}-0"
+          else
+            # it has seconds part, so we'll increment that only
+            NEW_BETA=$(echo "${VERSION_PARTS[1]}" | awk -F. -v OFS=. '{$NF += 1 ; print}')
+            NEXT_VERSION="${VERSION_PARTS[0]}-${NEW_BETA}"
+          fi
+          
+          echo "Changing version from: ${CURRENT_VERSION} To: ${NEXT_VERSION}"
+          sed -i "s/${CURRENT_VERSION}/${NEXT_VERSION}/" version/version.go
+          # now delete
+          rm -rf plugnmeet-recorder config.yaml
+          
+          # push changes
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "bump beta version"
+          git push
+
+      - name: Upload server files
         if: ${{ steps.release.outputs.release_created }}
-        name: Install pnpm
-        with:
-          version: 9
-      - name: Build project
-        if: ${{ steps.release.outputs.release_created }}
+        run: make -j upload
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pnpm install
-          pnpm run build
-          mkdir -p tmp/recorder
-          rsync -ar dist package.json config_sample.yaml tmp/recorder/
-          cd tmp
-          zip -X -r recorder.zip recorder
-          gh release upload ${{ steps.release.outputs.tag_name }} recorder.zip
+          GITHUB_RELEASE_UPLOAD_URL: ${{ steps.release.outputs.upload_url }}
+      - name: Docker meta
+        if: ${{ steps.release.outputs.release_created }}
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/plugnmeet-recorder
+          tags: |
+            type=ref,event=tag
+            type=pep440,pattern=${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }},value=${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
+            type=semver,pattern=${{ steps.release.outputs.tag_name }},value=${{ steps.release.outputs.tag_name }}
+            type=semver,pattern=v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }},value=${{ steps.release.outputs.tag_name }}
+
+      - name: Set up QEMU
+        if: ${{ steps.release.outputs.release_created }}
+        uses: docker/setup-qemu-action@v3
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: all
+
+      - name: Set up Docker Buildx
+        if: ${{ steps.release.outputs.release_created }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        if: ${{ steps.release.outputs.release_created }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+      - name: Build and push
+        if: ${{ steps.release.outputs.release_created }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker-build/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

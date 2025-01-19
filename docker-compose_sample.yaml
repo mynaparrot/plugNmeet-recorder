@@ -1,0 +1,9 @@
+services:
+  recorder:
+    build:
+      context: .
+      dockerfile: docker-build/Dockerfile
+    volumes:
+      - .:/app
+      - ../recording_files:/recording_files
+    #command: --config "/app/config.yaml"
