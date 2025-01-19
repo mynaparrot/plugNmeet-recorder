@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.4.3...v1.5.0) (2025-01-19)
+
+
+### Features
+
+* migrate project to `golang` using `chromedp` ([#203](https://github.com/mynaparrot/plugNmeet-recorder/issues/203)) ([59f8505](https://github.com/mynaparrot/plugNmeet-recorder/commit/59f850537cf8c1c8f520b21b47d093be6d739b50))
+
 ## [1.4.3](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.4.2...v1.4.3) (2025-01-12)
 
 
