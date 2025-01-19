@@ -63,11 +63,9 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 	}()
 
 	// so, if everything goes well then we can make callback
-	r.Lock()
 	if r.OnAfterStartCallback != nil {
 		r.OnAfterStartCallback(r.Req)
 	}
-	r.Unlock()
 	return nil
 }
 
