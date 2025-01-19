@@ -55,7 +55,7 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 			var exitErr *exec.ExitError
 			if errors.As(err, &exitErr) {
 				if exitErr.ExitCode() != -1 && exitErr.ExitCode() != 255 {
-					log.Errorln(fmt.Errorf("ffmpeg exited with code: %d", exitErr.ExitCode()))
+					log.Errorln(fmt.Errorf("ffmpeg exited with code: %d for task: %s, roomTableId: %d", exitErr.ExitCode(), r.Req.Task.String(), r.Req.GetRoomTableId()))
 				}
 			}
 			r.Close(err)
@@ -73,7 +73,7 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 
 func (r *Recorder) closeFfmpeg() {
 	if r.ffmpegCmd != nil {
-		log.Infoln("closing ffmpeg")
+		log.Infoln(fmt.Sprintf("closing ffmpeg for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
 		if err := r.ffmpegCmd.Process.Signal(os.Interrupt); err != nil && !errors.Is(err, os.ErrProcessDone) {
 			log.Errorln("failed to interrupt ffmpeg:", err.Error(), "so, trying to kill")
 			_ = r.ffmpegCmd.Process.Kill()

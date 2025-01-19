@@ -122,8 +122,9 @@ func (c *RecorderController) getRecorderInProgress(tableId int64, task plugnmeet
 
 func (c *RecorderController) CallEndToAll() {
 	c.recordersInProgress.Range(func(key, value interface{}) bool {
-		process := value.(*recorder.Recorder)
-		process.Close(nil)
+		if process, ok := value.(*recorder.Recorder); ok {
+			process.Close(nil)
+		}
 		return true
 	})
 	close(c.closeTicker)

@@ -78,8 +78,11 @@ func (r *Recorder) launchChrome() {
 	chromedp.ListenBrowser(chromeCtx, func(ev interface{}) {
 		switch ev.(type) {
 		case *target.EventDetachedFromTarget:
-			log.Infoln("browser detached from target")
+			log.Infoln(fmt.Sprintf("browser detached from target for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
 			r.Close(errors.New("browser detached from target unexpectedly"))
+		case *target.EventTargetCrashed:
+			log.Infoln(fmt.Sprintf("browser crashed for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
+			r.Close(errors.New("browser crashed"))
 		}
 	})
 
@@ -110,7 +113,7 @@ func (r *Recorder) launchChrome() {
 
 func (r *Recorder) closeChromeDp() {
 	if r.closeChrome != nil {
-		log.Infoln("closing chrome")
+		log.Infoln(fmt.Sprintf("closing chrome for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
 		r.closeChrome()
 		r.closeChrome = nil
 	}

@@ -28,7 +28,7 @@ func (r *Recorder) launchXvfb() error {
 	xvfb := exec.CommandContext(r.ctx, "Xvfb", args...)
 	xvfb.Stderr = &infoLogger{cmd: "xvfb"}
 	if err := xvfb.Start(); err != nil {
-		return errors.New("xvfb " + err.Error())
+		return errors.New("xvfb: " + err.Error())
 	}
 	r.Lock()
 	r.xvfbCmd = xvfb
@@ -39,7 +39,7 @@ func (r *Recorder) launchXvfb() error {
 		if err != nil {
 			var exitErr *exec.ExitError
 			if errors.As(err, &exitErr) {
-				log.Errorln(fmt.Errorf("xvfb exited with code: %d", exitErr.ExitCode()))
+				log.Errorln(fmt.Errorf("xvfb exited with code: %d for task: %s, roomTableId: %d", exitErr.ExitCode(), r.Req.Task.String(), r.Req.GetRoomTableId()))
 			}
 			r.Close(err)
 		}
@@ -49,7 +49,7 @@ func (r *Recorder) launchXvfb() error {
 
 func (r *Recorder) closeXvfb() {
 	if r.xvfbCmd != nil {
-		log.Infoln("closing X display")
+		log.Infoln(fmt.Sprintf("closing X display for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
 		if err := r.xvfbCmd.Process.Signal(os.Interrupt); err != nil && !errors.Is(err, os.ErrProcessDone) {
 			log.Errorln("failed to interrupt X display:", err.Error(), "so, trying to kill")
 			_ = r.xvfbCmd.Process.Kill()

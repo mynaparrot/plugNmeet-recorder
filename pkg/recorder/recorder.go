@@ -52,7 +52,7 @@ func (r *Recorder) Start() error {
 		if err != nil {
 			switch {
 			case errors.Is(err, os.ErrExist):
-				log.Infoln(fmt.Sprintf("%s already exists", r.filePath))
+				log.Infoln(fmt.Sprintf("%s already exists, will replace it", r.filePath))
 			default:
 				return err
 			}
@@ -61,7 +61,7 @@ func (r *Recorder) Start() error {
 		r.fileName = r.Req.GetRecordingId() + "_raw.mp4"
 	}
 
-	r.joinUrl = r.AppCnf.PlugNmeetInfo.Host + "/?access_token=" + r.Req.GetAccessToken()
+	r.joinUrl = fmt.Sprintf("%s/?access_token=%s", r.AppCnf.PlugNmeetInfo.Host, r.Req.GetAccessToken())
 	if r.AppCnf.PlugNmeetInfo.JoinHost != nil && *r.AppCnf.PlugNmeetInfo.JoinHost != "" {
 		r.joinUrl = *r.AppCnf.PlugNmeetInfo.JoinHost + r.Req.GetAccessToken()
 	}
