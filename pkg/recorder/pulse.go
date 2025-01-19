@@ -29,12 +29,14 @@ func (r *Recorder) createPulseSink() error {
 	r.pulseSinkId = strings.TrimSpace(string(b))
 	log.Infoln("pulse sink created successfully with id:", r.pulseSinkId)
 	r.Unlock()
+
 	return nil
 }
 
 func (r *Recorder) closePulse() {
 	if r.pulseSinkId != "" {
 		log.Infoln(fmt.Sprintf("unloading pulse module: %s for task: %s, roomTableId: %d", r.pulseSinkId, r.Req.Task.String(), r.Req.GetRoomTableId()))
+
 		cmd := exec.CommandContext(r.ctx, "pactl", "unload-module", r.pulseSinkId)
 		if _, err := cmd.CombinedOutput(); err != nil {
 			log.Errorln("failed to unload pulse sink", err)

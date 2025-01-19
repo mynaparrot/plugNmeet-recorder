@@ -44,16 +44,11 @@ sudo apt install -y fonts-noto fonts-liberation
 cp config_sample.yaml config.yaml
 ```
 
-3) Change the relevant information in the `config.yaml` file. Redis information should be the same as `plugnmeet-server`
-   . The `main_path` value should be same as `recording_files_path` value of `plugnmeet-server`'s `config.yaml` file. If
-   you intend to use NFS, ensure that both the recorder and the plugnmeet-server can access this directory. Otherwise,
-   the user will be unable to download recordings.
+3) Change the relevant information in the `config.yaml` file. The `nats_info` information should be the same as `plugnmeet-server`. The `main_path` value should be same as `recording_files_path` value of `plugnmeet-server`'s `config.yaml` file. If you intend to use NFS or another type of network mounted drive, ensure that both the `recorder` and the `plugnmeet-server` can access it. Otherwise, the user will be unable to download recordings.
 
 4) Change `plugNmeet_info` & `nats_info` with correct information.
 
-5) It's possible to install `plugNmeet-recorder` in multiple server. `plugNmeet-server` will choose the appropriate one
-   based on availability. In that case change value of `id` inside `config.yaml` file. Make sure that value is unique,
-   example: `node_01`, `node_02` ... You can also set the value of `max_limit` based on the server's capacity.
+5) You can deploy `plugNmeet-recorder` on several servers. `plugNmeet-server` will select the suitable one based on availability and load. In that scenario, modify the value of the `id` within the `config.yaml` file. Make sure the value is unique, such as `node_01`, `node_02`, etc. You can also change the value of `max_limit` based on the server's capacity.
 
 6) Start server `./plugnmeet-recorder-linux-[amd64|arm64]`
 

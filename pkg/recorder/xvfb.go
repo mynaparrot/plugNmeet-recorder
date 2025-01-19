@@ -50,6 +50,7 @@ func (r *Recorder) launchXvfb() error {
 func (r *Recorder) closeXvfb() {
 	if r.xvfbCmd != nil {
 		log.Infoln(fmt.Sprintf("closing X display for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
+
 		if err := r.xvfbCmd.Process.Signal(os.Interrupt); err != nil && !errors.Is(err, os.ErrProcessDone) {
 			log.Errorln("failed to interrupt X display:", err.Error(), "so, trying to kill")
 			_ = r.xvfbCmd.Process.Kill()

@@ -114,6 +114,7 @@ func (r *Recorder) launchChrome() {
 func (r *Recorder) closeChromeDp() {
 	if r.closeChrome != nil {
 		log.Infoln(fmt.Sprintf("closing chrome for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
+
 		r.closeChrome()
 		r.closeChrome = nil
 	}
