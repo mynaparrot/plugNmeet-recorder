@@ -2,7 +2,7 @@ name: Release to DockerHub as Dev
 on:
   push:
     branches:
-      - 'main'
+      - 'chromedp'
 jobs:
   build:
     runs-on: ubuntu-latest
