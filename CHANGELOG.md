@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.0...v1.5.1) (2025-02-02)
+
+
+### Bug Fixes
+
+* deps update ([48abad6](https://github.com/mynaparrot/plugNmeet-recorder/commit/48abad6f0781d901fb07e61ac5840ef61a96f4ed))
+* **deps:** update module github.com/chromedp/chromedp to v0.12.1 ([2d32089](https://github.com/mynaparrot/plugNmeet-recorder/commit/2d320894a54e6deb8b06734b0165d9a5b123ee1f))
+* **deps:** update module github.com/mynaparrot/plugnmeet-protocol to v1.0.11 ([bc80b35](https://github.com/mynaparrot/plugNmeet-recorder/commit/bc80b35054dc20f618837f516ebc529c89879041))
+* few updates ([e7558d2](https://github.com/mynaparrot/plugNmeet-recorder/commit/e7558d2cf44de3c4c999aecf8737422a18a654bf))
+* remove duplicate tag ([b0d66ce](https://github.com/mynaparrot/plugNmeet-recorder/commit/b0d66ced2af1d4622693d1d2520e3bb5e95b9382))
+
 ## [1.5.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.4.3...v1.5.0) (2025-01-19)
 
 
