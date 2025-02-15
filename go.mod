@@ -6,17 +6,17 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20250126231910-1730200a0f74
 	github.com/chromedp/chromedp v0.12.1
 	github.com/hashicorp/go-retryablehttp v0.7.7
-	github.com/mynaparrot/plugnmeet-protocol v1.0.11
+	github.com/mynaparrot/plugnmeet-protocol v1.0.12
 	github.com/nats-io/nats.go v1.39.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.5
-	google.golang.org/protobuf v1.36.4
+	google.golang.org/protobuf v1.36.5
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.4-20250130201111-63bb56e20495.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.5-20250130201111-63bb56e20495.1 // indirect
 	buf.build/go/protoyaml v0.3.1 // indirect
 	cel.dev/expr v0.19.2 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
