@@ -69,9 +69,6 @@ type PlugNmeetInfo struct {
 
 type NatsInfo struct {
 	NatsUrls    []string         `yaml:"nats_urls"`
-	User        string           `yaml:"user"`
-	Password    string           `yaml:"password"`
-	Nkey        *string          `yaml:"nkey"`
 	NumReplicas int              `yaml:"num_replicas"`
 	Recorder    NatsInfoRecorder `yaml:"recorder"`
 }

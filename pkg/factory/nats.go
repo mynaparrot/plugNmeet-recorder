@@ -1,28 +1,29 @@
 package factory
 
 import (
-	"github.com/mynaparrot/plugnmeet-protocol/utils"
+	"github.com/mynaparrot/plugnmeet-protocol/auth"
+	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"strings"
+	"time"
 )
 
-func NewNatsConnection(appCnf *config.AppConfig) error {
-	info := appCnf.NatsInfo
-	var opt nats.Option
-	var err error
+const nameAsUser = "PLUGNMEET_RECORDER_AUTH"
 
-	if info.Nkey != nil {
-		opt, err = utils.NkeyOptionFromSeedText(*info.Nkey)
-		if err != nil {
-			return err
-		}
-	} else {
-		opt = nats.UserInfo(info.User, info.Password)
+func NewNatsConnection(appCnf *config.AppConfig) error {
+	c := &plugnmeet.PlugNmeetTokenClaims{
+		UserId: appCnf.Recorder.Id,
+		Name:   nameAsUser,
+	}
+	token, err := auth.GeneratePlugNmeetJWTAccessToken(appCnf.PlugNmeetInfo.ApiKey, appCnf.PlugNmeetInfo.ApiSecret, c.UserId, time.Minute*1, c)
+	if err != nil {
+		return err
 	}
 
-	nc, err := nats.Connect(strings.Join(info.NatsUrls, ","), opt)
+	info := appCnf.NatsInfo
+	nc, err := nats.Connect(strings.Join(info.NatsUrls, ","), nats.Token(token))
 	if err != nil {
 		return err
 	}
