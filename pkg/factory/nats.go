@@ -10,12 +10,12 @@ import (
 	"time"
 )
 
-const nameAsUser = "PLUGNMEET_RECORDER_AUTH"
+const recorderUserAuthName = "PLUGNMEET_RECORDER_AUTH"
 
 func NewNatsConnection(appCnf *config.AppConfig) error {
 	c := &plugnmeet.PlugNmeetTokenClaims{
 		UserId: appCnf.Recorder.Id,
-		Name:   nameAsUser,
+		Name:   recorderUserAuthName,
 	}
 	token, err := auth.GeneratePlugNmeetJWTAccessToken(appCnf.PlugNmeetInfo.ApiKey, appCnf.PlugNmeetInfo.ApiSecret, c.UserId, time.Minute*1, c)
 	if err != nil {
