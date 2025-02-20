@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.5.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.1...v1.5.2) (2025-02-20)
+
+
+### Bug Fixes
+
+* bump proto ([2fde3a9](https://github.com/mynaparrot/plugNmeet-recorder/commit/2fde3a9c66a07f525a091d57a58952ef16212e23))
+* clean up ([db3321a](https://github.com/mynaparrot/plugNmeet-recorder/commit/db3321a685567255e48f8b11bae9332aa79f4b9e))
+* **deps:** update module github.com/mynaparrot/plugnmeet-protocol to v1.0.12 ([92a4080](https://github.com/mynaparrot/plugNmeet-recorder/commit/92a4080cbdac30a377b9e44d2bce61b2f286f3c1))
+* **deps:** update module github.com/nats-io/nats.go to v1.39.0 ([7fc5e1d](https://github.com/mynaparrot/plugNmeet-recorder/commit/7fc5e1df0b07070bb9bd4a451c65bd7f4e316dde))
+* invalid checksum ([785987e](https://github.com/mynaparrot/plugNmeet-recorder/commit/785987e57e575fb5bdcc481da23714ca4b6110e3))
+* option to add nkey ([9d6a051](https://github.com/mynaparrot/plugNmeet-recorder/commit/9d6a05159754ea75cb549cea72f219a1272e30dc))
+* recording server will authenticate with plugNmeet server for nats ([e2f1045](https://github.com/mynaparrot/plugNmeet-recorder/commit/e2f104543795b4cfdba3fc1b34a99989b624a66c))
+* replacing with nkey for new installations ([9de1f76](https://github.com/mynaparrot/plugNmeet-recorder/commit/9de1f768e4b4e86829d91b91db56f43dd1d9a89b))
+* typo ([1bb16ef](https://github.com/mynaparrot/plugNmeet-recorder/commit/1bb16ef375b8f0226394018f28369e5f54a9f8f8))
+* typo ([ee6044e](https://github.com/mynaparrot/plugNmeet-recorder/commit/ee6044edebdc323c3ebb5f1ac16a1cc13fe4aa51))
+* update dep ([02cdcd8](https://github.com/mynaparrot/plugNmeet-recorder/commit/02cdcd8d68ff74f9516850c9d16b6c9a2712a5b1))
+
 ## [1.5.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.1...v1.5.1) (2025-02-02)
 
 
