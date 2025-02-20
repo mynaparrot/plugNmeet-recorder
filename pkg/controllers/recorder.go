@@ -6,6 +6,7 @@ import (
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
 	natsservice "github.com/mynaparrot/plugnmeet-recorder/pkg/services/nats"
+	"github.com/mynaparrot/plugnmeet-recorder/version"
 	"github.com/nats-io/nats.go"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
@@ -103,7 +104,7 @@ func (c *RecorderController) BootUp() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("recorder is ready to accept tasks, recorderId:", c.cnf.Recorder.Id)
+	fmt.Println(fmt.Sprintf("recorder is ready to accept tasks, recorderId: %s; version: %s", c.cnf.Recorder.Id, version.Version))
 }
 
 func (c *RecorderController) getRecorderInProgress(tableId int64, task plugnmeet.RecordingTasks) (bool, *recorder.Recorder) {
