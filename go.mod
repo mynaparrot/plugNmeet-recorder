@@ -3,8 +3,8 @@ module github.com/mynaparrot/plugnmeet-recorder
 go 1.23
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250126231910-1730200a0f74
-	github.com/chromedp/chromedp v0.12.1
+	github.com/chromedp/cdproto v0.0.0-20250222051814-50c6cb17f10a
+	github.com/chromedp/chromedp v0.13.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/mynaparrot/plugnmeet-protocol v1.0.13
 	github.com/nats-io/nats.go v1.39.1
@@ -32,6 +32,7 @@ require (
 	github.com/gammazero/deque v1.0.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250211171154-1ae217ad3535 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
