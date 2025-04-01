@@ -1,13 +1,15 @@
 module github.com/mynaparrot/plugnmeet-recorder
 
-go 1.23
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
 	github.com/chromedp/cdproto v0.0.0-20250319231242-a755498943c8
 	github.com/chromedp/chromedp v0.13.3
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/mynaparrot/plugnmeet-protocol v1.0.13
-	github.com/nats-io/nats.go v1.39.1
+	github.com/nats-io/nats.go v1.40.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.5
 	google.golang.org/protobuf v1.36.5
@@ -41,7 +43,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/jxskiss/base62 v1.1.0 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/lithammer/shortuuid/v4 v4.2.0 // indirect
 	github.com/livekit/mageutil v0.0.0-20230125210925-54e8a70427c1 // indirect
@@ -80,9 +82,9 @@ require (
 	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c // indirect
 	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250127172529-29210b9bc287 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250204164813-702378808489 // indirect
 	google.golang.org/grpc v1.70.0 // indirect
