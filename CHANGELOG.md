@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.5.3](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.2...v1.5.3) (2025-04-10)
+
+
+### Bug Fixes
+
+* deps update ([906bc0c](https://github.com/mynaparrot/plugNmeet-recorder/commit/906bc0c3e0b181b97362b916a47f71d58eda15f8))
+* **deps:** dependencies update ([75734b3](https://github.com/mynaparrot/plugNmeet-recorder/commit/75734b30a6bca10f8d31613dce64156745f88c04))
+* **deps:** update module github.com/chromedp/chromedp to v0.13.0 ([afd4ea7](https://github.com/mynaparrot/plugNmeet-recorder/commit/afd4ea7d43a7f1a6c90f54a425740dc3d2e153f4))
+* **deps:** update module github.com/chromedp/chromedp to v0.13.0 ([ab9cf8d](https://github.com/mynaparrot/plugNmeet-recorder/commit/ab9cf8d7588113b371d553731ed1346e728857b7))
+* **deps:** update module github.com/chromedp/chromedp to v0.13.3 ([72673fb](https://github.com/mynaparrot/plugNmeet-recorder/commit/72673fb61002294eac49941e98f524b3f671b36d))
+* **deps:** update module github.com/chromedp/chromedp to v0.13.3 ([cc89ca0](https://github.com/mynaparrot/plugNmeet-recorder/commit/cc89ca054b528434e846da5fde33af58bb9f1193))
+* **deps:** update module github.com/chromedp/chromedp to v0.13.6 ([9d80ba2](https://github.com/mynaparrot/plugNmeet-recorder/commit/9d80ba26fa30e3b9e6ebc848e475c9a812a7bb5e))
+* **deps:** update module github.com/chromedp/chromedp to v0.13.6 ([ed00064](https://github.com/mynaparrot/plugNmeet-recorder/commit/ed00064a3991257985e136afa6c4303b16d1d85f))
+* **deps:** update module github.com/nats-io/nats.go to v1.40.1 ([506ec5b](https://github.com/mynaparrot/plugNmeet-recorder/commit/506ec5b1b0098cdf746e7734c016e4d91c3b6652))
+* **deps:** update module github.com/nats-io/nats.go to v1.40.1 ([d0057bb](https://github.com/mynaparrot/plugNmeet-recorder/commit/d0057bbfc3dd580efee871a011f621b4e2893d60))
+
 ## [1.5.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.1...v1.5.2) (2025-02-20)
 
 
