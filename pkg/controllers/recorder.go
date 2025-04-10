@@ -10,6 +10,7 @@ import (
 	"github.com/nats-io/nats.go"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -104,7 +105,7 @@ func (c *RecorderController) BootUp() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(fmt.Sprintf("recorder is ready to accept tasks, recorderId: %s; version: %s", c.cnf.Recorder.Id, version.Version))
+	fmt.Println(fmt.Sprintf("recorder is ready to accept tasks, recorderId: %s; version: %s; runtime: %s", c.cnf.Recorder.Id, version.Version, runtime.Version()))
 }
 
 func (c *RecorderController) getRecorderInProgress(tableId int64, task plugnmeet.RecordingTasks) (bool, *recorder.Recorder) {

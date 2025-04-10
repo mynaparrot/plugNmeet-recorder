@@ -1,24 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/mynaparrot/plugnmeet-recorder/helpers"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/controllers"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func main() {
-	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Printf("%s\n", c.App.Version)
+	cli.VersionPrinter = func(c *cli.Command) {
+		fmt.Printf("%s\n", c.Version)
 	}
 
-	app := &cli.App{
+	app := &cli.Command{
 		Name:        "plugnmeet-recorder",
 		Usage:       "Recording system for plugNmeet",
 		Description: "without option will start server",
@@ -33,13 +34,13 @@ func main() {
 		Action:  startServer,
 		Version: version.Version,
 	}
-	err := app.Run(os.Args)
+	err := app.Run(context.Background(), os.Args)
 	if err != nil {
 		logrus.Fatalln(err)
 	}
 }
 
-func startServer(c *cli.Context) error {
+func startServer(ctx context.Context, c *cli.Command) error {
 	appCnf, err := helpers.ReadYamlConfigFile(c.String("config"))
 	if err != nil {
 		logrus.Fatalln(err)
