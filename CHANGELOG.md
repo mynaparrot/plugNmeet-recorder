@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.4](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.3...v1.5.4) (2025-05-03)
+
+
+### Bug Fixes
+
+* **deps:** update github.com/mynaparrot/plugnmeet-protocol digest to d710940 ([a32e956](https://github.com/mynaparrot/plugNmeet-recorder/commit/a32e956f075bfd21e182e54f2f4f0c3af375bcdc))
+* **deps:** update github.com/mynaparrot/plugnmeet-protocol digest to d710940 ([a9e9f4f](https://github.com/mynaparrot/plugNmeet-recorder/commit/a9e9f4ffd7aa4e1bd0f83287c5687eb3c258fa4a))
+* **deps:** update module github.com/nats-io/nats.go to v1.42.0 ([0fb0181](https://github.com/mynaparrot/plugNmeet-recorder/commit/0fb0181ad39862fad98d55add54ae1c7a611a73c))
+* **deps:** update module github.com/nats-io/nats.go to v1.42.0 ([2bbf752](https://github.com/mynaparrot/plugNmeet-recorder/commit/2bbf7520160707dcbad5e1f6215e426e91f8be32))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.1 ([1f84873](https://github.com/mynaparrot/plugNmeet-recorder/commit/1f84873946afe9c23b12c8b035c9bfcfc79ce1d6))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.1 ([1f0610d](https://github.com/mynaparrot/plugNmeet-recorder/commit/1f0610d393fa9b2d3378bbdc6c05af06acb35f19))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.2 ([5e42b01](https://github.com/mynaparrot/plugNmeet-recorder/commit/5e42b01842345369a25ce9b151971cd7c87a9244))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.2 ([36c051e](https://github.com/mynaparrot/plugNmeet-recorder/commit/36c051e861679c54e5d2f96ddea018cdd3ddeb43))
+
 ## [1.5.3](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.2...v1.5.3) (2025-04-10)
 
 
