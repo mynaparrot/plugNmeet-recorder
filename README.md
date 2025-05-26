@@ -1,9 +1,6 @@
 # plugNmeet-recorder
 
-The plugNmeet-recorder can be used to record sessions as well as RTMP broadcasts. This software consumes CPU power, so
-it's best to run it on a different server from the one used for plugNmeet or livekit. However, if you are not recording
-frequently, you can continue to use the same server. In this scenario,
-the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script is recommended for installation.
+The plugNmeet-recorder is capable of handling both session recording and RTMP streaming functionalities. Due to its high CPU utilization, it is strongly recommended to deploy the recorder on a server separate from the one running plugNmeet or LiveKit. However, in environments where recording is performed infrequently, co-locating the recorder on the same server is fine. In such cases, it is advisable to use the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script to facilitate a streamlined and automated installation process.
 
 **Requirements**
 
@@ -37,20 +34,20 @@ sudo apt install -y fonts-noto fonts-liberation
 
 **Install recorder**
 
-1) To download the latest version based on the type of your OS architecture, check [release page](https://github.com/mynaparrot/plugNmeet-recorder/releases) or can use [plugnmeet-recorder](https://hub.docker.com/r/mynaparrot/plugnmeet-recorder) docker image.
-2) Unzip the zip file and navigate to the directory from the terminal, then run.
+1) To download the latest version suitable for your operating system architecture, visit the [release page](https://github.com/mynaparrot/plugNmeet-recorder/releases) or use the [plugnmeet-recorder](https://hub.docker.com/r/mynaparrot/plugnmeet-recorder) Docker image.
+2) Extract the downloaded ZIP file, navigate to the extracted directory using the terminal, and run:
 
 ```
 cp config_sample.yaml config.yaml
 ```
 
-3) Change the relevant information in the `config.yaml` file. The `nats_info` information should be the same as `plugnmeet-server`. The `main_path` value should be same as `recording_files_path` value of `plugnmeet-server`'s `config.yaml` file. If you intend to use NFS or another type of network mounted drive, ensure that both the `recorder` and the `plugnmeet-server` can access it. Otherwise, the user will be unable to download recordings.
+3) Edit the `config.yaml` file with the appropriate settings. The `nats_info` section must match the configuration used in the `plugnmeet-server`. The `main_path` value should be the same as the `recording_files_path` specified in the `plugnmeet-server's config.yaml`. If you're using NFS or another type of network-mounted storage, ensure both the `recorder` and the `plugnmeet-server` have access to it. Otherwise, users will not be able to download recordings. 
 
-4) Change `plugNmeet_info` & `nats_info` with correct information.
+4) Update the `plugNmeet_info` and `nats_info` sections with the correct values.
 
-5) You can deploy `plugNmeet-recorder` on several servers. `plugNmeet-server` will select the suitable one based on availability and load. In that scenario, modify the value of the `id` within the `config.yaml` file. Make sure the value is unique, such as `node_01`, `node_02`, etc. You can also change the value of `max_limit` based on the server's capacity.
+5) You can deploy `plugnmeet-recorder` on multiple servers. The `plugnmeet-server` will automatically select an available recorder based on load and availability. In such cases, make sure to assign a unique id in each `config.yaml` file (e.g., `node_01`, `node_02`, etc.). You can also adjust the `max_limit` value according to the server’s capacity.
 
-6) Start server `./plugnmeet-recorder-linux-[amd64|arm64]`
+6) Start the recorder using the appropriate binary: `./plugnmeet-recorder-linux-[amd64|arm64]`
 
 **Development**
 
@@ -62,7 +59,7 @@ cp config_sample.yaml config.yaml
 cp docker-compose_sample.yaml docker-compose.yaml
 ```
 
-3) Now start
+3) Start the development environment
 
 ```
 docker compose build
