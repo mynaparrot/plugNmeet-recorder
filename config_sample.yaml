@@ -1,75 +1,77 @@
 recorder:
-  ## Note: for any id should contain valid characters only
-  ## otherwise will be problem with nats (https://docs.nats.io/nats-concepts/subjects#characters-allowed-and-recommended-for-subject-names)
-  ## Allowed characters: (a - z),(A - Z), (0 - 9), - and _
+  ## Note: All IDs must contain only valid characters.
+  ## Otherwise, issues may arise with NATS (https://docs.nats.io/nats-concepts/subjects#characters-allowed-and-recommended-for-subject-names)
+  ## Permitted characters: (a - z), (A - Z), (0 - 9), hyphen (-), and underscore (_)
   id: node_01
-  # try to not process more than 10 concurrent recordings in a single server
-  # better to use multiple servers if needed
+  # Avoid processing more than 10 concurrent recordings on a single server.
+  # It is recommended to use multiple servers if higher capacity is necessary.
   max_limit: 10
-  # if debug enabled, then it will display output logs in the terminal as well as
+  # If enabled, debug logs will be displayed in the terminal.
   debug: false
-  # you can set it true if you want to post process recorded MP4 raw video to make better
-  # this will require more times & CPU for encoding
+  # Enable this to post-process the raw MP4 recording for improved quality.
+  # Note: This increases CPU usage and processing time.
   post_mp4_convert: true
-  # use it if you want to use custom chrome
+  # Specify a custom Chrome binary path if required.
   custom_chrome_path: ""
-  # This is optional. You can set the width and height of the recorded virtual window which will result in
-  # recorded video with the same resolution
+  # Optional: Set the dimensions of the virtual recording window.
+  # The output video will match this resolution.
   width: 1800
   height: 900
-  # this is optional. using this variable, you can change the DPI for xvfb virtual window, change this to
-  # improve the picture clarity but with impact on performance and compatibility
+  # Optional: Adjust the DPI of the xvfb virtual window.
+  # Higher DPI can enhance image clarity but may affect performance and compatibility.
   xvfb_dpi: 200
   copy_to_path:
-    # plugnmeet-server should have access this path otherwise user can't download recordings.
-    # this path can be NSF or other network path too
-    # to write this path.
+    # The plugNmeet server must have access to this path for users to download recordings.
+    # This can be an NFS or other network-accessible path.
     main_path: "../recording_files"
-    # This is optional. If you set this path, then it will be included with recording
-    # and store in the database. This path should be inside main_path.
-    # Sometime user wants to use a specific recording directory for this particular recorder.
+    # Optional: Specify a subdirectory for this recorder instance.
+    # This path must reside within main_path and will be stored in the database.
     sub_path: "node_01"
-  # You can use post-processing scripts for a further process the recording
-  # you can find example from post_processing_scripts/example.sh
+  # Optional: Define post-processing scripts to further process recordings.
+  # Example script available at post_processing_scripts/example.sh
+  # Ensure scripts have executable permissions (e.g., chmod +x).
   #post_processing_scripts:
-  # should be a full path and permission with executing e.g., chmod +x
   #  - "./post_processing_scripts/example.sh"
+
 log_settings:
   log_file: "./logs/recorder.log"
-  # maxsize of the log file in MB
+  # Maximum log file size in megabytes.
   maxsize: 20
+  # Maximum number of backup log files to retain.
   maxbackups: 4
-  # max age of log before doesn't rotate in days
+  # Maximum age (in days) before log rotation stops.
   maxage: 2
-  # info, warn, error, fatal, debug or panic
+  # Log levels: info, warn, error, fatal, debug, or panic.
   log_level: "info"
-# here you can set your custom ffmpeg options
+
+# Define custom FFmpeg options here.
 ffmpeg_settings:
   recording:
-    # any option to set before -i
+    # Options to apply before the input (-i) parameter.
     pre_input: "-loglevel error -thread_queue_size 512 -draw_mouse 0"
+    # Options to apply after the input (-i) parameter.
     post_input: "-c:v libx264 -x264-params keyint=120:scenecut=0 -preset ultrafast -crf 23 -c:a aac -af highpass=f=200,lowpass=f=2000,afftdn -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y"
   post_recording:
-    # any option to set before -i
     pre_input: "-loglevel error"
     post_input: "-preset ultrafast -movflags faststart -y"
   rtmp:
-    # any option to set before -i
     pre_input: "-loglevel error -draw_mouse 0"
     post_input: "-c:v libx264 -pix_fmt yuv420p -x264-params keyint=120:scenecut=0 -b:v 2500k -video_size 1280x720 -c:a aac -b:a 128k -ar 44100 -af highpass=f=200,lowpass=f=2000,afftdn -preset ultrafast -crf 23 -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -bufsize 512k -flush_packets 1 -tune zerolatency -f flv"
+
 plugNmeet_info:
-  # http://localhost:8080
+  # Example: http://localhost:8080
   host: PLUG_N_MEET_SERVER_DOMAIN
   api_key: PLUG_N_MEET_API_KEY
   api_secret: PLUG_N_MEET_SECRET
-  # Join_host is optional. Use it if plugNmeet-client installed in different places if
-  # this is a non-localhost server then should be https link otherwise won't work.
-  # format: https://PLUG_N_MEET_SERVER_DOMAIN/?access_token=
+  # Optional: Use join_host if the plugNmeet client is hosted separately.
+  # For non-localhost servers, use an HTTPS URL, or it will not function correctly.
+  # Format: https://PLUG_N_MEET_SERVER_DOMAIN/?access_token=
   # join_host: "http://localhost:3000/?access_token="
+
 nats_info:
   nats_urls:
     - "nats://127.0.0.1:4222"
-  num_replicas: 1 # 1,3,or 5
+  num_replicas: 1 # Acceptable values: 1, 3, or 5
   recorder:
     recorder_channel: "recorderChannel"
     recorder_info_kv: "pnm-recorderInfo"
