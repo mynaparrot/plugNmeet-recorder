@@ -5,7 +5,7 @@ go 1.24
 require (
 	github.com/chromedp/cdproto v0.0.0-20250403032234-65de8f5d025b
 	github.com/chromedp/chromedp v0.13.6
-	github.com/hashicorp/go-retryablehttp v0.7.7
+	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250526044145-238ce2bdcd6c
 	github.com/nats-io/nats.go v1.42.0
 	github.com/sirupsen/logrus v1.9.3
