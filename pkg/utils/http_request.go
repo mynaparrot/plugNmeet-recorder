@@ -11,34 +11,22 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var (
-	httpClient *retryablehttp.Client
-)
-
-func init() {
-	httpClient = retryablehttp.NewClient()
-	// disable default logger
-	httpClient.Logger = nil
-}
-
-// NotifyToPlugNmeet will use a shared retryablehttp client to make requests.
+// NotifyToPlugNmeet will use retryablehttp to make request
 func NotifyToPlugNmeet(host, apiKey, apiSecret string, req *plugnmeet.RecorderToPlugNmeet, retryMax *uint) (int, error) {
-	// a temporary client to handle retry logic per call without affecting the shared client's settings
-	tempClient := *httpClient
+	client := retryablehttp.NewClient()
+	client.Logger = nil
 	if retryMax != nil {
-		tempClient.RetryMax = int(*retryMax)
-	} else {
-		// reset to default if not provided
-		tempClient.RetryMax = httpClient.RetryMax
+		client.RetryMax = int(*retryMax)
 	}
+	var r *retryablehttp.Request
+	var err error
 
 	body, err := proto.Marshal(req)
 	if err != nil {
 		return 0, err
 	}
-
 	link := fmt.Sprintf("%s/auth/recorder/notify", host)
-	r, err := retryablehttp.NewRequest("POST", link, bytes.NewReader(body))
+	r, err = retryablehttp.NewRequest("POST", link, bytes.NewReader(body))
 	if err != nil {
 		return 0, err
 	}
@@ -51,7 +39,7 @@ func NotifyToPlugNmeet(host, apiKey, apiSecret string, req *plugnmeet.RecorderTo
 	r.Header.Set("HASH-SIGNATURE", signature)
 	r.Header.Set("content-type", "application/protobuf")
 
-	resp, err := tempClient.Do(r)
+	resp, err := client.Do(r)
 	if err != nil {
 		return 0, err
 	}
