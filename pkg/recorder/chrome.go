@@ -16,48 +16,42 @@ func (r *Recorder) launchChrome() {
 	log.Infoln(fmt.Sprintf("launching chrome for task: %s, with url:%s", r.Req.Task.String(), r.joinUrl))
 
 	opts := []chromedp.ExecAllocatorOption{
-		chromedp.NoFirstRun,
-		chromedp.NoDefaultBrowserCheck,
+		// ---- Performance & Stability Flags ----
 		chromedp.DisableGPU,
-		chromedp.NoSandbox,
-
-		// puppeteer default behavior
-		chromedp.Flag("disable-infobars", true),
-		chromedp.Flag("excludeSwitches", "enable-automation"),
 		chromedp.Flag("disable-background-networking", true),
-		chromedp.Flag("enable-features", "NetworkService,NetworkServiceInProcess"),
 		chromedp.Flag("disable-background-timer-throttling", true),
 		chromedp.Flag("disable-backgrounding-occluded-windows", true),
 		chromedp.Flag("disable-breakpad", true),
 		chromedp.Flag("disable-client-side-phishing-detection", true),
-		chromedp.Flag("disable-default-apps", true),
-		chromedp.Flag("disable-dev-shm-usage", true),
+		chromedp.Flag("disable-dev-shm-usage", true), // Crucial for Docker/containerized environments
 		chromedp.Flag("disable-extensions", true),
-		chromedp.Flag("disable-features", "AudioServiceOutOfProcess,site-per-process,Translate,TranslateUI,BlinkGenPropertyTrees"),
+		chromedp.Flag("disable-features", "site-per-process,Translate,TranslateUI"),
 		chromedp.Flag("disable-hang-monitor", true),
 		chromedp.Flag("disable-ipc-flooding-protection", true),
-		chromedp.Flag("disable-popup-blocking", true),
-		chromedp.Flag("disable-prompt-on-repost", true),
 		chromedp.Flag("disable-renderer-backgrounding", true),
 		chromedp.Flag("disable-sync", true),
-		chromedp.Flag("force-color-profile", "srgb"),
 		chromedp.Flag("metrics-recording-only", true),
 		chromedp.Flag("safebrowsing-disable-auto-update", true),
-		chromedp.Flag("password-store", "basic"),
-		chromedp.Flag("use-mock-keychain", true),
-		chromedp.Flag("disable-web-security", true),
-		chromedp.Flag("allow-running-insecure-content", true),
 
-		// custom args
+		// ---- Automation & UI Control Flags ----
+		chromedp.NoFirstRun,
+		chromedp.NoDefaultBrowserCheck,
+		chromedp.Flag("excludeSwitches", "enable-automation"), // Removes the "controlled by automation" bar
+		chromedp.Flag("disable-default-apps", true),
+		chromedp.Flag("disable-popup-blocking", true),
+		chromedp.Flag("disable-prompt-on-repost", true),
+		chromedp.Flag("password-store", "basic"), // Prevents prompts for OS-level keyrings
+		chromedp.Flag("use-mock-keychain", true),
 		chromedp.Flag("kiosk", true),
-		chromedp.Flag("disable-translate", true),
-		chromedp.Flag("enable-automation", false),
 		chromedp.Flag("disable-notifications", true),
 		chromedp.Flag("autoplay-policy", "no-user-gesture-required"),
 		chromedp.Flag("window-position", "0,0"),
 		chromedp.Flag("window-size", fmt.Sprintf("%d,%d", r.AppCnf.Recorder.Width, r.AppCnf.Recorder.Height)),
 
-		// output
+		// ---- Environment & Rendering Flags ----
+		chromedp.NoSandbox,
+		chromedp.Flag("force-color-profile", "srgb"),
+		chromedp.Flag("mute-audio", true), // Mutes chrome output, but audio is still captured by ffmpeg from pulse sink
 		chromedp.Env(fmt.Sprintf("PULSE_SINK=%s", r.pulseSinkName)),
 		chromedp.Flag("display", r.displayId),
 	}
@@ -112,6 +106,9 @@ func (r *Recorder) launchChrome() {
 }
 
 func (r *Recorder) closeChromeDp() {
+	r.Lock()
+	defer r.Unlock()
+
 	if r.closeChrome != nil {
 		log.Infoln(fmt.Sprintf("closing chrome for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
 

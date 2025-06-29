@@ -70,6 +70,9 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 }
 
 func (r *Recorder) closeFfmpeg() {
+	r.Lock()
+	defer r.Unlock()
+
 	if r.ffmpegCmd != nil {
 		log.Infoln(fmt.Sprintf("closing ffmpeg for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
 
