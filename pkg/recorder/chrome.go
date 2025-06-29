@@ -51,7 +51,6 @@ func (r *Recorder) launchChrome() {
 		// ---- Environment & Rendering Flags ----
 		chromedp.NoSandbox,
 		chromedp.Flag("force-color-profile", "srgb"),
-		chromedp.Flag("mute-audio", true), // Mutes chrome output, but audio is still captured by ffmpeg from pulse sink
 		chromedp.Env(fmt.Sprintf("PULSE_SINK=%s", r.pulseSinkName)),
 		chromedp.Flag("display", r.displayId),
 	}

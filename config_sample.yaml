@@ -15,11 +15,11 @@ recorder:
   custom_chrome_path: ""
   # Optional: Set the dimensions of the virtual recording window.
   # The output video will match this resolution.
-  width: 1800
-  height: 900
+  width: 1920
+  height: 1080
   # Optional: Adjust the DPI of the xvfb virtual window.
   # Higher DPI can enhance image clarity but may affect performance and compatibility.
-  xvfb_dpi: 200
+  xvfb_dpi: 96
   copy_to_path:
     # The plugNmeet server must have access to this path for users to download recordings.
     # This can be an NFS or other network-accessible path.
@@ -49,7 +49,7 @@ ffmpeg_settings:
   recording:
     # Options to apply before the input (-i) parameter.
     pre_input: "-loglevel error -thread_queue_size 512 -draw_mouse 0"
-    # Options to apply before the input (-i) parameter.
+    # Options to apply after the input (-i) parameter.
     post_input: "-c:v libx264 -x264-params keyint=120:scenecut=0 -preset veryfast -crf 23 -c:a aac -af highpass=f=200,lowpass=f=4000,afftdn -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y"
   post_recording:
     pre_input: "-loglevel error"

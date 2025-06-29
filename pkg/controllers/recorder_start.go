@@ -29,18 +29,20 @@ func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder)
 	// then processes won't clean properly because of missing process record
 	c.recordersInProgress.Store(id, r)
 
+	var err error
+	defer func() {
+		if err != nil {
+			log.Errorln(err)
+			r.Close(err)
+		}
+	}()
+
 	// start the process
-	err := r.Start()
-	if err != nil {
-		log.Errorln(err)
-		r.Close(err)
+	if err = r.Start(); err != nil {
 		return err
 	}
 
-	err = c.ns.UpdateCurrentProgress(true)
-	if err != nil {
-		log.Errorln(err)
-		r.Close(err)
+	if err = c.ns.UpdateCurrentProgress(true); err != nil {
 		return err
 	}
 

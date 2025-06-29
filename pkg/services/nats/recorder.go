@@ -11,7 +11,9 @@ import (
 )
 
 const (
-	RecorderKvBucket = "%s-%s"
+	RecorderKvBucket   = "%s-%s"
+	maxUpdateRetries   = 5
+	retryUpdateBackoff = 50 * time.Millisecond
 )
 
 func (s *NatsService) AddRecorder() error {
@@ -68,27 +70,43 @@ func (s *NatsService) UpdateCurrentProgress(increment bool) error {
 		return err
 	}
 
-	value, err := kv.Get(s.ctx, fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_CURRENT_PROGRESS))
-	if err != nil {
-		return err
-	}
+	key := fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_CURRENT_PROGRESS)
 
-	currentProgress, err := strconv.ParseUint(string(value.Value()), 10, 64)
-	if err != nil {
-		return err
-	}
-	if increment {
-		currentProgress++
-	} else {
-		if currentProgress > 0 {
-			currentProgress--
+	for i := 0; i < maxUpdateRetries; i++ {
+		entry, err := kv.Get(s.ctx, key)
+		if err != nil {
+			return err
 		}
+
+		currentProgress, err := strconv.ParseUint(string(entry.Value()), 10, 64)
+		if err != nil {
+			return err
+		}
+
+		if increment {
+			currentProgress++
+		} else {
+			if currentProgress > 0 {
+				currentProgress--
+			}
+		}
+
+		newValue := fmt.Sprintf("%d", currentProgress)
+		_, err = kv.Update(s.ctx, key, []byte(newValue), entry.Revision())
+		if err == nil {
+			return nil // Success
+		}
+
+		var apiErr *jetstream.APIError
+		if errors.As(err, &apiErr) && apiErr.ErrorCode == jetstream.JSErrCodeStreamWrongLastSequence {
+			// This is the expected conflict error, wait a bit and retry.
+			time.Sleep(retryUpdateBackoff)
+			continue
+		}
+
+		// For any other error, return immediately.
+		return fmt.Errorf("failed to update progress: %w", err)
 	}
 
-	_, err = kv.PutString(s.ctx, fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_CURRENT_PROGRESS), fmt.Sprintf("%d", currentProgress))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return fmt.Errorf("failed to update progress after %d retries", maxUpdateRetries)
 }
