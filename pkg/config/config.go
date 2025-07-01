@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
@@ -99,28 +100,30 @@ func (a *AppConfig) setDefaultConfig() {
 		a.Recorder.MaxLimit = 10
 	}
 	if a.Recorder.Width == 0 {
-		a.Recorder.Width = 1800
+		a.Recorder.Width = 1920
 	}
 	if a.Recorder.Height == 0 {
-		a.Recorder.Height = 900
+		a.Recorder.Height = 1080
 	}
 	if a.Recorder.XvfbDpi == 0 {
-		a.Recorder.XvfbDpi = 200
+		a.Recorder.XvfbDpi = 96
 	}
 
 	if a.FfmpegSettings == nil {
+		commonPostInput := "-c:v libx264 -x264-params keyint=120:scenecut=0 -preset veryfast -crf 23 -c:a aac -af highpass=f=200,lowpass=f=2000,afftdn -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency"
+
 		a.FfmpegSettings = &FfmpegSettings{
 			Recording: FfmpegOptions{
 				PreInput:  "-loglevel error -thread_queue_size 512 -draw_mouse 0",
-				PostInput: "-c:v libx264 -x264-params keyint=120:scenecut=0 -preset ultrafast -crf 23 -c:a aac -af highpass=f=200,lowpass=f=2000,afftdn -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y",
+				PostInput: fmt.Sprintf("%s -y", commonPostInput),
 			},
 			PostRecording: FfmpegOptions{
 				PreInput:  "-loglevel error",
-				PostInput: "-preset ultrafast -movflags faststart -y",
+				PostInput: "-preset veryfast -movflags faststart -y",
 			},
 			Rtmp: FfmpegOptions{
 				PreInput:  "-loglevel error -draw_mouse 0",
-				PostInput: "-c:v libx264 -pix_fmt yuv420p -x264-params keyint=120:scenecut=0 -b:v 2500k -video_size 1280x720 -c:a aac -b:a 128k -ar 44100 -af highpass=f=200,lowpass=f=2000,afftdn -preset ultrafast -crf 23 -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -bufsize 512k -flush_packets 1 -tune zerolatency -f flv",
+				PostInput: fmt.Sprintf("%s -pix_fmt yuv420p -b:v 2500k -video_size 1920x1080 -b:a 128k -ar 44100 -bufsize 5000k -f flv", commonPostInput),
 			},
 		}
 	}

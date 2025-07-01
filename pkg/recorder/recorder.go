@@ -86,7 +86,7 @@ func (r *Recorder) Start() error {
 func (r *Recorder) Close(err error) {
 	r.closeOnce.Do(func() {
 		// timeout for graceful shutdown
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		shutdownCtx, cancel := context.WithTimeout(r.ctx, shutdownTimeout)
 		defer cancel()
 
 		done := make(chan struct{})
@@ -95,7 +95,7 @@ func (r *Recorder) Close(err error) {
 			r.closeFfmpeg()
 			r.closeChromeDp()
 			r.closeXvfb()
-			r.closePulse()
+			r.closePulse(shutdownCtx)
 		}()
 
 		select {

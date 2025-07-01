@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	log "github.com/sirupsen/logrus"
+	"mvdan.cc/sh/v3/shell"
 	"os"
 	"os/exec"
 	"strings"
@@ -12,32 +13,44 @@ import (
 
 func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 	var args []string
+	var preInput, postInput string
 
 	if r.Req.Task == plugnmeet.RecordingTasks_START_RTMP {
-		args = append(args, strings.Split(r.AppCnf.FfmpegSettings.Rtmp.PreInput, " ")...)
-		args = append(args,
-			"-video_size", fmt.Sprintf("%dx%d", r.AppCnf.Recorder.Width, r.AppCnf.Recorder.Height),
-			"-f", "x11grab",
-			"-i", r.displayId,
-			"-f", "pulse",
-			"-i", fmt.Sprintf("%s.monitor", r.pulseSinkName),
-		)
-		args = append(args, strings.Split(r.AppCnf.FfmpegSettings.Rtmp.PostInput, " ")...)
-		args = append(args, *r.Req.RtmpUrl)
+		preInput = r.AppCnf.FfmpegSettings.Rtmp.PreInput
+		postInput = r.AppCnf.FfmpegSettings.Rtmp.PostInput
 	} else if r.Req.Task == plugnmeet.RecordingTasks_START_RECORDING {
-		args = append(args, strings.Split(r.AppCnf.FfmpegSettings.Recording.PreInput, " ")...)
-		args = append(args,
-			"-video_size", fmt.Sprintf("%dx%d", r.AppCnf.Recorder.Width, r.AppCnf.Recorder.Height),
-			"-f", "x11grab",
-			"-i", r.displayId,
-			"-f", "pulse",
-			"-i", fmt.Sprintf("%s.monitor", r.pulseSinkName),
-		)
-		args = append(args, strings.Split(r.AppCnf.FfmpegSettings.Recording.PostInput, " ")...)
-		args = append(args, mp4File)
+		preInput = r.AppCnf.FfmpegSettings.Recording.PreInput
+		postInput = r.AppCnf.FfmpegSettings.Recording.PostInput
 	} else {
-		return errors.New(fmt.Sprintf("invalid task %s received", r.Req.Task.String()))
+		return fmt.Errorf("invalid task %s received", r.Req.Task.String())
 	}
+
+	preArgs, err := shell.Fields(preInput, nil)
+	if err != nil {
+		return fmt.Errorf("failed to parse ffmpeg pre-input args: %w", err)
+	}
+	args = append(args, preArgs...)
+
+	args = append(args,
+		"-video_size", fmt.Sprintf("%dx%d", r.AppCnf.Recorder.Width, r.AppCnf.Recorder.Height),
+		"-f", "x11grab",
+		"-i", r.displayId,
+		"-f", "pulse",
+		"-i", fmt.Sprintf("%s.monitor", r.pulseSinkName),
+	)
+
+	postArgs, err := shell.Fields(postInput, nil)
+	if err != nil {
+		return fmt.Errorf("failed to parse ffmpeg post-input args: %w", err)
+	}
+	args = append(args, postArgs...)
+
+	if r.Req.Task == plugnmeet.RecordingTasks_START_RTMP {
+		args = append(args, *r.Req.RtmpUrl)
+	} else {
+		args = append(args, mp4File)
+	}
+
 	log.Infoln(fmt.Sprintf("starting ffmpeg process for Task: %s with args: %s", r.Req.Task.String(), strings.Join(args, " ")))
 
 	ffmpegCmd := exec.CommandContext(r.ctx, "ffmpeg", args...)

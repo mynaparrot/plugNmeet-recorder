@@ -53,10 +53,10 @@ ffmpeg_settings:
     post_input: "-c:v libx264 -x264-params keyint=120:scenecut=0 -preset veryfast -crf 23 -c:a aac -af highpass=f=200,lowpass=f=4000,afftdn -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y"
   post_recording:
     pre_input: "-loglevel error"
-    post_input: "-preset medium -movflags faststart -y"
+    post_input: "-preset veryfast -movflags faststart -y"
   rtmp:
     pre_input: "-loglevel error -draw_mouse 0"
-    post_input: "-c:v libx264 -pix_fmt yuv420p -x264-params keyint=120:scenecut=0 -b:v 2500k -video_size 1920x1080 -c:a aac -b:a 128k -ar 44100 -af highpass=f=200,lowpass=f=4000,afftdn -preset veryfast -crf 23 -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -bufsize 512k -flush_packets 1 -tune zerolatency -f flv"
+    post_input: "-c:v libx264 -pix_fmt yuv420p -x264-params keyint=120:scenecut=0 -b:v 2500k -video_size 1920x1080 -c:a aac -b:a 128k -ar 44100 -af highpass=f=200,lowpass=f=4000,afftdn -preset veryfast -crf 23 -async 1 -movflags frag_keyframe+empty_moov+default_base_moof -bufsize 5000k -flush_packets 1 -tune zerolatency -f flv"
 
 plugNmeet_info:
   # Example: http://localhost:8080
