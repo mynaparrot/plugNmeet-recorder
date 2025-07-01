@@ -1,6 +1,7 @@
 package recorder
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -33,13 +34,17 @@ func (r *Recorder) createPulseSink() error {
 	return nil
 }
 
-func (r *Recorder) closePulse() {
+func (r *Recorder) closePulse(ctx context.Context) {
+	r.Lock()
+	defer r.Unlock()
+
 	if r.pulseSinkId != "" {
 		log.Infoln(fmt.Sprintf("unloading pulse module: %s for task: %s, roomTableId: %d", r.pulseSinkId, r.Req.Task.String(), r.Req.GetRoomTableId()))
 
-		cmd := exec.CommandContext(r.ctx, "pactl", "unload-module", r.pulseSinkId)
+		cmd := exec.CommandContext(ctx, "pactl", "unload-module", r.pulseSinkId)
 		if _, err := cmd.CombinedOutput(); err != nil {
 			log.Errorln("failed to unload pulse sink", err)
 		}
+		r.pulseSinkId = ""
 	}
 }

@@ -48,6 +48,9 @@ func (r *Recorder) launchXvfb() error {
 }
 
 func (r *Recorder) closeXvfb() {
+	r.Lock()
+	defer r.Unlock()
+
 	if r.xvfbCmd != nil {
 		log.Infoln(fmt.Sprintf("closing X display for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
 

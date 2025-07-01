@@ -108,20 +108,6 @@ func (c *RecorderController) BootUp() {
 	fmt.Println(fmt.Sprintf("recorder is ready to accept tasks, recorderId: %s; version: %s; runtime: %s", c.cnf.Recorder.Id, version.Version, runtime.Version()))
 }
 
-func (c *RecorderController) getRecorderInProgress(tableId int64, task plugnmeet.RecordingTasks) (bool, *recorder.Recorder) {
-	id := fmt.Sprintf("%d-%d", tableId, task)
-	val, ok := c.recordersInProgress.Load(id)
-	if !ok {
-		return false, nil
-	}
-	process, ok := val.(*recorder.Recorder)
-	if !ok {
-		log.Errorf("invalid type in recordersInProgress for id %s", id)
-		return false, nil
-	}
-	return true, process
-}
-
 func (c *RecorderController) CallEndToAll() {
 	c.recordersInProgress.Range(func(key, value interface{}) bool {
 		if process, ok := value.(*recorder.Recorder); ok {

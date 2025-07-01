@@ -16,46 +16,52 @@ import (
 func (c *RecorderController) handleStopTask(req *plugnmeet.PlugNmeetToRecorder) bool {
 	log.Infoln(fmt.Sprintf("received new stop task: %s, roomTableId: %d, roomId: %s, sId: %s", req.Task.String(), req.GetRoomTableId(), req.GetRoomId(), req.GetRoomSid()))
 
-	var process *recorder.Recorder
+	var tasksToCheck []plugnmeet.RecordingTasks
 	switch req.Task {
 	case plugnmeet.RecordingTasks_STOP_RECORDING:
-		ok, val := c.getRecorderInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RECORDING)
-		if !ok {
-			return false
-		}
-		process = val
+		tasksToCheck = append(tasksToCheck, plugnmeet.RecordingTasks_START_RECORDING)
 	case plugnmeet.RecordingTasks_STOP_RTMP:
-		ok, val := c.getRecorderInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RTMP)
-		if !ok {
-			return false
-		}
-		process = val
+		tasksToCheck = append(tasksToCheck, plugnmeet.RecordingTasks_START_RTMP)
 	case plugnmeet.RecordingTasks_STOP:
-		ok, val := c.getRecorderInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RECORDING)
-		if !ok {
-			ok, val = c.getRecorderInProgress(req.RoomTableId, plugnmeet.RecordingTasks_START_RTMP)
-			if !ok {
-				return false
-			}
+		// For a general STOP, try to stop both recording and RTMP.
+		tasksToCheck = append(tasksToCheck, plugnmeet.RecordingTasks_START_RECORDING, plugnmeet.RecordingTasks_START_RTMP)
+	}
+
+	var found bool
+	for _, task := range tasksToCheck {
+		if process, ok := c.getAndDeleteRecorderInProgress(req.RoomTableId, task); ok && process != nil {
+			// need to start the process in goroutine otherwise will be delay in reply,
+			// and this will show error in the client
+			go process.Close(nil)
+			found = true
 		}
-		process = val
 	}
 
-	if process == nil {
-		return false
-	}
+	return found
+}
 
-	// need to start the process in goroutine otherwise will be delay in reply,
-	// and this will show error in the client
-	go process.Close(nil)
-	return true
+// getAndDeleteRecorderInProgress atomically loads and deletes a recorder from the sync.Map.
+func (c *RecorderController) getAndDeleteRecorderInProgress(tableId int64, task plugnmeet.RecordingTasks) (*recorder.Recorder, bool) {
+	id := fmt.Sprintf("%d-%d", tableId, task)
+	val, ok := c.recordersInProgress.LoadAndDelete(id)
+	if !ok {
+		return nil, false
+	}
+	process, ok := val.(*recorder.Recorder)
+	if !ok {
+		log.Errorf("invalid type in recordersInProgress for id %s", id)
+		return nil, false
+	}
+	return process, true
 }
 
 func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, filePath, fileName string, processErr error) {
 	log.Infoln(fmt.Sprintf("onAfterClose called for task: %s, roomTableId: %d, roomId: %s, sId: %s", req.Task.String(), req.GetRoomTableId(), req.GetRoomId(), req.GetRoomSid()))
 
-	// remove from map
+	// Atomically remove from map. This handles cleanup for crashes or other unexpected closures.
+	// It's safe to call even if handleStopTask already removed it.
 	c.recordersInProgress.Delete(fmt.Sprintf("%d-%d", req.RoomTableId, req.Task))
+
 	// decrement process
 	err := c.ns.UpdateCurrentProgress(false)
 	if err != nil {

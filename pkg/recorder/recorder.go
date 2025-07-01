@@ -2,7 +2,6 @@ package recorder
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
@@ -16,13 +15,13 @@ import (
 
 const (
 	waitForSelectorTimeout = time.Second * 30
+	shutdownTimeout        = time.Second * 5
 )
 
 type Recorder struct {
 	joinUrl  string
 	filePath string
 	fileName string
-	isClosed bool
 
 	Req                  *plugnmeet.PlugNmeetToRecorder
 	AppCnf               *config.AppConfig
@@ -37,7 +36,9 @@ type Recorder struct {
 	xvfbCmd       *exec.Cmd
 	ffmpegCmd     *exec.Cmd
 	closeChrome   context.CancelFunc
+
 	sync.Mutex
+	closeOnce sync.Once
 }
 
 func New(r *Recorder) *Recorder {
@@ -46,18 +47,20 @@ func New(r *Recorder) *Recorder {
 }
 
 func (r *Recorder) Start() error {
+	var err error
+	defer func() {
+		if err != nil {
+			log.Errorln(fmt.Sprintf("failed to start recorder for task: %s, roomTableId: %d, error: %v", r.Req.Task.String(), r.Req.GetRoomTableId(), err))
+			r.Close(err)
+		}
+	}()
+
 	if r.Req.Task == plugnmeet.RecordingTasks_START_RECORDING {
 		r.filePath = path.Join(r.AppCnf.Recorder.CopyToPath.MainPath, r.AppCnf.Recorder.CopyToPath.SubPath, r.Req.GetRoomSid())
-		err := os.MkdirAll(r.filePath, 0755)
+		err = os.MkdirAll(r.filePath, 0755)
 		if err != nil {
-			switch {
-			case errors.Is(err, os.ErrExist):
-				log.Infoln(fmt.Sprintf("%s already exists, will replace it", r.filePath))
-			default:
-				return err
-			}
+			return err
 		}
-
 		r.fileName = r.Req.GetRecordingId() + "_raw.mp4"
 	}
 
@@ -66,42 +69,49 @@ func (r *Recorder) Start() error {
 		r.joinUrl = *r.AppCnf.PlugNmeetInfo.JoinHost + r.Req.GetAccessToken()
 	}
 
-	err := r.createPulseSink()
-	if err != nil {
-		r.Close(err)
+	if err = r.createPulseSink(); err != nil {
 		return err
 	}
-	err = r.launchXvfb()
-	if err != nil {
-		r.Close(err)
+	if err = r.launchXvfb(); err != nil {
 		return err
 	}
 
+	// start chrome in go routine and return response immediately
+	// otherwise user will see error message if wait too long
+	// if something goes wrong then we can know from callback
 	go r.launchChrome()
 	return nil
 }
 
 func (r *Recorder) Close(err error) {
-	r.Lock()
-	defer r.Unlock()
+	r.closeOnce.Do(func() {
+		// timeout for graceful shutdown
+		shutdownCtx, cancel := context.WithTimeout(r.ctx, shutdownTimeout)
+		defer cancel()
 
-	if !r.isClosed {
-		time.Sleep(time.Second * 1)
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			r.closeFfmpeg()
+			r.closeChromeDp()
+			r.closeXvfb()
+			r.closePulse(shutdownCtx)
+		}()
 
-		r.closeFfmpeg()
-		r.closeChromeDp()
-		r.closeXvfb()
-		r.closePulse()
+		select {
+		case <-done:
+			log.Infoln("graceful shutdown finished for task:", r.Req.Task.String())
+		case <-shutdownCtx.Done():
+			log.Errorln("graceful shutdown timed out for task:", r.Req.Task.String(), "forcing close")
+		}
 
 		if r.OnAfterCloseCallback != nil {
 			r.OnAfterCloseCallback(r.Req, r.filePath, r.fileName, err)
 		}
 
-		time.Sleep(time.Second * 1)
-		// close everything
+		// close everything if still running
 		r.ctxCancel()
-		r.isClosed = true
-	}
+	})
 }
 
 type infoLogger struct {
