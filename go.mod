@@ -3,7 +3,7 @@ module github.com/mynaparrot/plugnmeet-recorder
 go 1.24
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250625204652-ce640014f9ac
+	github.com/chromedp/cdproto v0.0.0-20250630014756-b7288190f53c
 	github.com/chromedp/chromedp v0.13.7
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250627141540-0fdd4a147470
