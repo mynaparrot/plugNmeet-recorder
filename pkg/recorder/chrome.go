@@ -47,6 +47,7 @@ func (r *Recorder) launchChrome() {
 		chromedp.Flag("autoplay-policy", "no-user-gesture-required"),
 		chromedp.Flag("window-position", "0,0"),
 		chromedp.Flag("window-size", fmt.Sprintf("%d,%d", r.AppCnf.Recorder.Width, r.AppCnf.Recorder.Height)),
+		chromedp.Flag("force-device-scale-factor", "1"),
 
 		// ---- Environment & Rendering Flags ----
 		chromedp.NoSandbox,
