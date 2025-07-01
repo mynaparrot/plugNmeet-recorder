@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.5.4](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.3...v1.5.4) (2025-07-01)
+
+
+### Bug Fixes
+
+* chrome scale factor ([8fd466b](https://github.com/mynaparrot/plugNmeet-recorder/commit/8fd466bda177d4e1560d49dc4ace65c135a35531))
+* **deps:** update github.com/mynaparrot/plugnmeet-protocol digest to 238ce2b ([a344561](https://github.com/mynaparrot/plugNmeet-recorder/commit/a3445616b54d23e9e5219b2ac900015287c7d2c8))
+* **deps:** update github.com/mynaparrot/plugnmeet-protocol digest to 238ce2b ([7cfc5f0](https://github.com/mynaparrot/plugNmeet-recorder/commit/7cfc5f0a1e1762f2e591573e1687fac7639ea44a))
+* **deps:** update github.com/mynaparrot/plugnmeet-protocol digest to d710940 ([a32e956](https://github.com/mynaparrot/plugNmeet-recorder/commit/a32e956f075bfd21e182e54f2f4f0c3af375bcdc))
+* **deps:** update github.com/mynaparrot/plugnmeet-protocol digest to d710940 ([a9e9f4f](https://github.com/mynaparrot/plugNmeet-recorder/commit/a9e9f4ffd7aa4e1bd0f83287c5687eb3c258fa4a))
+* **deps:** update module github.com/nats-io/nats.go to v1.42.0 ([0fb0181](https://github.com/mynaparrot/plugNmeet-recorder/commit/0fb0181ad39862fad98d55add54ae1c7a611a73c))
+* **deps:** update module github.com/nats-io/nats.go to v1.42.0 ([2bbf752](https://github.com/mynaparrot/plugNmeet-recorder/commit/2bbf7520160707dcbad5e1f6215e426e91f8be32))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.1 ([1f84873](https://github.com/mynaparrot/plugNmeet-recorder/commit/1f84873946afe9c23b12c8b035c9bfcfc79ce1d6))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.1 ([1f0610d](https://github.com/mynaparrot/plugNmeet-recorder/commit/1f0610d393fa9b2d3378bbdc6c05af06acb35f19))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.2 ([5e42b01](https://github.com/mynaparrot/plugNmeet-recorder/commit/5e42b01842345369a25ce9b151971cd7c87a9244))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.2 ([36c051e](https://github.com/mynaparrot/plugNmeet-recorder/commit/36c051e861679c54e5d2f96ddea018cdd3ddeb43))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.3 ([92d0104](https://github.com/mynaparrot/plugNmeet-recorder/commit/92d01048fd124ac72ae0099df45c1f21726f02ff))
+* **deps:** update module github.com/urfave/cli/v3 to v3.3.3 ([e86e6d6](https://github.com/mynaparrot/plugNmeet-recorder/commit/e86e6d667d04659c93daf881abffda82cc7fdd64))
+* **improve:** few improvements and cleanup ([6370b9b](https://github.com/mynaparrot/plugNmeet-recorder/commit/6370b9b53ef273f292a7ec5a39767c82e0ec683c))
+* **improve:** few improvements and cleanup ([c39ad23](https://github.com/mynaparrot/plugNmeet-recorder/commit/c39ad2371d0cea78cfe6626200157e467334a55f))
+* updated text ([b67db33](https://github.com/mynaparrot/plugNmeet-recorder/commit/b67db33fce8fc1dc27dbbe1defafb6e1a4b5e00e))
+* updated text ([62dbeff](https://github.com/mynaparrot/plugNmeet-recorder/commit/62dbeff36f91dee55ade3575831be6d7037019c8))
+
 ## [1.5.3](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.2...v1.5.3) (2025-04-10)
 
 
