@@ -6,7 +6,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20250625204652-ce640014f9ac
 	github.com/chromedp/chromedp v0.13.7
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250627141540-0fdd4a147470
+	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250702183309-9abd8a2a4a65
 	github.com/nats-io/nats.go v1.43.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v3 v3.3.8
