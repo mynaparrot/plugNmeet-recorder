@@ -3,8 +3,8 @@ module github.com/mynaparrot/plugnmeet-recorder
 go 1.24
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250625204652-ce640014f9ac
-	github.com/chromedp/chromedp v0.13.7
+	github.com/chromedp/cdproto v0.0.0-20250724212937-08a3db8b4327
+	github.com/chromedp/chromedp v0.14.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250627141540-0fdd4a147470
 	github.com/nats-io/nats.go v1.43.0
@@ -32,7 +32,7 @@ require (
 	github.com/gammazero/deque v1.0.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250626171732-1a886bd29d1b // indirect
+	github.com/go-json-experiment/json v0.0.0-20250725192818-e39067aee2d2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
@@ -79,7 +79,7 @@ require (
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
