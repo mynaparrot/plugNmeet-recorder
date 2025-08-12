@@ -4,21 +4,21 @@ go 1.24
 
 require (
 	github.com/chromedp/cdproto v0.0.0-20250724212937-08a3db8b4327
-	github.com/chromedp/chromedp v0.14.0
+	github.com/chromedp/chromedp v0.14.1
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250627141540-0fdd4a147470
+	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250812125547-fd70b49d5b59
 	github.com/nats-io/nats.go v1.44.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/urfave/cli/v3 v3.3.8
-	google.golang.org/protobuf v1.36.6
+	github.com/urfave/cli/v3 v3.4.1
+	google.golang.org/protobuf v1.36.7
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.12.0
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250625184727-c923a0c2a132.1 // indirect
-	buf.build/go/protovalidate v0.13.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.7-20250717185734-6c6e0d3c608e.1 // indirect
+	buf.build/go/protovalidate v0.14.0 // indirect
 	buf.build/go/protoyaml v0.6.0 // indirect
 	cel.dev/expr v0.24.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
@@ -31,7 +31,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gammazero/deque v1.0.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.2 // indirect
 	github.com/go-json-experiment/json v0.0.0-20250725192818-e39067aee2d2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
