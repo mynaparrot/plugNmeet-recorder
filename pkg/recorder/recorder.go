@@ -3,14 +3,15 @@ package recorder
 import (
 	"context"
 	"fmt"
-	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
-	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path"
 	"sync"
 	"time"
+
+	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -56,7 +57,7 @@ func (r *Recorder) Start() error {
 	}()
 
 	if r.Req.Task == plugnmeet.RecordingTasks_START_RECORDING {
-		r.filePath = path.Join(r.AppCnf.Recorder.CopyToPath.MainPath, r.AppCnf.Recorder.CopyToPath.SubPath, r.Req.GetRoomSid())
+		r.filePath = path.Join(r.AppCnf.Recorder.CopyToPath.MainPath, r.AppCnf.Recorder.CopyToPath.SubPath, r.Req.GetRoomId())
 		err = os.MkdirAll(r.filePath, 0755)
 		if err != nil {
 			return err
