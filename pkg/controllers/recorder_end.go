@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -146,14 +147,31 @@ func (c *RecorderController) postProcessRecording(req *plugnmeet.PlugNmeetToReco
 		}
 	}
 
-	stat, err := os.Stat(path.Join(filePath, finalFileName))
+	outputFilePath := path.Join(filePath, finalFileName)
+	stat, err := os.Stat(outputFilePath)
 	if err != nil {
 		log.Errorln(err)
 		return
 	}
-	size := float32(stat.Size()) / 1000000.0
 
-	toSendPath := path.Join(c.cnf.Recorder.CopyToPath.SubPath, req.GetRoomSid(), finalFileName)
+	size := float32(stat.Size()) / 1000000.0
+	var relativePath string
+
+	// To robustly calculate the relative path, first ensure the base path is absolute.
+	// This prevents errors when the configured path is relative (e.g., "./recordings").
+	basePath, err := filepath.Abs(c.cnf.Recorder.CopyToPath.MainPath)
+	if err != nil {
+		log.WithError(err).Errorf("could not determine absolute path for main_path '%s', falling back to string trimming", c.cnf.Recorder.CopyToPath.MainPath)
+		relativePath = strings.TrimPrefix(outputFilePath, c.cnf.Recorder.CopyToPath.MainPath)
+	} else {
+		// Now that we have an absolute base path, we can safely calculate the relative path.
+		relativePath, err = filepath.Rel(basePath, outputFilePath)
+		if err != nil {
+			log.WithError(err).Errorf("could not make path relative for %s", outputFilePath)
+			relativePath = strings.TrimPrefix(outputFilePath, basePath)
+		}
+	}
+
 	toSend := &plugnmeet.RecorderToPlugNmeet{
 		From:        "recorder",
 		Status:      true,
@@ -162,7 +180,7 @@ func (c *RecorderController) postProcessRecording(req *plugnmeet.PlugNmeetToReco
 		RecordingId: req.RecordingId,
 		RecorderId:  req.RecorderId,
 		RoomTableId: req.RoomTableId,
-		FilePath:    toSendPath,
+		FilePath:    relativePath,
 		FileSize:    float32(int(size*100)) / 100,
 	}
 	log.Infoln(fmt.Sprintf("notifyToPlugNmeet with data: %+v", toSend))
