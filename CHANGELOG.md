@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.5](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.4...v1.5.5) (2025-08-12)
+
+
+### Bug Fixes
+
+* dependencies upgrade ([700f276](https://github.com/mynaparrot/plugNmeet-recorder/commit/700f27680b99459e11223699ed4c48e03df9901b))
+* **deps:** update module github.com/chromedp/chromedp to v0.14.0 ([e83615f](https://github.com/mynaparrot/plugNmeet-recorder/commit/e83615f1def12c1fdf35c3d47f5c4d935402f688))
+* **deps:** update module github.com/chromedp/chromedp to v0.14.0 ([292279b](https://github.com/mynaparrot/plugNmeet-recorder/commit/292279b6daaf43339825e9088329c78a52e014fb))
+* **deps:** update module github.com/nats-io/nats.go to v1.44.0 ([c478d1d](https://github.com/mynaparrot/plugNmeet-recorder/commit/c478d1d76371cace359ae41731666f9dce53d545))
+* **deps:** update module github.com/nats-io/nats.go to v1.44.0 ([8a5200d](https://github.com/mynaparrot/plugNmeet-recorder/commit/8a5200da33b8d6129c36cbba53f1ff4b139afc58))
+* **deps:** update module mvdan.cc/sh/v3 to v3.12.0 ([51fe233](https://github.com/mynaparrot/plugNmeet-recorder/commit/51fe233b0bb900d905e2cde31ab8718cf98fe2ba))
+* **deps:** update module mvdan.cc/sh/v3 to v3.12.0 ([fe6841f](https://github.com/mynaparrot/plugNmeet-recorder/commit/fe6841f0602c914b53b240886c77eeed1b1b4645))
+* invalid file path was sending ([bcd01ea](https://github.com/mynaparrot/plugNmeet-recorder/commit/bcd01ea17578b6c22b6966e272568e02f160ec2a))
+* use roomId for better management. Filename should be always unique ([1d4272d](https://github.com/mynaparrot/plugNmeet-recorder/commit/1d4272d01c4aec455a54973f2580cd839e3c0a16))
+
 ## [1.5.4](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.3...v1.5.4) (2025-07-01)
 
 
