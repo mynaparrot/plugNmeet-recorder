@@ -12,11 +12,12 @@ import (
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
-func (c *RecorderController) handleStopTask(req *plugnmeet.PlugNmeetToRecorder) bool {
-	log.Infoln(fmt.Sprintf("received new stop task: %s, roomTableId: %d, roomId: %s, sId: %s", req.Task.String(), req.GetRoomTableId(), req.GetRoomId(), req.GetRoomSid()))
+// handleStopTask now accepts a logger
+func (c *RecorderController) handleStopTask(req *plugnmeet.PlugNmeetToRecorder, logger *logrus.Entry) bool {
+	logger.Infoln("received new stop task")
 
 	var tasksToCheck []plugnmeet.RecordingTasks
 	switch req.Task {
@@ -31,6 +32,7 @@ func (c *RecorderController) handleStopTask(req *plugnmeet.PlugNmeetToRecorder) 
 
 	var found bool
 	for _, task := range tasksToCheck {
+		// pass logger to getAndDeleteRecorderInProgress
 		if process, ok := c.getAndDeleteRecorderInProgress(req.RoomTableId, task); ok && process != nil {
 			// need to start the process in goroutine otherwise will be delay in reply,
 			// and this will show error in the client
@@ -42,32 +44,33 @@ func (c *RecorderController) handleStopTask(req *plugnmeet.PlugNmeetToRecorder) 
 	return found
 }
 
-// getAndDeleteRecorderInProgress atomically loads and deletes a recorder from the sync.Map.
+// getAndDeleteRecorderInProgress now accepts a logger
 func (c *RecorderController) getAndDeleteRecorderInProgress(tableId int64, task plugnmeet.RecordingTasks) (*recorder.Recorder, bool) {
-	id := fmt.Sprintf("%d-%d", tableId, task)
+	id := fmt.Sprintf(taskIDTemplate, tableId, task)
 	val, ok := c.recordersInProgress.LoadAndDelete(id)
 	if !ok {
 		return nil, false
 	}
 	process, ok := val.(*recorder.Recorder)
 	if !ok {
-		log.Errorf("invalid type in recordersInProgress for id %s", id)
+		c.logger.Errorf("invalid type in recordersInProgress for id %s", id)
 		return nil, false
 	}
 	return process, true
 }
 
-func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, filePath, fileName string, processErr error) {
-	log.Infoln(fmt.Sprintf("onAfterClose called for task: %s, roomTableId: %d, roomId: %s, sId: %s", req.Task.String(), req.GetRoomTableId(), req.GetRoomId(), req.GetRoomSid()))
+// onAfterClose now accepts a logger
+func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, filePath, fileName string, processErr error, logger *logrus.Entry) {
+	logger.Infoln("onAfterClose callback called")
 
 	// Atomically remove from map. This handles cleanup for crashes or other unexpected closures.
 	// It's safe to call even if handleStopTask already removed it.
-	c.recordersInProgress.Delete(fmt.Sprintf("%d-%d", req.RoomTableId, req.Task))
+	c.recordersInProgress.Delete(fmt.Sprintf(taskIDTemplate, req.RoomTableId, req.Task))
 
 	// decrement process
 	err := c.ns.UpdateCurrentProgress(false)
 	if err != nil {
-		log.Errorln(err)
+		logger.WithError(err).Errorln("failed to update current progress")
 	}
 
 	// notify to plugnmeet
@@ -87,11 +90,11 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, fi
 		toSend.Status = false
 		toSend.Msg = processErr.Error()
 	}
-	log.Infoln(fmt.Sprintf("notifyToPlugNmeet with data: %+v", toSend))
+	logger.Infof("notifying to plugnmeet with data: %+v", toSend)
 
 	_, err = utils.NotifyToPlugNmeet(c.cnf.PlugNmeetInfo.Host, c.cnf.PlugNmeetInfo.ApiKey, c.cnf.PlugNmeetInfo.ApiSecret, toSend, nil)
 	if err != nil {
-		log.Errorln(err)
+		logger.WithError(err).Errorln("failed to notify to plugnmeet")
 	}
 
 	if req.Task == plugnmeet.RecordingTasks_START_RECORDING {
@@ -102,19 +105,21 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, fi
 				// in this case, not found error is expected so, don't need to log
 				// otherwise will create confusion
 			default:
-				log.Errorln(err)
+				logger.WithError(err).Errorln("failed to stat output file")
 			}
 			return
 		}
 		if stat.Size() > 0 {
-			go c.postProcessRecording(req, filePath, fileName)
+			// pass logger to postProcessRecording
+			go c.postProcessRecording(logger, req, filePath, fileName)
 		} else {
-			log.Errorln("avoiding postProcessRecording of ", path.Join(filePath, fileName), "file because of 0 size")
+			logger.Errorln("avoiding postProcessRecording of ", path.Join(filePath, fileName), "file because of 0 size")
 		}
 	}
 }
 
-func (c *RecorderController) postProcessRecording(req *plugnmeet.PlugNmeetToRecorder, filePath, currentFileName string) {
+// postProcessRecording now accepts a logger
+func (c *RecorderController) postProcessRecording(logger *logrus.Entry, req *plugnmeet.PlugNmeetToRecorder, filePath, currentFileName string) {
 	finalFileName := fmt.Sprintf("%s.mp4", req.RecordingId)
 
 	if c.cnf.Recorder.PostMp4Convert {
@@ -123,11 +128,11 @@ func (c *RecorderController) postProcessRecording(req *plugnmeet.PlugNmeetToReco
 		args = append(args, "-i", path.Join(filePath, currentFileName))
 		args = append(args, strings.Split(c.cnf.FfmpegSettings.PostRecording.PostInput, " ")...)
 		args = append(args, path.Join(filePath, finalFileName))
-		log.Infoln("starting post recording ffmpeg process with args:", strings.Join(args, " "))
+		logger.Infoln("starting post recording ffmpeg process with args:", strings.Join(args, " "))
 
 		_, err := exec.Command("ffmpeg", args...).CombinedOutput()
 		if err != nil {
-			log.Errorln(fmt.Sprintf("keeping the raw file: %s as output because of error from ffmpeg: %s", currentFileName, err.Error()))
+			logger.WithError(err).Errorf("keeping the raw file: %s as output because of error from ffmpeg", currentFileName)
 			// remove the new file
 			_ = os.Remove(path.Join(filePath, finalFileName))
 			// keep the old file as output
@@ -135,14 +140,14 @@ func (c *RecorderController) postProcessRecording(req *plugnmeet.PlugNmeetToReco
 		} else {
 			err = os.Remove(path.Join(filePath, currentFileName))
 			if err != nil {
-				log.Errorln(err)
+				logger.WithError(err).Errorln("failed to remove raw file")
 			}
 		}
 	} else {
 		// just rename
 		err := os.Rename(path.Join(filePath, currentFileName), path.Join(filePath, finalFileName))
 		if err != nil {
-			log.Errorln(fmt.Sprintf("keeping the raw file: %s as output because of error during rename: %s", currentFileName, err.Error()))
+			logger.Errorf("keeping the raw file: %s as output because of error during rename: %s", currentFileName, err.Error())
 			// keep the old file as output
 			finalFileName = currentFileName
 		}
@@ -151,26 +156,34 @@ func (c *RecorderController) postProcessRecording(req *plugnmeet.PlugNmeetToReco
 	outputFilePath := path.Join(filePath, finalFileName)
 	stat, err := os.Stat(outputFilePath)
 	if err != nil {
-		log.Errorln(err)
+		logger.WithError(err).Errorln("failed to stat output file")
 		return
 	}
 
 	size := float32(stat.Size()) / 1000000.0
 	var relativePath string
 
-	// To robustly calculate the relative path, first ensure the base path is absolute.
-	// This prevents errors when the configured path is relative (e.g., "./recordings").
+	// To robustly calculate the relative path, first ensure both paths are absolute.
+	// This prevents errors when paths are configured relatively (e.g., "./recordings").
 	basePath, err := filepath.Abs(c.cnf.Recorder.CopyToPath.MainPath)
 	if err != nil {
-		log.WithError(err).Errorf("could not determine absolute path for main_path '%s', falling back to string trimming", c.cnf.Recorder.CopyToPath.MainPath)
-		relativePath = strings.TrimPrefix(outputFilePath, c.cnf.Recorder.CopyToPath.MainPath)
-	} else {
-		// Now that we have an absolute base path, we can safely calculate the relative path.
-		relativePath, err = filepath.Rel(basePath, outputFilePath)
-		if err != nil {
-			log.WithError(err).Errorf("could not make path relative for %s", outputFilePath)
-			relativePath = strings.TrimPrefix(outputFilePath, basePath)
-		}
+		logger.WithError(err).Errorf("could not determine absolute path for main_path '%s', falling back to string trimming", c.cnf.Recorder.CopyToPath.MainPath)
+		relativePath = strings.TrimPrefix(outputFilePath, c.cnf.Recorder.CopyToPath.MainPath) // fallback
+	}
+
+	absOutputFilePath, err := filepath.Abs(outputFilePath)
+	if err != nil {
+		logger.WithError(err).Errorf("could not determine absolute path for output_file_path '%s', falling back to string trimming", outputFilePath)
+		relativePath = strings.TrimPrefix(outputFilePath, c.cnf.Recorder.CopyToPath.MainPath) // fallback
+	}
+
+	relativePath, err = filepath.Rel(basePath, absOutputFilePath)
+	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"base_path":   basePath,
+			"output_path": absOutputFilePath,
+		}).WithError(err).Warnf("could not make path relative for %s, falling back to string trimming", absOutputFilePath)
+		relativePath = strings.TrimPrefix(absOutputFilePath, basePath)
 	}
 
 	toSend := &plugnmeet.RecorderToPlugNmeet{
@@ -184,11 +197,11 @@ func (c *RecorderController) postProcessRecording(req *plugnmeet.PlugNmeetToReco
 		FilePath:    relativePath,
 		FileSize:    float32(int(size*100)) / 100,
 	}
-	log.Infoln(fmt.Sprintf("notifyToPlugNmeet with data: %+v", toSend))
+	logger.Infof("notifying to plugnmeet with data: %+v", toSend)
 
 	_, err = utils.NotifyToPlugNmeet(c.cnf.PlugNmeetInfo.Host, c.cnf.PlugNmeetInfo.ApiKey, c.cnf.PlugNmeetInfo.ApiSecret, toSend, nil)
 	if err != nil {
-		log.Errorln(err)
+		logger.WithError(err).Errorln("failed to notify to plugnmeet")
 	}
 
 	// post-processing scripts
@@ -207,14 +220,14 @@ func (c *RecorderController) postProcessRecording(req *plugnmeet.PlugNmeetToReco
 	}
 	marshal, err := json.Marshal(data)
 	if err != nil {
-		log.Errorln(err)
+		logger.WithError(err).Errorln("failed to marshal post-processing data")
 		return
 	}
 
 	for _, script := range c.cnf.Recorder.PostProcessingScripts {
 		_, err := exec.Command("/bin/sh", script, string(marshal)).CombinedOutput()
 		if err != nil {
-			log.Errorln(err)
+			logger.WithError(err).Errorln("failed to run post-processing script")
 		}
 	}
 }

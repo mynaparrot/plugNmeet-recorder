@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"runtime"
 	"sync"
 	"time"
@@ -12,24 +11,28 @@ import (
 	natsservice "github.com/mynaparrot/plugnmeet-recorder/pkg/services/nats"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
 	"github.com/nats-io/nats.go"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 )
+
+const taskIDTemplate = "%d-%d"
 
 type RecorderController struct {
 	cnf                 *config.AppConfig
 	ns                  *natsservice.NatsService
+	logger              *logrus.Entry
 	closeTicker         chan bool
 	recordersInProgress sync.Map
 }
 
-func NewRecorderController() *RecorderController {
+func NewRecorderController(logger *logrus.Logger) *RecorderController {
 	cnf := config.GetConfig()
 	ns := natsservice.New(cnf)
 
 	return &RecorderController{
 		cnf:         cnf,
 		ns:          ns,
+		logger:      logger.WithField("component", "recorder-controller"),
 		closeTicker: make(chan bool),
 	}
 }
@@ -38,7 +41,7 @@ func (c *RecorderController) BootUp() {
 	// add this recorder to the bucket
 	err := c.ns.AddRecorder()
 	if err != nil {
-		log.Fatal(err)
+		c.logger.WithError(err).Fatal("failed to add this recorder to the bucket")
 	}
 	// now start ping
 	go c.startPing()
@@ -46,7 +49,7 @@ func (c *RecorderController) BootUp() {
 	// try to recover if panic happens
 	defer func() {
 		if r := recover(); r != nil {
-			log.Warnln("recovered from panic in", r)
+			c.logger.Warnln("recovered from panic in", r)
 		}
 	}()
 
@@ -55,12 +58,20 @@ func (c *RecorderController) BootUp() {
 		req := new(plugnmeet.PlugNmeetToRecorder)
 		err := proto.Unmarshal(msg.Data, req)
 		if err != nil {
-			log.Errorln(err)
+			c.logger.Errorln(err)
 			return
 		}
 		if req.From != "plugnmeet" {
 			return
 		}
+
+		// Create a contextual logger for each task. This is very powerful!
+		taskLogger := c.logger.WithFields(logrus.Fields{
+			"task":        req.Task,
+			"roomTableId": req.RoomTableId,
+			"sid":         req.RoomSid,
+			"roomId":      req.RoomId,
+		})
 
 		switch req.Task {
 		case plugnmeet.RecordingTasks_START_RECORDING,
@@ -70,7 +81,8 @@ func (c *RecorderController) BootUp() {
 					Status: true,
 					Msg:    "success",
 				}
-				err := c.handleStartTask(req)
+				// Pass the contextual logger to the handler
+				err := c.handleStartTask(req, taskLogger)
 				if err != nil {
 					res.Status = false
 					res.Msg = err.Error()
@@ -78,13 +90,14 @@ func (c *RecorderController) BootUp() {
 				marshal, _ := proto.Marshal(res)
 				err = msg.Respond(marshal)
 				if err != nil {
-					log.Errorln(err)
+					taskLogger.Errorln(err)
 				}
 			}
 		case plugnmeet.RecordingTasks_STOP_RECORDING,
 			plugnmeet.RecordingTasks_STOP_RTMP,
 			plugnmeet.RecordingTasks_STOP:
-			ok := c.handleStopTask(req)
+			// Pass the contextual logger to the handler
+			ok := c.handleStopTask(req, taskLogger)
 			if ok {
 				// then the process was in this recorder
 				res := &plugnmeet.CommonResponse{
@@ -94,22 +107,27 @@ func (c *RecorderController) BootUp() {
 				marshal, _ := proto.Marshal(res)
 				err := msg.Respond(marshal)
 				if err != nil {
-					log.Errorln(err)
+					taskLogger.Errorln(err)
 				}
 			}
 		default:
-			log.Errorln(fmt.Sprintf("invalid task %s received", req.Task.String()))
+			taskLogger.Errorf("invalid task %s received", req.Task.String())
 		}
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		c.logger.Fatal(err)
 	}
 
-	fmt.Println(fmt.Sprintf("recorder is ready to accept tasks, recorderId: %s; version: %s; runtime: %s", c.cnf.Recorder.Id, version.Version, runtime.Version()))
+	c.logger.WithFields(logrus.Fields{
+		"recorderId": c.cnf.Recorder.Id,
+		"version":    version.Version,
+		"runtime":    runtime.Version(),
+	}).Infof("=== recorder is ready to accept tasks V:%s ====", version.Version)
 }
 
 func (c *RecorderController) CallEndToAll() {
+	c.logger.Infoln("received request to close all recorders")
 	var wg sync.WaitGroup
 	c.recordersInProgress.Range(func(key, value interface{}) bool {
 		if process, ok := value.(*recorder.Recorder); ok {
@@ -124,6 +142,7 @@ func (c *RecorderController) CallEndToAll() {
 
 	wg.Wait()
 	close(c.closeTicker)
+	c.logger.Infoln("all recorders closed")
 }
 
 func (c *RecorderController) startPing() {
@@ -136,7 +155,7 @@ func (c *RecorderController) startPing() {
 		case <-ping.C:
 			err := c.ns.UpdateLastPing()
 			if err != nil {
-				log.Errorln(err)
+				c.logger.Errorln(err)
 			}
 		}
 	}

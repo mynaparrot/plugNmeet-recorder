@@ -2,20 +2,16 @@ package config
 
 import (
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 type AppConfig struct {
 	NatsConn  *nats.Conn
 	JetStream jetstream.JetStream
+	Logger    *logrus.Logger
 
 	RootWorkingDir string
 	Recorder       RecorderInfo    `yaml:"recorder"`
@@ -92,7 +88,6 @@ func New(a *AppConfig) {
 	// now set the config
 	appCnf = a
 
-	appCnf.setLogger()
 	appCnf.setDefaultConfig()
 }
 
@@ -130,49 +125,6 @@ func (a *AppConfig) setDefaultConfig() {
 	}
 }
 
-func (a *AppConfig) setLogger() {
-	p := a.LogSettings.LogFile
-	if strings.HasPrefix(p, "./") {
-		p = filepath.Join(a.RootWorkingDir, p)
-	}
-
-	logLevel := logrus.WarnLevel
-	if a.LogSettings.LogLevel != nil && *a.LogSettings.LogLevel != "" {
-		if lv, err := logrus.ParseLevel(strings.ToLower(*a.LogSettings.LogLevel)); err == nil {
-			logLevel = lv
-		}
-	}
-
-	logWriter := &lumberjack.Logger{
-		Filename:   p,
-		MaxSize:    a.LogSettings.MaxSize,
-		MaxBackups: a.LogSettings.MaxBackups,
-		MaxAge:     a.LogSettings.MaxAge,
-	}
-
-	logrus.SetLevel(logLevel)
-	logrus.SetReportCaller(true)
-	logrus.SetFormatter(&logrus.JSONFormatter{
-		PrettyPrint:       true,
-		DisableHTMLEscape: true,
-	})
-	logrus.RegisterExitHandler(func() {
-		_ = logWriter.Close()
-	})
-
-	var w io.Writer
-	if a.Recorder.Debug {
-		w = io.MultiWriter(os.Stdout, logWriter)
-	} else {
-		w = io.Writer(logWriter)
-	}
-	logrus.SetOutput(w)
-}
-
 func GetConfig() *AppConfig {
 	return appCnf
-}
-
-func GetLogger() *logrus.Logger {
-	return logrus.StandardLogger()
 }

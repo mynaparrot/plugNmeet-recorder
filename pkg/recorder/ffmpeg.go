@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
-	log "github.com/sirupsen/logrus"
 	"mvdan.cc/sh/v3/shell"
 )
 
@@ -52,12 +51,13 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 		args = append(args, mp4File)
 	}
 
-	log.Infoln(fmt.Sprintf("starting ffmpeg process for Task: %s with args: %s", r.Req.Task.String(), strings.Join(args, " ")))
+	r.Logger.Infof("starting ffmpeg process with args: %s", strings.Join(args, " "))
 
 	ffmpegCmd := exec.CommandContext(r.ctx, "ffmpeg", args...)
-	ffmpegCmd.Stderr = &infoLogger{cmd: "ffmpeg"}
+	// Pass the contextual logger to the infoLogger for stderr
+	ffmpegCmd.Stderr = &infoLogger{cmd: "ffmpeg", logger: r.Logger}
 	if err := ffmpegCmd.Start(); err != nil {
-		return errors.New("ffmpeg: " + err.Error())
+		return fmt.Errorf("ffmpeg failed to start: %w", err)
 	}
 	r.Lock()
 	r.ffmpegCmd = ffmpegCmd
@@ -68,8 +68,9 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 		if err != nil {
 			var exitErr *exec.ExitError
 			if errors.As(err, &exitErr) {
+				// Don't log expected exit codes during shutdown.
 				if exitErr.ExitCode() != -1 && exitErr.ExitCode() != 255 {
-					log.Errorln(fmt.Errorf("ffmpeg exited with code: %d for task: %s, roomTableId: %d", exitErr.ExitCode(), r.Req.Task.String(), r.Req.GetRoomTableId()))
+					r.Logger.Errorf("ffmpeg exited with unexpected code: %d", exitErr.ExitCode())
 				}
 			}
 			r.Close(err)
@@ -78,7 +79,8 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 
 	// so, if everything goes well then we can make callback
 	if r.OnAfterStartCallback != nil {
-		r.OnAfterStartCallback(r.Req)
+		// Pass the logger to the callback, as per the new signature.
+		r.OnAfterStartCallback(r.Req, r.Logger)
 	}
 	return nil
 }
@@ -88,10 +90,10 @@ func (r *Recorder) closeFfmpeg() {
 	defer r.Unlock()
 
 	if r.ffmpegCmd != nil {
-		log.Infoln(fmt.Sprintf("closing ffmpeg for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
+		r.Logger.Infoln("closing ffmpeg")
 
 		if err := r.ffmpegCmd.Process.Signal(os.Interrupt); err != nil && !errors.Is(err, os.ErrProcessDone) {
-			log.Errorln("failed to interrupt ffmpeg:", err.Error(), "so, trying to kill")
+			r.Logger.Errorf("failed to interrupt ffmpeg: %v, trying to kill", err)
 			_ = r.ffmpegCmd.Process.Kill()
 		}
 		r.ffmpegCmd = nil

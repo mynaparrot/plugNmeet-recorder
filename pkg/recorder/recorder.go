@@ -11,7 +11,7 @@ import (
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -26,8 +26,9 @@ type Recorder struct {
 
 	Req                  *plugnmeet.PlugNmeetToRecorder
 	AppCnf               *config.AppConfig
-	OnAfterStartCallback func(req *plugnmeet.PlugNmeetToRecorder)
-	OnAfterCloseCallback func(req *plugnmeet.PlugNmeetToRecorder, filePath, fileName string, err error)
+	Logger               *logrus.Entry
+	OnAfterStartCallback func(req *plugnmeet.PlugNmeetToRecorder, logger *logrus.Entry)
+	OnAfterCloseCallback func(req *plugnmeet.PlugNmeetToRecorder, filePath, fileName string, err error, logger *logrus.Entry)
 
 	ctx           context.Context
 	ctxCancel     context.CancelFunc
@@ -51,7 +52,7 @@ func (r *Recorder) Start() error {
 	var err error
 	defer func() {
 		if err != nil {
-			log.Errorln(fmt.Sprintf("failed to start recorder for task: %s, roomTableId: %d, error: %v", r.Req.Task.String(), r.Req.GetRoomTableId(), err))
+			r.Logger.Errorf("failed to start recorder: %v", err)
 			r.Close(err)
 		}
 	}()
@@ -101,13 +102,13 @@ func (r *Recorder) Close(err error) {
 
 		select {
 		case <-done:
-			log.Infoln("graceful shutdown finished for task:", r.Req.Task.String())
+			r.Logger.Infoln("graceful shutdown finished")
 		case <-shutdownCtx.Done():
-			log.Errorln("graceful shutdown timed out for task:", r.Req.Task.String(), "forcing close")
+			r.Logger.Errorln("graceful shutdown timed out, forcing close")
 		}
 
 		if r.OnAfterCloseCallback != nil {
-			r.OnAfterCloseCallback(r.Req, r.filePath, r.fileName, err)
+			r.OnAfterCloseCallback(r.Req, r.filePath, r.fileName, err, r.Logger)
 		}
 
 		// close everything if still running
@@ -115,11 +116,13 @@ func (r *Recorder) Close(err error) {
 	})
 }
 
+// infoLogger is used to capture stdout/stderr of external commands.
 type infoLogger struct {
-	cmd string
+	cmd    string
+	logger *logrus.Entry
 }
 
 func (l *infoLogger) Write(p []byte) (int, error) {
-	log.Infoln(fmt.Sprintf("%s: %s", l.cmd, string(p)))
+	l.logger.Infof("%s: %s", l.cmd, p)
 	return len(p), nil
 }

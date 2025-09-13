@@ -9,12 +9,11 @@ import (
 
 	"github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
-	log "github.com/sirupsen/logrus"
 )
 
 // launch Chrome to access URL
 func (r *Recorder) launchChrome() {
-	log.Infoln(fmt.Sprintf("launching chrome for task: %s, with url:%s", r.Req.Task.String(), r.joinUrl))
+	r.Logger.Infof("launching chrome with url: %s", r.joinUrl)
 
 	opts := []chromedp.ExecAllocatorOption{
 		// ---- Performance & Stability Flags ----
@@ -73,10 +72,10 @@ func (r *Recorder) launchChrome() {
 	chromedp.ListenBrowser(chromeCtx, func(ev interface{}) {
 		switch ev.(type) {
 		case *target.EventDetachedFromTarget:
-			log.Infoln(fmt.Sprintf("browser detached from target for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
+			r.Logger.Errorln("browser detached from target unexpectedly")
 			r.Close(errors.New("browser detached from target unexpectedly"))
 		case *target.EventTargetCrashed:
-			log.Infoln(fmt.Sprintf("browser crashed for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
+			r.Logger.Errorln("browser crashed")
 			r.Close(errors.New("browser crashed"))
 		}
 	})
@@ -93,14 +92,14 @@ func (r *Recorder) launchChrome() {
 		}),
 		chromedp.WaitVisible("div[id=errorPage]"),
 		chromedp.ActionFunc(func(context.Context) error {
-			log.Infoln("got closing tag, so closing recorder now")
+			r.Logger.Infoln("got error page, closing recorder")
 			r.Close(nil)
 			return nil
 		}),
 	)
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
-			log.Errorln("chrome:", err)
+			r.Logger.Errorf("chromedp run error: %v", err)
 		}
 		r.Close(err)
 	}
@@ -111,7 +110,7 @@ func (r *Recorder) closeChromeDp() {
 	defer r.Unlock()
 
 	if r.closeChrome != nil {
-		log.Infoln(fmt.Sprintf("closing chrome for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
+		r.Logger.Infoln("closing chrome")
 
 		r.closeChrome()
 		r.closeChrome = nil
@@ -124,7 +123,7 @@ func (r *Recorder) waitVisibleWithTimeout(selector string, timeout time.Duration
 		defer cancel()
 		err := chromedp.WaitVisible(selector).Do(timeoutCtx)
 		if err != nil && errors.Is(err, context.DeadlineExceeded) {
-			err = errors.New(fmt.Sprintf("%s was not visible after %v", selector, timeout))
+			err = fmt.Errorf("%s was not visible after %v", selector, timeout)
 		}
 		return err
 	}

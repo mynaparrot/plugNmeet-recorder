@@ -8,7 +8,6 @@ import (
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/nats-io/nats.go/jetstream"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -36,7 +35,7 @@ func (s *NatsService) AddRecorder() error {
 	for k, v := range data {
 		_, err = kv.PutString(s.ctx, k, v)
 		if err != nil {
-			log.Errorln(err)
+			s.logger.WithError(err).Errorln("failed to add recorder info")
 		}
 	}
 
@@ -48,7 +47,7 @@ func (s *NatsService) UpdateLastPing() error {
 	kv, err := s.js.KeyValue(s.ctx, bucket)
 	switch {
 	case errors.Is(err, jetstream.ErrBucketNotFound):
-		return errors.New("this recorder was not found")
+		return fmt.Errorf("this recorder was not found")
 	case err != nil:
 		return err
 	}
@@ -66,7 +65,7 @@ func (s *NatsService) UpdateCurrentProgress(increment bool) error {
 	kv, err := s.js.KeyValue(s.ctx, bucket)
 	switch {
 	case errors.Is(err, jetstream.ErrBucketNotFound):
-		return errors.New("this recorder was not found")
+		return fmt.Errorf("this recorder was not found")
 	case err != nil:
 		return err
 	}

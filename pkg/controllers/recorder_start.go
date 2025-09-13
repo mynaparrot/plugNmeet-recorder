@@ -7,20 +7,22 @@ import (
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
-func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder) error {
-	id := fmt.Sprintf("%d-%d", req.RoomTableId, req.Task)
+// handleStartTask now accepts a logger
+func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder, logger *logrus.Entry) error {
+	id := fmt.Sprintf(taskIDTemplate, req.RoomTableId, req.Task)
 	_, ok := c.recordersInProgress.Load(id)
 	if ok {
 		return errors.New("this request in progress")
 	}
-	log.Infoln(fmt.Sprintf("received new start task: %s, roomTableId: %d, roomId: %s, sId: %s", req.Task.String(), req.GetRoomTableId(), req.GetRoomId(), req.GetRoomSid()))
+	logger.Infoln("received new start task")
 
 	rc := &recorder.Recorder{
 		AppCnf:               c.cnf,
 		Req:                  req,
+		Logger:               logger.WithField("component", "recorder"),
 		OnAfterStartCallback: c.onAfterStart,
 		OnAfterCloseCallback: c.onAfterClose,
 	}
@@ -33,7 +35,8 @@ func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder)
 	var err error
 	defer func() {
 		if err != nil {
-			log.Errorln(err)
+			// Use the injected logger for error logging
+			logger.Errorln(err)
 			r.Close(err)
 		}
 	}()
@@ -50,8 +53,9 @@ func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder)
 	return nil
 }
 
-func (c *RecorderController) onAfterStart(req *plugnmeet.PlugNmeetToRecorder) {
-	log.Infoln(fmt.Sprintf("onAfterStart called for task: %s, roomTableId: %d, roomId: %s, sId: %s", req.Task.String(), req.GetRoomTableId(), req.GetRoomId(), req.GetRoomSid()))
+// onAfterStart now accepts a logger
+func (c *RecorderController) onAfterStart(req *plugnmeet.PlugNmeetToRecorder, logger *logrus.Entry) {
+	logger.Infoln("onAfterStart callback called")
 
 	// notify to plugnmeet
 	toSend := &plugnmeet.RecorderToPlugNmeet{
@@ -63,10 +67,10 @@ func (c *RecorderController) onAfterStart(req *plugnmeet.PlugNmeetToRecorder) {
 		RecorderId:  req.RecorderId,
 		RoomTableId: req.RoomTableId,
 	}
-	log.Infoln(fmt.Sprintf("notifyToPlugNmeet with data: %+v", toSend))
+	logger.Infof("notifying to plugnmeet: %+v", toSend)
 
 	_, err := utils.NotifyToPlugNmeet(c.cnf.PlugNmeetInfo.Host, c.cnf.PlugNmeetInfo.ApiKey, c.cnf.PlugNmeetInfo.ApiSecret, toSend, nil)
 	if err != nil {
-		log.Errorln(err)
+		logger.WithError(err).Errorln("failed to notify to plugnmeet")
 	}
 }

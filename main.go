@@ -10,6 +10,7 @@ import (
 	"github.com/mynaparrot/plugnmeet-recorder/helpers"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/controllers"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/logging"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
@@ -55,8 +56,14 @@ func startServer(ctx context.Context, c *cli.Command) error {
 		logrus.Fatalln(err)
 	}
 
+	logger, err := logging.NewLogger(&appCnf.LogSettings)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to setup logger")
+	}
+	appCnf.Logger = logger
+
 	// start services
-	rc := controllers.NewRecorderController()
+	rc := controllers.NewRecorderController(logger)
 	go rc.BootUp()
 
 	// defer close connections
@@ -66,7 +73,7 @@ func startServer(ctx context.Context, c *cli.Command) error {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-sigChan
 
-	logrus.Infoln("exit requested, shutting down signal", sig)
+	logger.Infoln("exit requested, shutting down signal", sig)
 	// close all the remaining task
 	rc.CallEndToAll()
 

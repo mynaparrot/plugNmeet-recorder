@@ -6,8 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // creates a new xvfb display
@@ -24,12 +22,12 @@ func (r *Recorder) launchXvfb() error {
 		"-dpi", fmt.Sprintf("%d", r.AppCnf.Recorder.XvfbDpi),
 		"+extension", "RANDR",
 	}
-	log.Infoln(fmt.Sprintf("creating X dispaly for task: %s with agrs: %s", r.Req.Task, strings.Join(args, " ")))
+	r.Logger.Infof("creating X display with args: %s", strings.Join(args, " "))
 
 	xvfb := exec.CommandContext(r.ctx, "Xvfb", args...)
-	xvfb.Stderr = &infoLogger{cmd: "xvfb"}
+	xvfb.Stderr = &infoLogger{cmd: "xvfb", logger: r.Logger}
 	if err := xvfb.Start(); err != nil {
-		return errors.New("xvfb: " + err.Error())
+		return fmt.Errorf("xvfb failed to start: %w", err)
 	}
 	r.Lock()
 	r.xvfbCmd = xvfb
@@ -40,7 +38,10 @@ func (r *Recorder) launchXvfb() error {
 		if err != nil {
 			var exitErr *exec.ExitError
 			if errors.As(err, &exitErr) {
-				log.Errorln(fmt.Errorf("xvfb exited with code: %d for task: %s, roomTableId: %d", exitErr.ExitCode(), r.Req.Task.String(), r.Req.GetRoomTableId()))
+				// Don't log expected exit codes during a graceful shutdown.
+				if exitErr.ExitCode() != -1 && exitErr.ExitCode() != 255 {
+					r.Logger.Errorf("xvfb exited with unexpected code: %d", exitErr.ExitCode())
+				}
 			}
 			r.Close(err)
 		}
@@ -53,10 +54,10 @@ func (r *Recorder) closeXvfb() {
 	defer r.Unlock()
 
 	if r.xvfbCmd != nil {
-		log.Infoln(fmt.Sprintf("closing X display for task: %s, roomTableId: %d", r.Req.Task.String(), r.Req.GetRoomTableId()))
+		r.Logger.Infoln("closing X display")
 
 		if err := r.xvfbCmd.Process.Signal(os.Interrupt); err != nil && !errors.Is(err, os.ErrProcessDone) {
-			log.Errorln("failed to interrupt X display:", err.Error(), "so, trying to kill")
+			r.Logger.Errorf("failed to interrupt X display: %v, trying to kill", err)
 			_ = r.xvfbCmd.Process.Kill()
 		}
 		r.xvfbCmd = nil
