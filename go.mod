@@ -7,13 +7,11 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20250803210736-d308e07a266d
 	github.com/chromedp/chromedp v0.14.1
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/mattn/go-isatty v0.0.20
 	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250812125547-fd70b49d5b59
 	github.com/nats-io/nats.go v1.45.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v3 v3.4.1
 	google.golang.org/protobuf v1.36.9
-	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.12.0
 )
