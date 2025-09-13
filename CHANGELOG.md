@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.6](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.5...v1.5.6) (2025-09-13)
+
+
+### Bug Fixes
+
+* dependencies upgrade ([d0c72d5](https://github.com/mynaparrot/plugNmeet-recorder/commit/d0c72d5093211871ab4533589fe383f354a410c5))
+* end processes in individual goroutine ([afbd588](https://github.com/mynaparrot/plugNmeet-recorder/commit/afbd588433ca1cb0be16d049ee921172a7b94133))
+* improve logging + bug fixed related `relativePath` getting ([68fa9af](https://github.com/mynaparrot/plugNmeet-recorder/commit/68fa9af1474bfe5f2b77e0d7e1466eaed1330995))
+* mod tidy ([99abc5c](https://github.com/mynaparrot/plugNmeet-recorder/commit/99abc5c13744f07cb6a0eb4498553c027e5ccd1f))
+* protocol update ([2fdf40d](https://github.com/mynaparrot/plugNmeet-recorder/commit/2fdf40d3af706fd30821aee6ccc8277070b02699))
+
 ## [1.5.5](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.4...v1.5.5) (2025-08-12)
 
 
