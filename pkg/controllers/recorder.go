@@ -2,6 +2,10 @@ package controllers
 
 import (
 	"fmt"
+	"runtime"
+	"sync"
+	"time"
+
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
@@ -10,9 +14,6 @@ import (
 	"github.com/nats-io/nats.go"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
-	"runtime"
-	"sync"
-	"time"
 )
 
 type RecorderController struct {
@@ -109,12 +110,19 @@ func (c *RecorderController) BootUp() {
 }
 
 func (c *RecorderController) CallEndToAll() {
+	var wg sync.WaitGroup
 	c.recordersInProgress.Range(func(key, value interface{}) bool {
 		if process, ok := value.(*recorder.Recorder); ok {
-			process.Close(nil)
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				process.Close(nil)
+			}()
 		}
 		return true
 	})
+
+	wg.Wait()
 	close(c.closeTicker)
 }
 

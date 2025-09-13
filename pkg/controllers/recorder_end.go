@@ -3,15 +3,16 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
-	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
-	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 func (c *RecorderController) handleStopTask(req *plugnmeet.PlugNmeetToRecorder) bool {

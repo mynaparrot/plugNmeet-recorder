@@ -1,10 +1,11 @@
 package helpers
 
 import (
+	"os"
+
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/factory"
 	"gopkg.in/yaml.v3"
-	"os"
 )
 
 func ReadYamlConfigFile(file string) (*config.AppConfig, error) {

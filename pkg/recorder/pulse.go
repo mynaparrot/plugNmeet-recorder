@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os/exec"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func (r *Recorder) createPulseSink() error {

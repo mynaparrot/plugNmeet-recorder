@@ -3,11 +3,12 @@ package natsservice
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/nats-io/nats.go/jetstream"
 	log "github.com/sirupsen/logrus"
-	"strconv"
-	"time"
 )
 
 const (

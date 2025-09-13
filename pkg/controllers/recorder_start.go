@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"fmt"
+
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"

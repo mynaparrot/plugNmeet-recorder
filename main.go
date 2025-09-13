@@ -3,15 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/mynaparrot/plugnmeet-recorder/helpers"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/controllers"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {

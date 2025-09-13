@@ -3,12 +3,13 @@ package recorder
 import (
 	"errors"
 	"fmt"
-	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
-	log "github.com/sirupsen/logrus"
-	"mvdan.cc/sh/v3/shell"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	log "github.com/sirupsen/logrus"
+	"mvdan.cc/sh/v3/shell"
 )
 
 func (r *Recorder) launchFfmpegProcess(mp4File string) error {

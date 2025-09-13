@@ -1,14 +1,15 @@
 package factory
 
 import (
+	"strings"
+	"time"
+
 	"github.com/mynaparrot/plugnmeet-protocol/auth"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	log "github.com/sirupsen/logrus"
-	"strings"
-	"time"
 )
 
 const recorderUserAuthName = "PLUGNMEET_RECORDER_AUTH"

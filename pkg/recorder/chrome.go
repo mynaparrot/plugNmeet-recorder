@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
+	"time"
+
 	"github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
 	log "github.com/sirupsen/logrus"
-	"path"
-	"time"
 )
 
 // launch Chrome to access URL

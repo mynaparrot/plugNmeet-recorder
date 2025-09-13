@@ -2,6 +2,7 @@ package natsservice
 
 import (
 	"context"
+
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"

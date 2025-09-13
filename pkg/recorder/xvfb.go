@@ -3,10 +3,11 @@ package recorder
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // creates a new xvfb display
