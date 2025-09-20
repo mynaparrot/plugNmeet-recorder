@@ -3,11 +3,11 @@ module github.com/mynaparrot/plugnmeet-recorder
 go 1.25.1
 
 require (
-	github.com/DeRuina/timberjack v1.3.5
+	github.com/DeRuina/timberjack v1.3.7
 	github.com/chromedp/cdproto v0.0.0-20250803210736-d308e07a266d
 	github.com/chromedp/chromedp v0.14.1
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250913102644-1bc08624583d
+	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20250920165118-763ad9e68bce
 	github.com/nats-io/nats.go v1.45.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v3 v3.4.1
@@ -64,7 +64,7 @@ require (
 	github.com/pion/stun/v3 v3.0.0 // indirect
 	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/pion/turn/v4 v4.1.1 // indirect
-	github.com/pion/webrtc/v4 v4.1.4 // indirect
+	github.com/pion/webrtc/v4 v4.1.5-0.20250828044558-c376d0edf977 // indirect
 	github.com/puzpuzpuz/xsync/v3 v3.5.1 // indirect
 	github.com/redis/go-redis/v9 v9.14.0 // indirect
 	github.com/stoewer/go-strcase v1.3.1 // indirect
