@@ -11,7 +11,6 @@ import (
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
-	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,7 +35,7 @@ func (c *RecorderController) handleStopTask(req *plugnmeet.PlugNmeetToRecorder, 
 		if process, ok := c.getAndDeleteRecorderInProgress(req.RoomTableId, task); ok && process != nil {
 			// need to start the process in goroutine otherwise will be delay in reply,
 			// and this will show error in the client
-			go process.Close(nil)
+			go process.Close(req.Task, nil)
 			found = true
 		}
 	}
@@ -92,7 +91,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, fi
 	}
 	logger.Infof("notifying to plugnmeet with data: %+v", toSend)
 
-	_, err = utils.NotifyToPlugNmeet(c.cnf.PlugNmeetInfo.Host, c.cnf.PlugNmeetInfo.ApiKey, c.cnf.PlugNmeetInfo.ApiSecret, toSend, nil)
+	_, err = c.notifier.NotifyToPlugNmeet(toSend)
 	if err != nil {
 		logger.WithError(err).Errorln("failed to notify to plugnmeet")
 	}
@@ -199,7 +198,7 @@ func (c *RecorderController) postProcessRecording(logger *logrus.Entry, req *plu
 	}
 	logger.Infof("notifying to plugnmeet with data: %+v", toSend)
 
-	_, err = utils.NotifyToPlugNmeet(c.cnf.PlugNmeetInfo.Host, c.cnf.PlugNmeetInfo.ApiKey, c.cnf.PlugNmeetInfo.ApiSecret, toSend, nil)
+	_, err = c.notifier.NotifyToPlugNmeet(toSend)
 	if err != nil {
 		logger.WithError(err).Errorln("failed to notify to plugnmeet")
 	}

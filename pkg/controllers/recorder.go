@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"runtime"
 	"sync"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
 	natsservice "github.com/mynaparrot/plugnmeet-recorder/pkg/services/nats"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
 	"github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
@@ -18,20 +20,23 @@ import (
 const taskIDTemplate = "%d-%d"
 
 type RecorderController struct {
+	ctx                 context.Context
 	cnf                 *config.AppConfig
+	notifier            *utils.Notifier
 	ns                  *natsservice.NatsService
 	logger              *logrus.Entry
 	closeTicker         chan bool
 	recordersInProgress sync.Map
 }
 
-func NewRecorderController(logger *logrus.Logger) *RecorderController {
-	cnf := config.GetConfig()
-	ns := natsservice.New(cnf)
+func NewRecorderController(ctx context.Context, cnf *config.AppConfig, logger *logrus.Logger) *RecorderController {
+	ns := natsservice.New(ctx, cnf)
 
 	return &RecorderController{
+		ctx:         ctx,
 		cnf:         cnf,
 		ns:          ns,
+		notifier:    utils.NewNotifier(cnf.PlugNmeetInfo.Host, cnf.PlugNmeetInfo.ApiKey, cnf.PlugNmeetInfo.ApiSecret, nil),
 		logger:      logger.WithField("component", "recorder-controller"),
 		closeTicker: make(chan bool),
 	}
@@ -134,7 +139,7 @@ func (c *RecorderController) CallEndToAll() {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				process.Close(nil)
+				process.Close(plugnmeet.RecordingTasks_STOP, nil)
 			}()
 		}
 		return true

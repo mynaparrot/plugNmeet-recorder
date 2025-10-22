@@ -6,7 +6,6 @@ import (
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
-	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,7 +26,7 @@ func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder,
 		OnAfterCloseCallback: c.onAfterClose,
 	}
 
-	r := recorder.New(rc)
+	r := recorder.New(c.ctx, rc)
 	// add in the list, otherwise if OnAfterCloseCallback called for an error,
 	// then processes won't clean properly because of missing process record
 	c.recordersInProgress.Store(id, r)
@@ -37,7 +36,7 @@ func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder,
 		if err != nil {
 			// Use the injected logger for error logging
 			logger.Errorln(err)
-			r.Close(err)
+			r.Close(plugnmeet.RecordingTasks_STOP, err)
 		}
 	}()
 
@@ -69,7 +68,7 @@ func (c *RecorderController) onAfterStart(req *plugnmeet.PlugNmeetToRecorder, lo
 	}
 	logger.Infof("notifying to plugnmeet: %+v", toSend)
 
-	_, err := utils.NotifyToPlugNmeet(c.cnf.PlugNmeetInfo.Host, c.cnf.PlugNmeetInfo.ApiKey, c.cnf.PlugNmeetInfo.ApiSecret, toSend, nil)
+	_, err := c.notifier.NotifyToPlugNmeet(toSend)
 	if err != nil {
 		logger.WithError(err).Errorln("failed to notify to plugnmeet")
 	}

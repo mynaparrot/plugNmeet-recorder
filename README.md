@@ -1,67 +1,100 @@
 # plugNmeet-recorder
 
-The plugNmeet-recorder is capable of handling both session recording and RTMP streaming functionalities. Due to its high CPU utilization, it is strongly recommended to deploy the recorder on a server separate from the one running plugNmeet or LiveKit. However, in environments where recording is performed infrequently, co-locating the recorder on the same server is fine. In such cases, it is advisable to use the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script to facilitate a streamlined and automated installation process.
+The plugNmeet-recorder handles session recording and RTMP streaming for plugNmeet. It is designed for scalability and can record multiple sessions simultaneously. You can deploy multiple recorder instances to create a horizontally scalable, highly available recording infrastructure. The plugnmeet-server will automatically balance the load across the available recorders.
 
-**Requirements**
+## Requirements
 
-1) Linux system (**Recommend: Ubuntu**)
-2) Google Chrome
-3) pulseaudio
-4) xvfb
-5) ffmpeg
+*   A Linux system (Ubuntu is recommended)
+*   Google Chrome
+*   PulseAudio
+*   Xvfb (X virtual framebuffer)
+*   FFmpeg
 
-**Install dependencies (Ubuntu)**
+## Installation
 
-```
-## To insall pulseaudio, xvfb & ffmpeg
+These instructions are for Ubuntu.
+
+### 1. Install Dependencies
+
+```bash
+# Install PulseAudio, Xvfb, and FFmpeg
 sudo apt install -y pulseaudio xvfb ffmpeg
 
-## To start pulseaudio
+# Start PulseAudio and enable it to start on boot
 pulseaudio -D --verbose --exit-idle-time=-1 --disallow-exit
-# to start at boot
 systemctl --user enable pulseaudio
 
-## Google Chrome
-
+# Install Google Chrome
 curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg
-sudo echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" >/etc/apt/sources.list.d/google-chrome.list
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list > /dev/null
+sudo apt -y update && sudo apt -y install google-chrome-stable
 
-sudo apt -y update && apt -y install google-chrome-stable
-
-## optional
+# Optional: Install additional fonts
 sudo apt install -y fonts-noto fonts-liberation
 ```
 
-**Install recorder**
+### 2. Install the Recorder
 
-1) To download the latest version suitable for your operating system architecture, visit the [release page](https://github.com/mynaparrot/plugNmeet-recorder/releases) or use the [plugnmeet-recorder](https://hub.docker.com/r/mynaparrot/plugnmeet-recorder) Docker image.
-2) Extract the downloaded ZIP file, navigate to the extracted directory using the terminal, and run:
+1.  Download the latest release for your architecture from the [releases page](https://github.com/mynaparrot/plugNmeet-recorder/releases) or use the [Docker image](https://hub.docker.com/r/mynaparrot/plugnmeet-recorder).
+2.  Extract the downloaded archive and navigate into the new directory.
+3.  Create a configuration file from the sample:
 
+    ```bash
+    cp config_sample.yaml config.yaml
+    ```
+
+## Configuration
+
+Edit `config.yaml` to configure the recorder.
+
+### Basic Configuration
+
+*   **`nats_info`**: This section must match the NATS configuration in your `plugnmeet-server`'s `config.yaml`.
+*   **`main_path`**: This should be the same as `recording_files_path` in your `plugnmeet-server`'s `config.yaml`.
+*   **`plugNmeet_info`**: Update this section with your plugNmeet server details.
+
+**Important:** If you use NFS or other network-mounted storage for recordings, ensure both the recorder and the `plugnmeet-server` can access the storage path. Otherwise, users won't be able to download recordings.
+
+### Multi-server Deployment
+
+You can run multiple `plugnmeet-recorder` instances for load balancing and high availability. The `plugnmeet-server` will automatically choose a recorder based on server load.
+
+When deploying multiple recorders:
+
+*   Assign a unique `id` in each `config.yaml` (e.g., `node_01`, `node_02`).
+*   Adjust the `max_limit` value in `config.yaml` based on each server’s capacity.
+
+## Running the Recorder
+
+To start the recorder, run the binary for your system's architecture:
+
+```bash
+# For AMD64
+./plugnmeet-recorder-linux-amd64
+
+# For ARM64
+./plugnmeet-recorder-linux-arm64
 ```
-cp config_sample.yaml config.yaml
-```
 
-3) Edit the `config.yaml` file with the appropriate settings. The `nats_info` section must match the configuration used in the `plugnmeet-server`. The `main_path` value should be the same as the `recording_files_path` specified in the `plugnmeet-server's config.yaml`. If you're using NFS or another type of network-mounted storage, ensure both the `recorder` and the `plugnmeet-server` have access to it. Otherwise, users will not be able to download recordings. 
+## Deployment Recommendations
 
-4) Update the `plugNmeet_info` and `nats_info` sections with the correct values.
+For optimal performance, especially when recording frequently, we recommend deploying the `plugnmeet-recorder` on a dedicated server, separate from your plugNmeet or LiveKit instance. This is because recording can be a CPU-intensive process.
 
-5) You can deploy `plugnmeet-recorder` on multiple servers. The `plugnmeet-server` will automatically select an available recorder based on load and availability. In such cases, make sure to assign a unique id in each `config.yaml` file (e.g., `node_01`, `node_02`, etc.). You can also adjust the `max_limit` value according to the server’s capacity.
+However, if you only plan to record sessions infrequently, running the recorder on the same server is a viable option. For a streamlined and automated installation on a single server, you can use the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script.
 
-6) Start the recorder using the appropriate binary: `./plugnmeet-recorder-linux-[amd64|arm64]`
+## Development
 
-**Development**
+1.  Clone this repository and navigate into the project directory.
+2.  Create configuration files from the samples:
 
-1) Clone the project & navigate to the directory. 
-2) Copy to rename the following files and update info:
+    ```bash
+    cp config_sample.yaml config.yaml
+    cp docker-compose_sample.yaml docker-compose.yaml
+    ```
+3.  Update `config.yaml` with your development settings.
+4.  Build and start the development environment using Docker Compose:
 
-```
-cp config_sample.yaml config.yaml
-cp docker-compose_sample.yaml docker-compose.yaml
-```
-
-3) Start the development environment
-
-```
-docker compose build
-docker compose up
-```
+    ```bash
+    docker compose build
+    docker compose up
+    ```

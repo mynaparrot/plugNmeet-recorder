@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 func (r *Recorder) createPulseSink() error {
 	r.pulseSinkName = fmt.Sprintf("%d-%d", r.Req.RoomTableId, r.Req.Task)
+	log := r.Logger.WithField("pulseSinkName", r.pulseSinkName)
 
 	args := []string{
 		"load-module",
@@ -16,7 +19,7 @@ func (r *Recorder) createPulseSink() error {
 		fmt.Sprintf("sink_name=\"%s\"", r.pulseSinkName),
 		fmt.Sprintf("sink_properties=device.description=\"%s\"", r.pulseSinkName),
 	}
-	r.Logger.Infof("creating pulse sink with args: %s", strings.Join(args, " "))
+	log.WithField("args", args).Infof("creating pulse sink")
 
 	cmd := exec.CommandContext(r.ctx, "pactl", args...)
 	b, err := cmd.CombinedOutput()
@@ -26,22 +29,22 @@ func (r *Recorder) createPulseSink() error {
 
 	r.Lock()
 	r.pulseSinkId = strings.TrimSpace(string(b))
-	r.Logger.Infof("pulse sink created successfully with id: %s", r.pulseSinkId)
+	log.WithField("pulseSinkId", r.pulseSinkId).Infof("pulse sink created successfully")
 	r.Unlock()
 
 	return nil
 }
 
-func (r *Recorder) closePulse(ctx context.Context) {
+func (r *Recorder) closePulse(log *logrus.Entry, ctx context.Context) {
 	r.Lock()
 	defer r.Unlock()
 
 	if r.pulseSinkId != "" {
-		r.Logger.Infof("unloading pulse module: %s", r.pulseSinkId)
+		log.Infof("unloading pulse module: %s", r.pulseSinkId)
 
 		cmd := exec.CommandContext(ctx, "pactl", "unload-module", r.pulseSinkId)
 		if _, err := cmd.CombinedOutput(); err != nil {
-			r.Logger.Errorf("failed to unload pulse sink: %v", err)
+			log.Errorf("failed to unload pulse sink: %v", err)
 		}
 		r.pulseSinkId = ""
 	}

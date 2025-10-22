@@ -76,19 +76,9 @@ type NatsInfoRecorder struct {
 	RecorderInfoKv  string `yaml:"recorder_info_kv"`
 }
 
-var appCnf *AppConfig
-
-func New(a *AppConfig) {
-	if appCnf != nil {
-		// not allow multiple config
-		return
-	}
-
-	appCnf = new(AppConfig) // otherwise will give error
-	// now set the config
-	appCnf = a
-
-	appCnf.setDefaultConfig()
+func New(a *AppConfig) *AppConfig {
+	a.setDefaultConfig()
+	return a
 }
 
 func (a *AppConfig) setDefaultConfig() {
@@ -123,8 +113,4 @@ func (a *AppConfig) setDefaultConfig() {
 			},
 		}
 	}
-}
-
-func GetConfig() *AppConfig {
-	return appCnf
 }

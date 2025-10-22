@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	"github.com/sirupsen/logrus"
 	"mvdan.cc/sh/v3/shell"
 )
 
@@ -50,12 +50,12 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 	} else {
 		args = append(args, mp4File)
 	}
-
-	r.Logger.Infof("starting ffmpeg process with args: %s", strings.Join(args, " "))
+	log := r.Logger.WithField("args", args)
+	log.Infof("starting ffmpeg process")
 
 	ffmpegCmd := exec.CommandContext(r.ctx, "ffmpeg", args...)
 	// Pass the contextual logger to the infoLogger for stderr
-	ffmpegCmd.Stderr = &infoLogger{cmd: "ffmpeg", logger: r.Logger}
+	ffmpegCmd.Stderr = &infoLogger{cmd: "ffmpeg", logger: log}
 	if err := ffmpegCmd.Start(); err != nil {
 		return fmt.Errorf("ffmpeg failed to start: %w", err)
 	}
@@ -70,10 +70,10 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 			if errors.As(err, &exitErr) {
 				// Don't log expected exit codes during shutdown.
 				if exitErr.ExitCode() != -1 && exitErr.ExitCode() != 255 {
-					r.Logger.Errorf("ffmpeg exited with unexpected code: %d", exitErr.ExitCode())
+					log.Errorf("ffmpeg exited with unexpected code: %d", exitErr.ExitCode())
 				}
 			}
-			r.Close(err)
+			r.Close(plugnmeet.RecordingTasks_STOP, err)
 		}
 	}()
 
@@ -85,15 +85,15 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 	return nil
 }
 
-func (r *Recorder) closeFfmpeg() {
+func (r *Recorder) closeFfmpeg(log *logrus.Entry) {
 	r.Lock()
 	defer r.Unlock()
 
 	if r.ffmpegCmd != nil {
-		r.Logger.Infoln("closing ffmpeg")
+		log.Infoln("closing ffmpeg")
 
 		if err := r.ffmpegCmd.Process.Signal(os.Interrupt); err != nil && !errors.Is(err, os.ErrProcessDone) {
-			r.Logger.Errorf("failed to interrupt ffmpeg: %v, trying to kill", err)
+			log.Errorf("failed to interrupt ffmpeg: %v, trying to kill", err)
 			_ = r.ffmpegCmd.Process.Kill()
 		}
 		r.ffmpegCmd = nil

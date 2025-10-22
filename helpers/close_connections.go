@@ -2,17 +2,13 @@ package helpers
 
 import (
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
-	"github.com/sirupsen/logrus"
 )
 
-func HandleCloseConnections() {
-	if config.GetConfig() == nil {
-		return
-	}
+func HandleCloseConnections(appCnf *config.AppConfig) {
 	// close nats
-	_ = config.GetConfig().NatsConn.Drain()
-	config.GetConfig().NatsConn.Close()
+	_ = appCnf.NatsConn.Drain()
+	appCnf.NatsConn.Close()
 
 	// close logger
-	logrus.Exit(0)
+	appCnf.Logger.Exit(0)
 }

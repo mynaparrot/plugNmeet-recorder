@@ -43,8 +43,8 @@ type Recorder struct {
 	closeOnce sync.Once
 }
 
-func New(r *Recorder) *Recorder {
-	r.ctx, r.ctxCancel = context.WithCancel(context.Background())
+func New(mainCtx context.Context, r *Recorder) *Recorder {
+	r.ctx, r.ctxCancel = context.WithCancel(mainCtx)
 	return r
 }
 
@@ -53,7 +53,7 @@ func (r *Recorder) Start() error {
 	defer func() {
 		if err != nil {
 			r.Logger.Errorf("failed to start recorder: %v", err)
-			r.Close(err)
+			r.Close(plugnmeet.RecordingTasks_STOP, err)
 		}
 	}()
 
@@ -85,8 +85,11 @@ func (r *Recorder) Start() error {
 	return nil
 }
 
-func (r *Recorder) Close(err error) {
+func (r *Recorder) Close(task plugnmeet.RecordingTasks, err error) {
 	r.closeOnce.Do(func() {
+		log := r.Logger.WithField("closeTask", task)
+		log.Infoln("starting to close recorder")
+
 		// timeout for graceful shutdown
 		shutdownCtx, cancel := context.WithTimeout(r.ctx, shutdownTimeout)
 		defer cancel()
@@ -94,21 +97,21 @@ func (r *Recorder) Close(err error) {
 		done := make(chan struct{})
 		go func() {
 			defer close(done)
-			r.closeFfmpeg()
-			r.closeChromeDp()
-			r.closeXvfb()
-			r.closePulse(shutdownCtx)
+			r.closeFfmpeg(log)
+			r.closeChromeDp(log)
+			r.closeXvfb(log)
+			r.closePulse(log, shutdownCtx)
 		}()
 
 		select {
 		case <-done:
-			r.Logger.Infoln("graceful shutdown finished")
+			log.Infoln("graceful shutdown finished")
 		case <-shutdownCtx.Done():
-			r.Logger.Errorln("graceful shutdown timed out, forcing close")
+			log.Errorln("graceful shutdown timed out, forcing close")
 		}
 
 		if r.OnAfterCloseCallback != nil {
-			r.OnAfterCloseCallback(r.Req, r.filePath, r.fileName, err, r.Logger)
+			r.OnAfterCloseCallback(r.Req, r.filePath, r.fileName, err, log)
 		}
 
 		// close everything if still running

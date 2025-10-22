@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+
+	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	"github.com/sirupsen/logrus"
 )
 
 // creates a new xvfb display
 func (r *Recorder) launchXvfb() error {
 	r.displayId = fmt.Sprintf(":%d%d", r.Req.RoomTableId, r.Req.Task)
+	log := r.Logger.WithField("displayId", r.displayId)
 
 	args := []string{
 		r.displayId,
@@ -22,10 +25,10 @@ func (r *Recorder) launchXvfb() error {
 		"-dpi", fmt.Sprintf("%d", r.AppCnf.Recorder.XvfbDpi),
 		"+extension", "RANDR",
 	}
-	r.Logger.Infof("creating X display with args: %s", strings.Join(args, " "))
+	log.WithField("args", args).Infof("creating X display")
 
 	xvfb := exec.CommandContext(r.ctx, "Xvfb", args...)
-	xvfb.Stderr = &infoLogger{cmd: "xvfb", logger: r.Logger}
+	xvfb.Stderr = &infoLogger{cmd: "xvfb", logger: log}
 	if err := xvfb.Start(); err != nil {
 		return fmt.Errorf("xvfb failed to start: %w", err)
 	}
@@ -40,24 +43,24 @@ func (r *Recorder) launchXvfb() error {
 			if errors.As(err, &exitErr) {
 				// Don't log expected exit codes during a graceful shutdown.
 				if exitErr.ExitCode() != -1 && exitErr.ExitCode() != 255 {
-					r.Logger.Errorf("xvfb exited with unexpected code: %d", exitErr.ExitCode())
+					log.Errorf("xvfb exited with unexpected code: %d", exitErr.ExitCode())
 				}
 			}
-			r.Close(err)
+			r.Close(plugnmeet.RecordingTasks_STOP, err)
 		}
 	}()
 	return nil
 }
 
-func (r *Recorder) closeXvfb() {
+func (r *Recorder) closeXvfb(log *logrus.Entry) {
 	r.Lock()
 	defer r.Unlock()
 
 	if r.xvfbCmd != nil {
-		r.Logger.Infoln("closing X display")
+		log.Infoln("closing X display")
 
 		if err := r.xvfbCmd.Process.Signal(os.Interrupt); err != nil && !errors.Is(err, os.ErrProcessDone) {
-			r.Logger.Errorf("failed to interrupt X display: %v, trying to kill", err)
+			log.Errorf("failed to interrupt X display: %v, trying to kill", err)
 			_ = r.xvfbCmd.Process.Kill()
 		}
 		r.xvfbCmd = nil

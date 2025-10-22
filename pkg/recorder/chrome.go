@@ -9,11 +9,14 @@ import (
 
 	"github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
+	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	"github.com/sirupsen/logrus"
 )
 
 // launch Chrome to access URL
 func (r *Recorder) launchChrome() {
-	r.Logger.Infof("launching chrome with url: %s", r.joinUrl)
+	log := r.Logger.WithField("joinUrl", r.joinUrl)
+	log.Infof("launching chrome")
 
 	opts := []chromedp.ExecAllocatorOption{
 		// ---- Performance & Stability Flags ----
@@ -72,11 +75,11 @@ func (r *Recorder) launchChrome() {
 	chromedp.ListenBrowser(chromeCtx, func(ev interface{}) {
 		switch ev.(type) {
 		case *target.EventDetachedFromTarget:
-			r.Logger.Errorln("browser detached from target unexpectedly")
-			r.Close(errors.New("browser detached from target unexpectedly"))
+			log.Errorln("browser detached from target unexpectedly")
+			r.Close(plugnmeet.RecordingTasks_STOP, errors.New("browser detached from target unexpectedly"))
 		case *target.EventTargetCrashed:
-			r.Logger.Errorln("browser crashed")
-			r.Close(errors.New("browser crashed"))
+			log.Errorln("browser crashed")
+			r.Close(plugnmeet.RecordingTasks_STOP, errors.New("browser crashed"))
 		}
 	})
 
@@ -92,25 +95,25 @@ func (r *Recorder) launchChrome() {
 		}),
 		chromedp.WaitVisible("div[id=errorPage]"),
 		chromedp.ActionFunc(func(context.Context) error {
-			r.Logger.Infoln("got error page, closing recorder")
-			r.Close(nil)
+			log.Infoln("got error page, closing recorder")
+			r.Close(plugnmeet.RecordingTasks_STOP, nil)
 			return nil
 		}),
 	)
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
-			r.Logger.Errorf("chromedp run error: %v", err)
+			log.WithError(err).Errorln("chromedp run error")
 		}
-		r.Close(err)
+		r.Close(plugnmeet.RecordingTasks_STOP, err)
 	}
 }
 
-func (r *Recorder) closeChromeDp() {
+func (r *Recorder) closeChromeDp(log *logrus.Entry) {
 	r.Lock()
 	defer r.Unlock()
 
 	if r.closeChrome != nil {
-		r.Logger.Infoln("closing chrome")
+		log.Infoln("closing chrome")
 
 		r.closeChrome()
 		r.closeChrome = nil

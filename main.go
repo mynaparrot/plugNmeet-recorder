@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -13,69 +14,64 @@ import (
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/logging"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v3"
 )
 
 func main() {
-	cli.VersionPrinter = func(c *cli.Command) {
-		fmt.Printf("%s\n", c.Version)
+	// Define command-line flags
+	var configPath string
+	flag.StringVar(&configPath, "config", "config.yaml", "Path to the configuration file")
+
+	var showVersion bool
+	flag.BoolVar(&showVersion, "version", false, "Print version information and exit")
+
+	// Parse the command-line arguments
+	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("%s\n", version.Version)
+		os.Exit(0)
 	}
 
-	app := &cli.Command{
-		Name:        "plugnmeet-recorder",
-		Usage:       "Recording system for plugNmeet",
-		Description: "without option will start server",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "config",
-				Usage:       "Configuration file",
-				DefaultText: "config.yaml",
-				Value:       "config.yaml",
-			},
-		},
-		Action:  startServer,
-		Version: version.Version,
-	}
-	err := app.Run(context.Background(), os.Args)
+	// Read the application configuration
+	cnf, err := helpers.ReadYamlConfigFile(configPath)
 	if err != nil {
 		logrus.Fatalln(err)
 	}
-}
+	// Set this config for global usage
+	appCnf := config.New(cnf)
 
-func startServer(ctx context.Context, c *cli.Command) error {
-	appCnf, err := helpers.ReadYamlConfigFile(c.String("config"))
-	if err != nil {
-		logrus.Fatalln(err)
-	}
-	// set this config for global usage
-	config.New(appCnf)
-
-	// now prepare our server
-	err = helpers.PrepareServer(config.GetConfig())
-	if err != nil {
-		logrus.Fatalln(err)
-	}
-
+	// Setup the logger
 	logger, err := logging.NewLogger(&appCnf.LogSettings)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to setup logger")
 	}
 	appCnf.Logger = logger
 
-	// start services
-	rc := controllers.NewRecorderController(logger)
+	// Prepare the server (e.g., NATS connections, JetStream)
+	err = helpers.PrepareServer(appCnf)
+	if err != nil {
+		// Use the configured logger from this point on
+		appCnf.Logger.Fatalln(err)
+	}
+
+	// Setup context for graceful shutdown.
+	ctx, cancel := context.WithCancel(context.Background())
+	// cancel all context when main function exit
+	defer cancel()
+
+	// Start recorder services
+	rc := controllers.NewRecorderController(ctx, appCnf, logger)
 	go rc.BootUp()
 
-	// defer close connections
-	defer helpers.HandleCloseConnections()
+	// Defer closing connections to ensure they are cleaned up
+	// when the main function exits
+	defer helpers.HandleCloseConnections(appCnf)
 
+	// Wait for interrupt signal to gracefully shut down the server.
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-sigChan
+	<-sigChan
 
-	logger.Infoln("exit requested, shutting down signal", sig)
-	// close all the remaining task
+	appCnf.Logger.Infoln("exit requested, shutting down services...")
 	rc.CallEndToAll()
-
-	return nil
 }

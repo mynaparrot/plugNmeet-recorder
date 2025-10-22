@@ -17,12 +17,9 @@ type NatsService struct {
 	js     jetstream.JetStream
 }
 
-func New(app *config.AppConfig) *NatsService {
-	if app == nil {
-		app = config.GetConfig()
-	}
+func New(ctx context.Context, app *config.AppConfig) *NatsService {
 	return &NatsService{
-		ctx:    context.Background(),
+		ctx:    ctx,
 		app:    app,
 		nc:     app.NatsConn,
 		js:     app.JetStream,
