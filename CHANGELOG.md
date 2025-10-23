@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.7](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.6...v1.5.7) (2025-10-23)
+
+
+### Bug Fixes
+
+* better logging + clean up ([db619f9](https://github.com/mynaparrot/plugNmeet-recorder/commit/db619f955221ded9ff08837f1b72ddaed2c64632))
+* moved log to proto ([c3c34e2](https://github.com/mynaparrot/plugNmeet-recorder/commit/c3c34e235509483c95f99cd48b6f3dad3d66ec40))
+* specify the Pixel Format `yuv420p` ([f170463](https://github.com/mynaparrot/plugNmeet-recorder/commit/f170463c33d3ac31972ca37808c04636eaf7899f))
+
 ## [1.5.6](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.5...v1.5.6) (2025-09-13)
 
 
