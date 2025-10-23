@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/mynaparrot/plugnmeet-protocol/logging"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
@@ -14,11 +15,11 @@ type AppConfig struct {
 	Logger    *logrus.Logger
 
 	RootWorkingDir string
-	Recorder       RecorderInfo    `yaml:"recorder"`
-	LogSettings    LogSettings     `yaml:"log_settings"`
-	FfmpegSettings *FfmpegSettings `yaml:"ffmpeg_settings"`
-	NatsInfo       NatsInfo        `yaml:"nats_info"`
-	PlugNmeetInfo  PlugNmeetInfo   `yaml:"plugNmeet_info"`
+	Recorder       RecorderInfo        `yaml:"recorder"`
+	LogSettings    logging.LogSettings `yaml:"log_settings"`
+	FfmpegSettings *FfmpegSettings     `yaml:"ffmpeg_settings"`
+	NatsInfo       NatsInfo            `yaml:"nats_info"`
+	PlugNmeetInfo  PlugNmeetInfo       `yaml:"plugNmeet_info"`
 }
 
 type RecorderInfo struct {
@@ -37,14 +38,6 @@ type RecorderInfo struct {
 type CopyToPathSettings struct {
 	MainPath string `yaml:"main_path"`
 	SubPath  string `yaml:"sub_path"`
-}
-
-type LogSettings struct {
-	LogFile    string  `yaml:"log_file"`
-	MaxSize    int     `yaml:"max_size"`
-	MaxBackups int     `yaml:"max_backups"`
-	MaxAge     int     `yaml:"max_age"`
-	LogLevel   *string `yaml:"log_level"`
 }
 
 type FfmpegSettings struct {

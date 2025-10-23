@@ -8,10 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/mynaparrot/plugnmeet-protocol/logging"
 	"github.com/mynaparrot/plugnmeet-recorder/helpers"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/controllers"
-	"github.com/mynaparrot/plugnmeet-recorder/pkg/logging"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
 	"github.com/sirupsen/logrus"
 )
