@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ const (
 type Recorder struct {
 	joinUrl  string
 	filePath string
+	// fileName will be the raw file, e.g. recordingId_raw.mkv
 	fileName string
 
 	Req                  *plugnmeet.PlugNmeetToRecorder
@@ -63,7 +65,14 @@ func (r *Recorder) Start() error {
 		if err != nil {
 			return err
 		}
-		r.fileName = r.Req.GetRecordingId() + "_raw.mp4"
+
+		// For backward compatibility, we'll check which codec is in use.
+		// ffv1 must be stored in .mkv
+		if strings.Contains(r.AppCnf.FfmpegSettings.Recording.PostInput, "ffv1") {
+			r.fileName = r.Req.GetRecordingId() + "_raw.mkv"
+		} else {
+			r.fileName = r.Req.GetRecordingId() + "_raw.mp4"
+		}
 	}
 
 	r.joinUrl = fmt.Sprintf("%s/?access_token=%s", r.AppCnf.PlugNmeetInfo.Host, r.Req.GetAccessToken())

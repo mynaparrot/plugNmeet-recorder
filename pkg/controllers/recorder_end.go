@@ -1,17 +1,14 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
-	"path/filepath"
-	"strings"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 )
 
 // handleStopTask now accepts a logger
@@ -117,132 +114,28 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, fi
 			return
 		}
 		if stat.Size() > 0 {
-			// pass logger to postProcessRecording
-			go c.postProcessRecording(req, filePath, fileName, log)
-		} else {
-			log.Errorf("avoiding postProcessRecording of: %s file because of 0 size", path.Join(filePath, fileName))
-		}
-	}
-}
-
-// postProcessRecording now accepts a logger
-func (c *RecorderController) postProcessRecording(req *plugnmeet.PlugNmeetToRecorder, filePath, currentFileName string, logger *logrus.Entry) {
-	log := logger.WithField("sub-method", "postProcessRecording")
-	finalFileName := fmt.Sprintf("%s.mp4", req.RecordingId)
-
-	log.WithFields(logrus.Fields{
-		"filePath":        filePath,
-		"currentFileName": currentFileName,
-		"finalFileName":   finalFileName,
-	}).Info("starting post recording ffmpeg process")
-
-	if c.cnf.Recorder.PostMp4Convert {
-		var args []string
-		args = append(args, strings.Split(c.cnf.FfmpegSettings.PostRecording.PreInput, " ")...)
-		args = append(args, "-i", path.Join(filePath, currentFileName))
-		args = append(args, strings.Split(c.cnf.FfmpegSettings.PostRecording.PostInput, " ")...)
-		args = append(args, path.Join(filePath, finalFileName))
-		log.Infof("starting post recording ffmpeg process with args: %s", strings.Join(args, " "))
-
-		_, err := exec.Command("ffmpeg", args...).CombinedOutput()
-		if err != nil {
-			log.WithError(err).Errorf("keeping the raw file: %s as output because of error from ffmpeg", currentFileName)
-			// remove the new file
-			_ = os.Remove(path.Join(filePath, finalFileName))
-			// keep the old file as output
-			finalFileName = currentFileName
-		} else {
-			err = os.Remove(path.Join(filePath, currentFileName))
-			if err != nil {
-				log.WithError(err).Errorln("failed to remove raw file")
+			task := &plugnmeet.TranscodingTask{
+				RecordingId: req.RecordingId,
+				RoomId:      req.RoomId,
+				RoomSid:     req.RoomSid,
+				FilePath:    filePath,
+				FileName:    fileName,
+				RoomTableId: req.RoomTableId,
+				RecorderId:  req.RecorderId,
 			}
-		}
-	} else {
-		// just rename
-		err := os.Rename(path.Join(filePath, currentFileName), path.Join(filePath, finalFileName))
-		if err != nil {
-			log.Errorf("keeping the raw file: %s as output because of error during rename: %s", currentFileName, err.Error())
-			// keep the old file as output
-			finalFileName = currentFileName
-		}
-	}
 
-	outputFilePath := path.Join(filePath, finalFileName)
-	stat, err := os.Stat(outputFilePath)
-	if err != nil {
-		log.WithError(err).Errorln("failed to stat output file")
-		return
-	}
+			marshal, err := proto.Marshal(task)
+			if err != nil {
+				log.WithError(err).Errorln("failed to marshal transcoding task")
+				return
+			}
 
-	size := float32(stat.Size()) / 1000000.0
-	var relativePath string
-
-	// To robustly calculate the relative path, first ensure both paths are absolute.
-	// This prevents errors when paths are configured relatively (e.g., "./recordings").
-	basePath, err := filepath.Abs(c.cnf.Recorder.CopyToPath.MainPath)
-	if err != nil {
-		log.WithError(err).Errorf("could not determine absolute path for main_path '%s', falling back to string trimming", c.cnf.Recorder.CopyToPath.MainPath)
-		relativePath = strings.TrimPrefix(outputFilePath, c.cnf.Recorder.CopyToPath.MainPath) // fallback
-	}
-
-	absOutputFilePath, err := filepath.Abs(outputFilePath)
-	if err != nil {
-		log.WithError(err).Errorf("could not determine absolute path for output_file_path '%s', falling back to string trimming", outputFilePath)
-		relativePath = strings.TrimPrefix(outputFilePath, c.cnf.Recorder.CopyToPath.MainPath) // fallback
-	}
-
-	relativePath, err = filepath.Rel(basePath, absOutputFilePath)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"base_path":   basePath,
-			"output_path": absOutputFilePath,
-		}).WithError(err).Warnf("could not make path relative for %s, falling back to string trimming", absOutputFilePath)
-		relativePath = strings.TrimPrefix(absOutputFilePath, basePath)
-	}
-
-	toSend := &plugnmeet.RecorderToPlugNmeet{
-		From:        "recorder",
-		Status:      true,
-		Task:        plugnmeet.RecordingTasks_RECORDING_PROCEEDED,
-		Msg:         "success",
-		RecordingId: req.RecordingId,
-		RecorderId:  req.RecorderId,
-		RoomTableId: req.RoomTableId,
-		FilePath:    relativePath,
-		FileSize:    float32(int(size*100)) / 100,
-	}
-	log.Infof("notifying to plugnmeet with data: %+v", toSend)
-
-	_, err = c.notifier.NotifyToPlugNmeet(toSend)
-	if err != nil {
-		log.WithError(err).Errorln("failed to notify to plugnmeet")
-	}
-
-	// post-processing scripts
-	if len(c.cnf.Recorder.PostProcessingScripts) == 0 {
-		return
-	}
-	data := map[string]interface{}{
-		"recording_id":  req.GetRecordingId(),
-		"room_table_id": req.GetRoomTableId(),
-		"room_id":       req.GetRoomId(),
-		"room_sid":      req.GetRoomSid(),
-		"file_name":     finalFileName,
-		"file_path":     path.Join(filePath, finalFileName), // this will be the full path of the file
-		"file_size":     size,
-		"recorder_id":   req.GetRecorderId(),
-	}
-	marshal, err := json.Marshal(data)
-	if err != nil {
-		log.WithError(err).Errorln("failed to marshal post-processing data")
-		return
-	}
-
-	for _, script := range c.cnf.Recorder.PostProcessingScripts {
-		_, err := exec.Command("/bin/sh", script, string(marshal)).CombinedOutput()
-		if err != nil {
-			logger.WithError(err).Errorln("failed to run post-processing script")
+			_, err = c.cnf.JetStream.Publish(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, marshal)
+			if err != nil {
+				log.WithError(err).Errorln("failed to publish transcoding task")
+			}
+		} else {
+			log.Errorf("avoiding to publish transcoding task of: %s file because of 0 size", path.Join(filePath, fileName))
 		}
 	}
-	log.Infoln("post process recording has been finished")
 }

@@ -24,6 +24,7 @@ type AppConfig struct {
 
 type RecorderInfo struct {
 	Id                    string             `yaml:"id"`
+	Mode                  string             `yaml:"mode"`
 	MaxLimit              uint64             `yaml:"max_limit"`
 	Debug                 bool               `yaml:"debug"`
 	PostMp4Convert        bool               `yaml:"post_mp4_convert"`
@@ -67,6 +68,7 @@ type NatsInfo struct {
 type NatsInfoRecorder struct {
 	RecorderChannel string `yaml:"recorder_channel"`
 	RecorderInfoKv  string `yaml:"recorder_info_kv"`
+	TranscodingJobs string `yaml:"transcoding_jobs_subject"`
 }
 
 func New(a *AppConfig) *AppConfig {
@@ -75,6 +77,9 @@ func New(a *AppConfig) *AppConfig {
 }
 
 func (a *AppConfig) setDefaultConfig() {
+	if a.Recorder.Mode == "" {
+		a.Recorder.Mode = "both"
+	}
 	if a.Recorder.MaxLimit == 0 {
 		a.Recorder.MaxLimit = 10
 	}
@@ -105,5 +110,8 @@ func (a *AppConfig) setDefaultConfig() {
 				PostInput: fmt.Sprintf("%s -pix_fmt yuv420p -b:v 2500k -video_size 1920x1080 -b:a 128k -ar 44100 -bufsize 5000k -f flv", commonPostInput),
 			},
 		}
+	}
+	if a.NatsInfo.Recorder.TranscodingJobs == "" {
+		a.NatsInfo.Recorder.TranscodingJobs = "pnm-RecorderTranscoderJobs"
 	}
 }

@@ -1,6 +1,6 @@
 # plugNmeet-recorder
 
-The plugNmeet-recorder handles session recording and RTMP streaming for plugNmeet. It is designed for scalability and can record multiple sessions simultaneously. You can deploy multiple recorder instances to create a horizontally scalable, highly available recording infrastructure. The plugnmeet-server will automatically balance the load across the available recorders.
+The plugnmeet-recorder handles session recording and RTMP streaming for plugnmeet. It is designed for scalability and can record multiple sessions simultaneously. You can deploy multiple recorder instances to create a horizontally scalable, highly available recording infrastructure. The plugnmeet-server will automatically balance the load across the available recorders.
 
 ## Requirements
 
@@ -53,7 +53,7 @@ Edit `config.yaml` to configure the recorder.
 *   **`main_path`**: This should be the same as `recording_files_path` in your `plugnmeet-server`'s `config.yaml`.
 *   **`plugNmeet_info`**: Update this section with your plugNmeet server details.
 
-**Important:** If you use NFS or other network-mounted storage for recordings, ensure both the recorder and the `plugnmeet-server` can access the storage path. Otherwise, users won't be able to download recordings.
+**Important:** If you use NFS or other network-mounted storage for recordings, ensure both the recorder and the `plugnmeet-server` can access the storage path. Otherwise, users' won't be able to download recordings.
 
 ### Multi-server Deployment
 
@@ -63,6 +63,28 @@ When deploying multiple recorders:
 
 *   Assign a unique `id` in each `config.yaml` (e.g., `node_01`, `node_02`).
 *   Adjust the `max_limit` value in `config.yaml` based on each server’s capacity.
+
+## Operational Modes (Recorder & Transcoder Workers)
+
+The `plugnmeet-recorder` application supports different operational modes, allowing for a highly scalable and resilient recording and transcoding pipeline.
+
+Each instance of the `plugnmeet-recorder` can be configured to run in one of three modes via the `recorder.mode` setting in `config.yaml`:
+
+*   **`both` (Default):** In this mode, a single `plugnmeet-recorder` instance performs both live session recording and post-processing (transcoding) of recorded files.
+    *   **Workflow:** Records a session -> Publishes transcoding job -> Processes transcoding job.
+
+*   **`recorderOnly`:** This instance will *only* handle live session recording. Once a raw recording file (e.g., `.mkv`) is captured, it will publish a transcoding job to a queue, and its responsibility for that recording ends.
+    *   **Workflow:** Records a session -> Publishes transcoding job.
+
+*   **`transcoderOnly`:** This instance will *only* process transcoding jobs. It subscribes to the transcoding job queue, fetches jobs one at a time, and executes the `ffmpeg` command to convert the raw recording file into a final, compressed MP4.
+    *   **Workflow:** Subscribes to job queue -> Fetches transcoding job -> Processes transcoding job.
+
+### Benefits of this Architecture:
+
+*   **Decoupling:** Recording and transcoding are separate concerns, preventing CPU-intensive post-processing from impacting live sessions.
+*   **Scalability:** You can scale recording instances (`recorderOnly`) and transcoding instances (`transcoderOnly`) independently based on your workload.
+*   **Resilience:** The job queue ensures that transcoding jobs are persistent. If a `transcoderOnly` worker fails, the job remains in the queue and will be picked up by another available worker, guaranteeing that all recordings are eventually processed.
+*   **Resource Management:** `transcoderOnly` workers process one `ffmpeg` job at a time, preventing CPU overload on individual machines.
 
 ## Running the Recorder
 
@@ -78,9 +100,11 @@ To start the recorder, run the binary for your system's architecture:
 
 ## Deployment Recommendations
 
-For optimal performance, especially when recording frequently, we recommend deploying the `plugnmeet-recorder` on a dedicated server, separate from your plugNmeet or LiveKit instance. This is because recording can be a CPU-intensive process.
+For optimal performance and resource utilization, especially in production environments with frequent recordings, it is highly recommended to deploy `plugnmeet-recorder` instances on dedicated servers. Both live recording and transcoding can be CPU-intensive processes.
 
-However, if you only plan to record sessions infrequently, running the recorder on the same server is a viable option. For a streamlined and automated installation on a single server, you can use the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script.
+Review the "Operational Modes" section above. Based on your specific use case and desired load distribution, deploy `plugnmeet-recorder` instances in the appropriate modes across dedicated servers.
+
+For a streamlined and automated installation on a single server, you can use the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script.
 
 ## Development
 

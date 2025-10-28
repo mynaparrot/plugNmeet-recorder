@@ -3,6 +3,11 @@ recorder:
   ## Otherwise, issues may arise with NATS (https://docs.nats.io/nats-concepts/subjects#characters-allowed-and-recommended-for-subject-names)
   ## Permitted characters: (a - z), (A - Z), (0 - 9), hyphen (-), and underscore (_)
   id: node_01
+  # Operational mode for this instance. Can be one of:
+  # "both" (default): Runs both the recorder and transcoder services.
+  # "recorderOnly": Only records, then publishes jobs for a transcoder.
+  # "transcoderOnly": Only processes transcoding jobs from the queue.
+  mode: "both"
   # Avoid processing more than 10 concurrent recordings on a single server.
   # It is recommended to use multiple servers if higher capacity is necessary.
   max_limit: 10
@@ -75,3 +80,4 @@ nats_info:
   recorder:
     recorder_channel: "recorderChannel"
     recorder_info_kv: "pnm-recorderInfo"
+    transcoding_jobs_subject: "pnm-RecorderTranscoderJobs"

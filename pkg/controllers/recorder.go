@@ -58,8 +58,28 @@ func (c *RecorderController) BootUp() {
 		}
 	}()
 
+	switch c.cnf.Recorder.Mode {
+	case "recorderOnly":
+		c.startRecordingService()
+	case "transcoderOnly":
+		c.startTranscodingService()
+	default:
+		// by default, it will be both
+		c.startRecordingService()
+		c.startTranscodingService()
+	}
+
+	c.logger.WithFields(logrus.Fields{
+		"recorderId": c.cnf.Recorder.Id,
+		"version":    version.Version,
+		"runtime":    runtime.Version(),
+		"mode":       c.cnf.Recorder.Mode,
+	}).Infof("=== recorder is ready V:%s ====", version.Version)
+}
+
+func (c *RecorderController) startRecordingService() {
 	// subscribe to channel for receiving tasks
-	_, err = c.cnf.NatsConn.Subscribe(c.cnf.NatsInfo.Recorder.RecorderChannel, func(msg *nats.Msg) {
+	_, err := c.cnf.NatsConn.Subscribe(c.cnf.NatsInfo.Recorder.RecorderChannel, func(msg *nats.Msg) {
 		req := new(plugnmeet.PlugNmeetToRecorder)
 		err := proto.Unmarshal(msg.Data, req)
 		if err != nil {
@@ -123,12 +143,6 @@ func (c *RecorderController) BootUp() {
 	if err != nil {
 		c.logger.Fatal(err)
 	}
-
-	c.logger.WithFields(logrus.Fields{
-		"recorderId": c.cnf.Recorder.Id,
-		"version":    version.Version,
-		"runtime":    runtime.Version(),
-	}).Infof("=== recorder is ready to accept tasks V:%s ====", version.Version)
 }
 
 func (c *RecorderController) CallEndToAll() {
