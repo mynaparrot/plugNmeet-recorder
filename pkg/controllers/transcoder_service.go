@@ -16,9 +16,13 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
+	"mvdan.cc/sh/v3/shell"
 )
 
-const transcoderConsumerDurable = "transcoderWorker"
+const (
+	transcoderConsumerDurable = "transcoderWorker"
+	maxTranscodingRetries     = 3
+)
 
 func (c *RecorderController) startTranscodingService() {
 	logger := c.logger.WithField("service", "transcoder")
@@ -79,6 +83,20 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		"method":      "handleTranscoding",
 	})
 
+	meta, err := msg.Metadata()
+	if err != nil {
+		log.WithError(err).Errorln("failed to get message metadata")
+		_ = msg.NakWithDelay(5 * time.Second)
+		return
+	}
+
+	if meta.NumDelivered > maxTranscodingRetries {
+		log.Warnf("transcoding job failed after %d attempts, removing from queue", maxTranscodingRetries)
+		// Ack the message to prevent it from being redelivered
+		_ = msg.Ack()
+		return
+	}
+
 	// Use a deferred function to ensure the message is always NAK'd if not explicitly ACK'd.
 	acked := false
 	defer func() {
@@ -110,10 +128,19 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 	}
 
 	if c.cnf.Recorder.PostMp4Convert {
-		var args []string
-		args = append(args, strings.Split(c.cnf.FfmpegSettings.PostRecording.PreInput, " ")...)
-		args = append(args, "-i", rawFilePath)
-		args = append(args, strings.Split(c.cnf.FfmpegSettings.PostRecording.PostInput, " ")...)
+		preArgs, err := shell.Fields(c.cnf.FfmpegSettings.PostRecording.PreInput, nil)
+		if err != nil {
+			log.WithError(err).Errorln("failed to parse ffmpeg pre-input args")
+			return // will be NAK'd
+		}
+		postArgs, err := shell.Fields(c.cnf.FfmpegSettings.PostRecording.PostInput, nil)
+		if err != nil {
+			log.WithError(err).Errorln("failed to parse ffmpeg post-input args")
+			return // will be NAK'd
+		}
+
+		args := append(preArgs, "-i", rawFilePath)
+		args = append(args, postArgs...)
 		args = append(args, outputFile)
 		log.Infof("starting post recording ffmpeg process with args: %s", strings.Join(args, " "))
 
