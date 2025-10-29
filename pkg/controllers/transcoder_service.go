@@ -21,19 +21,16 @@ import (
 const transcoderConsumerDurable = "transcoderWorker"
 
 func (c *RecorderController) startTranscodingService() {
-	// Draining subscription before shutting down
-	defer c.cnf.NatsConn.Drain()
+	logger := c.logger.WithField("service", "transcoder")
 
 	consumer, err := c.cnf.JetStream.Consumer(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, transcoderConsumerDurable)
 	if err != nil {
-		c.logger.Fatalln(err)
+		logger.WithError(err).Fatalln("failed to create consumer for transcoding jobs")
 	}
 
-	logger := c.logger.WithField("worker", "transcoder")
-	logger.Infoln("starting transcoding worker")
+	logger.Infoln("transcoding service started successfully")
 
-	// This single loop ensures that only one job is processed at a time by this worker instance.
-	// Parallelism is achieved by running multiple 'transcoderOnly' instances.
+	// Single loop ensures that only one job is processed at a time by this worker instance.
 	for {
 		select {
 		case <-c.ctx.Done():
@@ -100,7 +97,7 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		"rawFilePath":   rawFilePath,
 		"finalFileName": finalFileName,
 		"outputFile":    outputFile,
-	}).Info("starting post recording ffmpeg process")
+	}).Info("starting new transcoding job")
 
 	// Check if the raw file exists before proceeding
 	if _, err := os.Stat(rawFilePath); os.IsNotExist(err) {

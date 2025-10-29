@@ -61,7 +61,7 @@ func main() {
 
 	// Start recorder services
 	rc := controllers.NewRecorderController(ctx, appCnf, logger)
-	go rc.BootUp()
+	rc.BootUp()
 
 	// Defer closing connections to ensure they are cleaned up
 	// when the main function exits
