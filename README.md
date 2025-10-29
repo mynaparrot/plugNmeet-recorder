@@ -64,11 +64,11 @@ When deploying multiple recorders:
 *   Assign a unique `id` in each `config.yaml` (e.g., `node_01`, `node_02`).
 *   Adjust the `max_limit` value in `config.yaml` based on each server’s capacity.
 
-## Operational Modes (Recorder & Transcoder Workers)
+#### Operational Modes (Recorder & Transcoder Workers)
 
 The `plugnmeet-recorder` application supports different operational modes, allowing for a highly scalable and resilient recording and transcoding pipeline.
 
-Each instance of the `plugnmeet-recorder` can be configured to run in one of three modes via the `recorder.mode` setting in `config.yaml`:
+Each instance of the `plugnmeet-recorder` can be configured to run in one of three modes via the `mode` setting in `config.yaml`:
 
 *   **`both` (Default):** In this mode, a single `plugnmeet-recorder` instance performs both live session recording and post-processing (transcoding) of recorded files.
     *   **Workflow:** Records a session -> Publishes transcoding job -> Processes transcoding job.
@@ -79,7 +79,7 @@ Each instance of the `plugnmeet-recorder` can be configured to run in one of thr
 *   **`transcoderOnly`:** This instance will *only* process transcoding jobs. It subscribes to the transcoding job queue, fetches jobs one at a time, and executes the `ffmpeg` command to convert the raw recording file into a final, compressed MP4.
     *   **Workflow:** Subscribes to job queue -> Fetches transcoding job -> Processes transcoding job.
 
-### Benefits of this Architecture:
+##### Benefits of this Architecture:
 
 *   **Decoupling:** Recording and transcoding are separate concerns, preventing CPU-intensive post-processing from impacting live sessions.
 *   **Scalability:** You can scale recording instances (`recorderOnly`) and transcoding instances (`transcoderOnly`) independently based on your workload.
