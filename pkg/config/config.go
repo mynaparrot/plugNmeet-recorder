@@ -32,6 +32,7 @@ type RecorderInfo struct {
 	Width                 uint64             `yaml:"width"`
 	Height                uint64             `yaml:"height"`
 	XvfbDpi               uint64             `yaml:"xvfb_dpi"`
+	TemporaryDir          *string            `yaml:"temporary_dir"`
 	CopyToPath            CopyToPathSettings `yaml:"copy_to_path"`
 	PostProcessingScripts []string           `yaml:"post_processing_scripts"`
 }

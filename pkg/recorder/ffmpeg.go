@@ -11,7 +11,7 @@ import (
 	"mvdan.cc/sh/v3/shell"
 )
 
-func (r *Recorder) launchFfmpegProcess(mp4File string) error {
+func (r *Recorder) launchFfmpegProcess() error {
 	var args []string
 	var preInput, postInput string
 
@@ -48,7 +48,7 @@ func (r *Recorder) launchFfmpegProcess(mp4File string) error {
 	if r.Req.Task == plugnmeet.RecordingTasks_START_RTMP {
 		args = append(args, *r.Req.RtmpUrl)
 	} else {
-		args = append(args, mp4File)
+		args = append(args, r.recordingFilePath)
 	}
 	log := r.Logger.WithField("args", args)
 	log.Infof("starting ffmpeg process")

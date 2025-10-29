@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path"
 	"time"
 
 	"github.com/chromedp/cdproto/target"
@@ -91,7 +90,7 @@ func (r *Recorder) launchChrome() {
 		chromedp.ActionFunc(func(context.Context) error {
 			// wait to make sure videos are all loaded properly
 			time.Sleep(time.Second * 3)
-			return r.launchFfmpegProcess(path.Join(r.filePath, r.fileName))
+			return r.launchFfmpegProcess()
 		}),
 		chromedp.WaitVisible("div[id=errorPage]"),
 		chromedp.ActionFunc(func(context.Context) error {

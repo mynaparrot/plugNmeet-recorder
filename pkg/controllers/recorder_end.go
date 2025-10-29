@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
@@ -63,7 +64,7 @@ func (c *RecorderController) getAndDeleteRecorderInProgress(tableId int64, task 
 }
 
 // onAfterClose now accepts a logger
-func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, filePath, fileName string, processErr error, logger *logrus.Entry) {
+func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, recordingFilePath, finalRawFilePath string, processErr error, logger *logrus.Entry) {
 	log := logger.WithField("method", "onAfterClose").WithError(processErr)
 	log.Infoln("onAfterClose callback called")
 
@@ -102,7 +103,20 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, fi
 	}
 
 	if req.Task == plugnmeet.RecordingTasks_START_RECORDING {
-		stat, err := os.Stat(path.Join(filePath, fileName))
+		// if we used a temporary file, we must move it to the final destination first.
+		if recordingFilePath != finalRawFilePath {
+			log.Infof("moving temp file %s to final destination %s", recordingFilePath, finalRawFilePath)
+			err = moveFile(recordingFilePath, finalRawFilePath, log)
+			if err != nil {
+				log.WithError(err).Errorln("failed to move file from temporary location")
+				// if we can't move the file, we can't transcode it.
+				return
+			}
+		}
+
+		// now we can check the final file
+		finalFilePath, finalFileName := path.Split(finalRawFilePath)
+		stat, err := os.Stat(finalRawFilePath)
 		if err != nil {
 			switch {
 			case os.IsNotExist(err) && processErr != nil:
@@ -118,8 +132,8 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, fi
 				RecordingId: req.RecordingId,
 				RoomId:      req.RoomId,
 				RoomSid:     req.RoomSid,
-				FilePath:    filePath,
-				FileName:    fileName,
+				FilePath:    finalFilePath, // this is now the final path
+				FileName:    finalFileName, // this is the raw file name
 				RoomTableId: req.RoomTableId,
 				RecorderId:  req.RecorderId,
 			}
@@ -135,7 +149,41 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, fi
 				log.WithError(err).Errorln("failed to publish transcoding task")
 			}
 		} else {
-			log.Errorf("avoiding to publish transcoding task of: %s file because of 0 size", path.Join(filePath, fileName))
+			log.Errorf("avoiding to publish transcoding task of: %s file because of 0 size", finalRawFilePath)
 		}
 	}
+}
+
+// moveFile moves a file from src to dst. It creates the destination directory if it doesn't exist.
+func moveFile(src, dst string, log *logrus.Entry) error {
+	// Ensure the destination directory exists.
+	dstDir := path.Dir(dst)
+	if err := os.MkdirAll(dstDir, 0755); err != nil {
+		return fmt.Errorf("failed to create destination directory %s: %w", dstDir, err)
+	}
+
+	// Attempt to rename first, as it's atomic and fast.
+	err := os.Rename(src, dst)
+	if err == nil {
+		log.Infof("successfully moved file using rename from %s to %s", src, dst)
+		return nil
+	}
+
+	// If rename fails (e.g., across different filesystems), fall back to copy-then-delete.
+	log.Warnf("rename failed (possibly cross-device move), falling back to rsync: %v", err)
+
+	// -a: archive mode (preserves permissions, etc.)
+	// --partial: keep partially transferred files for resuming.
+	// --remove-source-files: move the file instead of copying.
+	// --mkpath: creates the destination directory path.
+	cmd := exec.Command("rsync", "-a", "--partial", "--remove-source-files", "--mkpath", src, dst)
+
+	log.Infof("executing rsync command: %s", cmd.String())
+	output, rsyncErr := cmd.CombinedOutput()
+	if rsyncErr != nil {
+		return fmt.Errorf("rsync failed with error: %w. Output: %s", rsyncErr, string(output))
+	}
+
+	log.Infof("rsync completed successfully. Output: %s", string(output))
+	return nil
 }

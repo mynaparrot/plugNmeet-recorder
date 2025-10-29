@@ -21,16 +21,15 @@ const (
 )
 
 type Recorder struct {
-	joinUrl  string
-	filePath string
-	// fileName will be the raw file, e.g. recordingId_raw.mkv
-	fileName string
+	joinUrl           string
+	recordingFilePath string // Full path to the raw file being written (can be temp or final)
+	finalRawFilePath  string // Full path to the final destination of the raw file
 
 	Req                  *plugnmeet.PlugNmeetToRecorder
 	AppCnf               *config.AppConfig
 	Logger               *logrus.Entry
 	OnAfterStartCallback func(req *plugnmeet.PlugNmeetToRecorder, logger *logrus.Entry)
-	OnAfterCloseCallback func(req *plugnmeet.PlugNmeetToRecorder, filePath, fileName string, err error, logger *logrus.Entry)
+	OnAfterCloseCallback func(req *plugnmeet.PlugNmeetToRecorder, recordingFilePath, finalRawFilePath string, err error, logger *logrus.Entry)
 
 	ctx           context.Context
 	ctxCancel     context.CancelFunc
@@ -60,18 +59,29 @@ func (r *Recorder) Start() error {
 	}()
 
 	if r.Req.Task == plugnmeet.RecordingTasks_START_RECORDING {
-		r.filePath = path.Join(r.AppCnf.Recorder.CopyToPath.MainPath, r.AppCnf.Recorder.CopyToPath.SubPath, r.Req.GetRoomId())
-		err = os.MkdirAll(r.filePath, 0755)
-		if err != nil {
-			return err
+		var fileName string
+		if strings.Contains(r.AppCnf.FfmpegSettings.Recording.PostInput, "ffv1") {
+			fileName = r.Req.GetRecordingId() + "_raw.mkv"
+		} else {
+			fileName = r.Req.GetRecordingId() + "_raw.mp4"
 		}
 
-		// For backward compatibility, we'll check which codec is in use.
-		// ffv1 must be stored in .mkv
-		if strings.Contains(r.AppCnf.FfmpegSettings.Recording.PostInput, "ffv1") {
-			r.fileName = r.Req.GetRecordingId() + "_raw.mkv"
-		} else {
-			r.fileName = r.Req.GetRecordingId() + "_raw.mp4"
+		// Final destination path on the network drive
+		finalPath := path.Join(r.AppCnf.Recorder.CopyToPath.MainPath, r.AppCnf.Recorder.CopyToPath.SubPath, r.Req.GetRoomId())
+		r.finalRawFilePath = path.Join(finalPath, fileName)
+
+		// Determine the recording path (temporary or final)
+		recordPath := finalPath
+		if r.AppCnf.Recorder.TemporaryDir != nil && *r.AppCnf.Recorder.TemporaryDir != "" {
+			recordPath = path.Join(*r.AppCnf.Recorder.TemporaryDir, r.Req.GetRoomId())
+			r.Logger.Infof("using temporary recording path: %s", recordPath)
+		}
+		r.recordingFilePath = path.Join(recordPath, fileName)
+
+		// Create the directory where the file will be written
+		err = os.MkdirAll(recordPath, 0755)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -120,7 +130,7 @@ func (r *Recorder) Close(task plugnmeet.RecordingTasks, err error) {
 		}
 
 		if r.OnAfterCloseCallback != nil {
-			r.OnAfterCloseCallback(r.Req, r.filePath, r.fileName, err, log)
+			r.OnAfterCloseCallback(r.Req, r.recordingFilePath, r.finalRawFilePath, err, log)
 		}
 
 		// close everything if still running

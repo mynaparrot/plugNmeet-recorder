@@ -27,7 +27,7 @@ ARG TARGETPLATFORM
 
 # install deps
 RUN apt-get update && \
-    apt-get install -y curl wget gnupg unzip fonts-noto pulseaudio ffmpeg xvfb
+    apt-get install -y curl wget gnupg unzip fonts-noto pulseaudio ffmpeg xvfb rsync
 
 # install chrome using livekit/chrome-installer
 COPY --from=livekit/chrome-installer:125.0.6422.141 /chrome-installer /chrome-installer
