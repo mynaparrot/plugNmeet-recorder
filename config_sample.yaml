@@ -25,9 +25,10 @@ recorder:
   # Optional: Adjust the DPI of the xvfb virtual window.
   # Higher DPI can enhance image clarity but may affect performance and compatibility.
   xvfb_dpi: 96
-  # Optional: Specify a temporary local directory for recording.
-  # Using a local disk (e.g., /tmp/recordings) is highly recommended to prevent I/O errors and dropped frames caused by network latency.
-  # After recording, the file will be moved to 'copy_to_path.main_path' for post-processing.
+  # Optional: A local temp directory for recording.
+  # Highly recommended if 'main_path' is a network disk (e.g., NFS) to prevent I/O errors.
+  # The file is moved to 'main_path' after recording, and the temporary copy is then deleted.
+  # IMPORTANT: Ensure this directory has sufficient free space for raw recordings.
   # temporary_dir: "/tmp/recordings"
   copy_to_path:
     # The plugNmeet server must have access to this path for users to download recordings.

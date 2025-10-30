@@ -53,7 +53,7 @@ Edit `config.yaml` to configure the recorder.
 *   **`main_path`**: This should be the same as `recording_files_path` in your `plugnmeet-server`'s `config.yaml`.
 *   **`plugNmeet_info`**: Update this section with your plugNmeet server details.
 
-**Important:** If you use NFS or other network-mounted storage for recordings, ensure both the recorder and the `plugnmeet-server` can access the storage path. Otherwise, users' won't be able to download recordings.
+**Important:** If you use NFS or other network-mounted storage for `main_path`, ensure both the recorder and the `plugnmeet-server` can access it. Otherwise, users won't be able to download recordings. To prevent I/O errors and dropped frames caused by this network latency, it is **highly recommended** to set a local `temporary_dir` in `config.yaml`. The recorder will write to this local directory first and then automatically move the file to the final network path after the recording is complete.
 
 ### Multi-server Deployment
 
