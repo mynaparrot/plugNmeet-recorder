@@ -57,6 +57,20 @@ func (c *RecorderController) startTranscodingService() {
 
 			// Since we fetch 1, there will only be one message.
 			for msg := range batch.Messages() {
+				meta, err := msg.Metadata()
+				if err != nil {
+					logger.WithError(err).Errorln("failed to get message metadata")
+					_ = msg.NakWithDelay(5 * time.Second)
+					continue
+				}
+
+				if meta.NumDelivered > maxTranscodingRetries {
+					logger.Warnf("transcoding job failed after %d attempts, removing from queue", maxTranscodingRetries)
+					// Ack the message to prevent it from being redelivered
+					_ = msg.Ack()
+					continue
+				}
+
 				// This is a blocking call. The loop will not continue
 				// to the next Fetch until this transcoding is finished.
 				c.handleTranscoding(msg, logger)
@@ -82,20 +96,6 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		"fileName":    task.FileName,
 		"method":      "handleTranscoding",
 	})
-
-	meta, err := msg.Metadata()
-	if err != nil {
-		log.WithError(err).Errorln("failed to get message metadata")
-		_ = msg.NakWithDelay(5 * time.Second)
-		return
-	}
-
-	if meta.NumDelivered > maxTranscodingRetries {
-		log.Warnf("transcoding job failed after %d attempts, removing from queue", maxTranscodingRetries)
-		// Ack the message to prevent it from being redelivered
-		_ = msg.Ack()
-		return
-	}
 
 	// Use a deferred function to ensure the message is always NAK'd if not explicitly ACK'd.
 	acked := false
