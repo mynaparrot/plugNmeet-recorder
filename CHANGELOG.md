@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.6.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.6...v1.6.0) (2025-10-30)
+
+
+### Features
+
+* added option to set temporary working path ([82b9b0f](https://github.com/mynaparrot/plugNmeet-recorder/commit/82b9b0fe3341d4e1dc1e6291f9401053ad915033))
+* Implement multi-mode recorder with NATS JetStream for decoupled transcoding ([5ca6c7e](https://github.com/mynaparrot/plugNmeet-recorder/commit/5ca6c7e451bf0b5e8ae66898b1839770bf3ee662))
+
+
+### Bug Fixes
+
+* better logging + clean up ([db619f9](https://github.com/mynaparrot/plugNmeet-recorder/commit/db619f955221ded9ff08837f1b72ddaed2c64632))
+* **cleanup:** simplified logic ([2432b1d](https://github.com/mynaparrot/plugNmeet-recorder/commit/2432b1ded6e2a0ebe020718804374d8647c923a9))
+* further tuning params ([5429506](https://github.com/mynaparrot/plugNmeet-recorder/commit/54295061ca7b667f93f0f3031c660c35897db7ef))
+* missed to update default value ([b1ad733](https://github.com/mynaparrot/plugNmeet-recorder/commit/b1ad73381049aa31bca68767f7a3f1b702732ea5))
+* moved log to proto ([c3c34e2](https://github.com/mynaparrot/plugNmeet-recorder/commit/c3c34e235509483c95f99cd48b6f3dad3d66ec40))
+* moved retry logic checker upper level ([eb489fa](https://github.com/mynaparrot/plugNmeet-recorder/commit/eb489fa0b6e7a8407e3082316d8edef0e26fd3b2))
+* **recorder:** improve worker robustness ([cda9be4](https://github.com/mynaparrot/plugNmeet-recorder/commit/cda9be45ac3e152e52f7bbb6f996cdc5f3dac146))
+* service wasn't starting properly ([f79eddf](https://github.com/mynaparrot/plugNmeet-recorder/commit/f79eddf01b83b9504b458de1c2d4be60f03902e0))
+* specify the Pixel Format `yuv420p` ([f170463](https://github.com/mynaparrot/plugNmeet-recorder/commit/f170463c33d3ac31972ca37808c04636eaf7899f))
+* update read me ([8704524](https://github.com/mynaparrot/plugNmeet-recorder/commit/8704524c0f4973c8ca44cd245a6d2ce08f222b63))
+* updated comments ([5f8da6b](https://github.com/mynaparrot/plugNmeet-recorder/commit/5f8da6b5800b46856ff22c058c08590d61d036fc))
+* use default preset `ultrafast` ([a77a2a4](https://github.com/mynaparrot/plugNmeet-recorder/commit/a77a2a407c0428d9ccc7fa9e24472ed7b551c41c))
+
 ## [1.5.6](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.5...v1.5.6) (2025-09-13)
 
 
