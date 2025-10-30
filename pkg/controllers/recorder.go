@@ -109,3 +109,18 @@ func (c *RecorderController) startPing() {
 		}
 	}
 }
+
+func (c *RecorderController) updateAndGetProgress() int {
+	var count int
+	c.recordersInProgress.Range(func(key, value interface{}) bool {
+		count++
+		return true
+	})
+
+	err := c.ns.UpdateCurrentProgress(count)
+	if err != nil {
+		c.logger.WithError(err).Errorln("failed to update current progress")
+	}
+
+	return count
+}

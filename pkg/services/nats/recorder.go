@@ -3,7 +3,6 @@ package natsservice
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
@@ -11,9 +10,7 @@ import (
 )
 
 const (
-	RecorderKvBucket   = "%s-%s"
-	maxUpdateRetries   = 5
-	retryUpdateBackoff = 50 * time.Millisecond
+	RecorderKvBucket = "%s-%s"
 )
 
 func (s *NatsService) AddRecorder() error {
@@ -60,7 +57,7 @@ func (s *NatsService) UpdateLastPing() error {
 	return nil
 }
 
-func (s *NatsService) UpdateCurrentProgress(increment bool) error {
+func (s *NatsService) UpdateCurrentProgress(progress int) error {
 	bucket := fmt.Sprintf(RecorderKvBucket, s.app.NatsInfo.Recorder.RecorderInfoKv, s.app.Recorder.Id)
 	kv, err := s.js.KeyValue(s.ctx, bucket)
 	switch {
@@ -71,42 +68,8 @@ func (s *NatsService) UpdateCurrentProgress(increment bool) error {
 	}
 
 	key := fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_CURRENT_PROGRESS)
+	newValue := fmt.Sprintf("%d", progress)
 
-	for i := 0; i < maxUpdateRetries; i++ {
-		entry, err := kv.Get(s.ctx, key)
-		if err != nil {
-			return err
-		}
-
-		currentProgress, err := strconv.ParseUint(string(entry.Value()), 10, 64)
-		if err != nil {
-			return err
-		}
-
-		if increment {
-			currentProgress++
-		} else {
-			if currentProgress > 0 {
-				currentProgress--
-			}
-		}
-
-		newValue := fmt.Sprintf("%d", currentProgress)
-		_, err = kv.Update(s.ctx, key, []byte(newValue), entry.Revision())
-		if err == nil {
-			return nil // Success
-		}
-
-		var apiErr *jetstream.APIError
-		if errors.As(err, &apiErr) && apiErr.ErrorCode == jetstream.JSErrCodeStreamWrongLastSequence {
-			// This is the expected conflict error, wait a bit and retry.
-			time.Sleep(retryUpdateBackoff)
-			continue
-		}
-
-		// For any other error, return immediately.
-		return fmt.Errorf("failed to update progress: %w", err)
-	}
-
-	return fmt.Errorf("failed to update progress after %d retries", maxUpdateRetries)
+	_, err = kv.PutString(s.ctx, key, newValue)
+	return err
 }

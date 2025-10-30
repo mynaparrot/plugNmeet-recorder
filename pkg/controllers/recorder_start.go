@@ -45,9 +45,9 @@ func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder,
 		return err
 	}
 
-	if err = c.ns.UpdateCurrentProgress(true); err != nil {
-		return err
-	}
+	// update progress
+	count := c.updateAndGetProgress()
+	logger.Infof("%d tasks in progress", count)
 
 	return nil
 }

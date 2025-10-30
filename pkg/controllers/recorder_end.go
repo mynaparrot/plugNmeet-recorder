@@ -72,11 +72,9 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 	// It's safe to call even if handleStopTask already removed it.
 	c.recordersInProgress.Delete(fmt.Sprintf(taskIDTemplate, req.RoomTableId, req.Task))
 
-	// decrement process
-	err := c.ns.UpdateCurrentProgress(false)
-	if err != nil {
-		log.WithError(err).Errorln("failed to update current progress")
-	}
+	// update progress
+	count := c.updateAndGetProgress()
+	log.Infof("%d tasks left in progress", count)
 
 	// notify to plugnmeet
 	toSend := &plugnmeet.RecorderToPlugNmeet{
@@ -97,7 +95,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 	}
 	log.Infof("notifying to plugnmeet with data: %+v", toSend)
 
-	_, err = c.notifier.NotifyToPlugNmeet(toSend)
+	_, err := c.notifier.NotifyToPlugNmeet(toSend)
 	if err != nil {
 		log.WithError(err).Errorln("failed to notify to plugnmeet")
 	}
