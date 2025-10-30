@@ -106,6 +106,51 @@ Review the "Operational Modes" section above. Based on your specific use case an
 
 For a streamlined and automated installation on a single server, you can use the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script.
 
+## Post-Processing Scripts
+
+The recorder offers a powerful feature to run custom shell scripts after a recording has been successfully transcoded. This allows you to automate tasks like uploading the final file to cloud storage (e.g., Amazon S3), notifying an external API, or performing additional media processing.
+
+### How to Use
+
+1.  **Create a Script:** Write a standard shell script (e.g., `my_script.sh`) that performs your desired actions.
+2.  **Enable in Config:** Add the path to your script (or multiple scripts) in the `post_processing_scripts` section of your `config.yaml`:
+
+    ```yaml
+    # config.yaml
+    recorder:
+      # ... other settings
+      post_processing_scripts:
+        - "./post_processing_scripts/example.sh"
+        - "/path/to/your/other_script.sh"
+    ```
+
+3.  **Make it Executable:** Ensure your script has execute permissions:
+
+    ```bash
+    chmod +x ./post_processing_scripts/example.sh
+    ```
+
+### Script Data
+
+When a script is executed, it receives a single argument: a JSON string containing metadata about the completed recording. Your script can parse this JSON to get the information it needs.
+
+**Example JSON Data:**
+
+```json
+{
+  "recording_id": "REC_ax9s3djn2s",
+  "room_table_id": 123,
+  "room_id": "room01",
+  "room_sid": "SID_d82k3s9d2l",
+  "file_name": "REC_ax9s3djn2s.mp4",
+  "file_path": "/path/to/recording/files/node_01/room01/REC_ax9s3djn2s.mp4",
+  "file_size": 123.45, // in MB
+  "recorder_id": "node_01"
+}
+```
+
+An example script (`post_processing_scripts/example.sh`) is provided to demonstrate how to parse this JSON using tools like `jq` and log the output. You can use this as a template for your own custom workflows.
+
 ## Development
 
 1.  Clone this repository and navigate into the project directory.
