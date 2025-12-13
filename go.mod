@@ -9,7 +9,7 @@ require (
 	github.com/mynaparrot/plugnmeet-protocol v1.0.16-0.20251028233830-1dd8dc1d6324
 	github.com/nats-io/nats.go v1.47.0
 	github.com/sirupsen/logrus v1.9.3
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.12.0
 )
