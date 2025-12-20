@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.6.0...v2.0.0) (2025-12-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* align with new UI + API + features
+
+### Features
+
+* align with new UI + API + features ([ee41b5e](https://github.com/mynaparrot/plugNmeet-recorder/commit/ee41b5e98ea43e4728f727dd0e22908ec15546cb))
+
 ## [1.6.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.5.6...v1.6.0) (2025-10-30)
 
 
