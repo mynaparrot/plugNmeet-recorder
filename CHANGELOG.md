@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.0...v2.0.1) (2026-01-10)
+
+
+### Bug Fixes
+
+* move the mouse to the top-left corner to remove hover effects. ([6546895](https://github.com/mynaparrot/plugNmeet-recorder/commit/654689503662904aa8d3ae2dd8ffd1251350813f))
+
 ## [2.0.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v1.6.0...v2.0.0) (2025-12-19)
 
 
