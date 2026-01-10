@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
@@ -86,6 +87,8 @@ func (r *Recorder) launchChrome() {
 		chromedp.Navigate(r.joinUrl),
 		r.waitVisibleWithTimeout("div[id=startupJoinModal]", waitForSelectorTimeout),
 		chromedp.Click("button[id=listenOnlyJoin]", chromedp.NodeVisible),
+		// Move the mouse to the top-left corner to remove hover effects.
+		chromedp.MouseEvent(input.MouseMoved, 0, 0),
 		r.waitVisibleWithTimeout("div[id=main-area]", waitForSelectorTimeout),
 		chromedp.ActionFunc(func(context.Context) error {
 			// wait to make sure videos are all loaded properly
