@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"path"
@@ -217,7 +218,7 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		RecorderId:       task.RecorderId,
 		RoomTableId:      task.RoomTableId,
 		FilePath:         relativePath,
-		FileSize:         float32(int(size*100)) / 100,
+		FileSize:         float32(math.Round(float64(size)*100) / 100),
 		RecordingVariant: &task.RecordingVariant,
 	}
 
