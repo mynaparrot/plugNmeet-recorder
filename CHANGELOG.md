@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.1...v2.0.2) (2026-01-15)
+
+
+### Bug Fixes
+
+* recording file size record ([b291268](https://github.com/mynaparrot/plugNmeet-recorder/commit/b2912689d8ceeaf7fa9c926b02226649f98164b4))
+
 ## [2.0.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.0...v2.0.1) (2026-01-10)
 
 
