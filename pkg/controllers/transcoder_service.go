@@ -14,21 +14,19 @@ import (
 	"time"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	"github.com/mynaparrot/plugnmeet-protocol/utils"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"mvdan.cc/sh/v3/shell"
 )
 
-const (
-	transcoderConsumerDurable = "transcoderWorker"
-	maxTranscodingRetries     = 3
-)
+const maxTranscodingRetries = 3
 
 func (c *RecorderController) startTranscodingService() {
 	logger := c.logger.WithField("service", "transcoder")
 
-	consumer, err := c.cnf.JetStream.Consumer(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, transcoderConsumerDurable)
+	consumer, err := c.cnf.JetStream.Consumer(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, utils.TranscoderConsumerDurable)
 	if err != nil {
 		logger.WithError(err).Fatalln("failed to create consumer for transcoding jobs")
 	}
