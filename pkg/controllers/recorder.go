@@ -47,13 +47,17 @@ func NewRecorderController(ctx context.Context, cnf *config.AppConfig, logger *l
 }
 
 func (c *RecorderController) BootUp() {
-	// add this recorder to the bucket
-	err := c.ns.AddRecorder(pingInterval)
-	if err != nil {
-		c.logger.WithError(err).Fatal("failed to add this recorder to the bucket")
+	// Only register as an active recorder if we are in a mode that can handle recordings.
+	if c.cnf.Recorder.Mode != "transcoderOnly" {
+		c.logger.Info("registering as an active recorder")
+		// add this recorder to the bucket
+		err := c.ns.AddRecorder(pingInterval)
+		if err != nil {
+			c.logger.WithError(err).Fatal("failed to add this recorder to the bucket")
+		}
+		// now start ping
+		go c.startPing()
 	}
-	// now start ping
-	go c.startPing()
 
 	// try to recover if panic happens
 	defer func() {
