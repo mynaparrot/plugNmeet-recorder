@@ -24,6 +24,9 @@ func main() {
 	var showVersion bool
 	flag.BoolVar(&showVersion, "version", false, "Print version information and exit")
 
+	var recorderMode string
+	flag.StringVar(&recorderMode, "mode", "", "Override recorder mode (recorderOnly, transcoderOnly, or both)")
+
 	// Parse the command-line arguments
 	flag.Parse()
 
@@ -37,6 +40,18 @@ func main() {
 	if err != nil {
 		logrus.Fatalln(err)
 	}
+
+	if recorderMode != "" {
+		// Validate the input from the flag.
+		switch recorderMode {
+		case "both", "recorderOnly", "transcoderOnly":
+			logrus.Infof("Overriding recorder mode with command-line flag: %s", recorderMode)
+			cnf.Recorder.Mode = recorderMode
+		default:
+			logrus.Fatalf("Invalid value for -mode flag: '%s'. Allowed values are 'both', 'recorderOnly', 'transcoderOnly'.", recorderMode)
+		}
+	}
+
 	// Set this config for global usage
 	appCnf := config.New(cnf)
 

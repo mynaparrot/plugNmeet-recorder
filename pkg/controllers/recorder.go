@@ -51,7 +51,7 @@ func (c *RecorderController) BootUp() {
 	if c.cnf.Recorder.Mode != "transcoderOnly" {
 		c.logger.Info("registering as an active recorder")
 		// add this recorder to the bucket
-		err := c.ns.AddRecorder(pingInterval)
+		err := c.ns.RegisterAsActiveRecorder(pingInterval)
 		if err != nil {
 			c.logger.WithError(err).Fatal("failed to add this recorder to the bucket")
 		}

@@ -17,8 +17,8 @@ var (
 	lastPingField = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_LAST_PING)
 )
 
-// AddRecorder initializes a recorder's information and ensures it is the only active instance with this ID.
-func (s *NatsService) AddRecorder(pingInterval time.Duration) error {
+// RegisterAsActiveRecorder initializes a recorder's information and ensures it is the only active instance with this ID.
+func (s *NatsService) RegisterAsActiveRecorder(pingInterval time.Duration) error {
 	kv, err := s.js.KeyValue(s.ctx, s.app.NatsInfo.Recorder.RecorderInfoKv)
 	if err != nil {
 		return err
