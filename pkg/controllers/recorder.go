@@ -15,7 +15,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const taskIDTemplate = "%d-%d"
+const (
+	taskIDTemplate = "%d-%d"
+	pingInterval   = 3 * time.Second
+)
 
 type RecorderController struct {
 	ctx                 context.Context
@@ -31,18 +34,21 @@ func NewRecorderController(ctx context.Context, cnf *config.AppConfig, logger *l
 	ns := natsservice.New(ctx, cnf)
 
 	return &RecorderController{
-		ctx:         ctx,
-		cnf:         cnf,
-		ns:          ns,
-		notifier:    utils.NewNotifier(cnf.PlugNmeetInfo.Host, cnf.PlugNmeetInfo.ApiKey, cnf.PlugNmeetInfo.ApiSecret, nil),
-		logger:      logger.WithField("component", "recorder-controller"),
+		ctx:      ctx,
+		cnf:      cnf,
+		ns:       ns,
+		notifier: utils.NewNotifier(cnf.PlugNmeetInfo.Host, cnf.PlugNmeetInfo.ApiKey, cnf.PlugNmeetInfo.ApiSecret, nil),
+		logger: logger.WithFields(logrus.Fields{
+			"component":  "recorder-controller",
+			"recorderId": cnf.Recorder.Id,
+		}),
 		closeTicker: make(chan bool),
 	}
 }
 
 func (c *RecorderController) BootUp() {
 	// add this recorder to the bucket
-	err := c.ns.AddRecorder()
+	err := c.ns.AddRecorder(pingInterval)
 	if err != nil {
 		c.logger.WithError(err).Fatal("failed to add this recorder to the bucket")
 	}
@@ -91,11 +97,12 @@ func (c *RecorderController) CallEndToAll() {
 
 	wg.Wait()
 	close(c.closeTicker)
+	c.ns.DeleteRecorder()
 	c.logger.Infoln("all recorders closed")
 }
 
 func (c *RecorderController) startPing() {
-	ping := time.NewTicker(3 * time.Second)
+	ping := time.NewTicker(pingInterval)
 
 	for {
 		select {
