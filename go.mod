@@ -6,7 +6,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20250803210736-d308e07a266d
 	github.com/chromedp/chromedp v0.14.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/mynaparrot/plugnmeet-protocol v1.2.1-0.20260128133128-934c31084bfe
+	github.com/mynaparrot/plugnmeet-protocol v1.2.1
 	github.com/nats-io/nats.go v1.48.0
 	github.com/sirupsen/logrus v1.9.4
 	google.golang.org/protobuf v1.36.11
@@ -48,7 +48,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/lithammer/shortuuid/v4 v4.2.0 // indirect
 	github.com/livekit/mageutil v0.0.0-20250511045019-0f1ff63f7731 // indirect
-	github.com/livekit/protocol v1.43.4 // indirect
+	github.com/livekit/protocol v1.44.1-0.20260120134243-0914cc74653e // indirect
 	github.com/livekit/psrpc v0.7.1 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -80,6 +80,7 @@ require (
 	github.com/valyala/fasthttp v1.68.0 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
+	go.opentelemetry.io/otel v1.39.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect
