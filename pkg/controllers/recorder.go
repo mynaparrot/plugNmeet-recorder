@@ -86,23 +86,30 @@ func (c *RecorderController) BootUp() {
 }
 
 func (c *RecorderController) CallEndToAll() {
-	c.logger.Infoln("received request to close all recorders")
-	var wg sync.WaitGroup
-	c.recordersInProgress.Range(func(key, value interface{}) bool {
-		if process, ok := value.(*recorder.Recorder); ok {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				process.Close(plugnmeet.RecordingTasks_STOP, nil)
-			}()
-		}
-		return true
-	})
+	c.logger.Infoln("received request to shut down services")
 
-	wg.Wait()
-	close(c.closeTicker)
-	c.ns.DeleteRecorder()
-	c.logger.Infoln("all recorders closed")
+	// Only perform recorder-specific cleanup if we are not in transcoderOnly mode.
+	if c.cnf.Recorder.Mode != "transcoderOnly" {
+		c.logger.Infoln("closing all active recorders...")
+		var wg sync.WaitGroup
+		c.recordersInProgress.Range(func(key, value interface{}) bool {
+			if process, ok := value.(*recorder.Recorder); ok {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					process.Close(plugnmeet.RecordingTasks_STOP, nil)
+				}()
+			}
+			return true
+		})
+
+		wg.Wait()
+		close(c.closeTicker)
+		c.ns.DeleteRecorder()
+		c.logger.Infoln("all recorders closed and unregistered")
+	}
+
+	c.logger.Infoln("shutdown complete")
 }
 
 func (c *RecorderController) startPing() {
