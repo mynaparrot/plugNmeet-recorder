@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.1...v2.0.2) (2026-01-30)
+
+
+### Bug Fixes
+
+* `transcoderOnly` was wiping all data ([9bc7267](https://github.com/mynaparrot/plugNmeet-recorder/commit/9bc72676be8043a83826d0e676de16b1b1e54d54))
+* clean up + bump proto ([2c97ead](https://github.com/mynaparrot/plugNmeet-recorder/commit/2c97eade5ce5d987727b1df830b916be816060df))
+* **deps:** update module github.com/mynaparrot/plugnmeet-protocol to v1.2.0 ([511de23](https://github.com/mynaparrot/plugNmeet-recorder/commit/511de23be09010f38eae0bf1c24ea46cef2132a6))
+* **deps:** update module github.com/mynaparrot/plugnmeet-protocol to v1.2.0 ([d24cd40](https://github.com/mynaparrot/plugNmeet-recorder/commit/d24cd40ba12ab33ae80997735ff1e2380775945f))
+* **deps:** update module github.com/sirupsen/logrus to v1.9.4 ([668e291](https://github.com/mynaparrot/plugNmeet-recorder/commit/668e291b88c0822b93f472956ae018455ab1e196))
+* **deps:** update module github.com/sirupsen/logrus to v1.9.4 ([25b9d8a](https://github.com/mynaparrot/plugNmeet-recorder/commit/25b9d8a1ce74562ec411c4a9b7fc621fdb57e8b1))
+* only register as an active recorder if we are in a mode that can handle recordings. ([1f3a1bc](https://github.com/mynaparrot/plugNmeet-recorder/commit/1f3a1bc1659a70dee4a37312bf03a5e756b080ad))
+* option to override mode by `-mode` flag ([d1e4e90](https://github.com/mynaparrot/plugNmeet-recorder/commit/d1e4e9001f331425617cb6e26014728098bc63df))
+* recording file size record ([b291268](https://github.com/mynaparrot/plugNmeet-recorder/commit/b2912689d8ceeaf7fa9c926b02226649f98164b4))
+* **refactor:** recorders will use single KV bucket ([36f1c08](https://github.com/mynaparrot/plugNmeet-recorder/commit/36f1c083b1ea2f3db0aaa17e954f4a106bb96f3d))
+* way to prevent duplicate recorder ID ([00ed5f6](https://github.com/mynaparrot/plugNmeet-recorder/commit/00ed5f6a415053895cad15146821a200beffdeea))
+
 ## [2.0.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.0...v2.0.1) (2026-01-10)
 
 
