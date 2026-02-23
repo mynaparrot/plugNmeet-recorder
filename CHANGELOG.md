@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.2...v2.0.3) (2026-02-23)
+
+
+### Bug Fixes
+
+* nats connection tag name ([883605f](https://github.com/mynaparrot/plugNmeet-recorder/commit/883605fd0ea6ee0ec65e3f6731ce18e0f3d33c65))
+
 ## [2.0.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.1...v2.0.2) (2026-01-30)
 
 
