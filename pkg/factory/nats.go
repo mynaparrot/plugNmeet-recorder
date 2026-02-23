@@ -30,6 +30,7 @@ func NewNatsConnection(appCnf *config.AppConfig) error {
 	}
 
 	opts := []nats.Option{
+		nats.Name("plugnmeet-recorder"),
 		nats.TokenHandler(tokenHandler),
 		nats.ReconnectWait(5 * time.Second),
 		nats.MaxReconnects(-1), // Keep trying to reconnect indefinitely.
