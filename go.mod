@@ -7,7 +7,7 @@ require (
 	github.com/chromedp/chromedp v0.15.1
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/mynaparrot/plugnmeet-protocol v1.2.1
-	github.com/nats-io/nats.go v1.49.0
+	github.com/nats-io/nats.go v1.50.0
 	github.com/sirupsen/logrus v1.9.4
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
@@ -44,7 +44,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/jxskiss/base62 v1.1.0 // indirect
-	github.com/klauspost/compress v1.18.2 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/lithammer/shortuuid/v4 v4.2.0 // indirect
 	github.com/livekit/mageutil v0.0.0-20250511045019-0f1ff63f7731 // indirect
@@ -54,7 +54,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/nats-io/jwt/v2 v2.8.0 // indirect
-	github.com/nats-io/nkeys v0.4.14 // indirect
+	github.com/nats-io/nkeys v0.4.15 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pion/datachannel v1.5.10 // indirect
 	github.com/pion/dtls/v3 v3.0.8 // indirect
@@ -85,12 +85,12 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect
 	go.uber.org/zap/exp v0.3.0 // indirect
-	golang.org/x/crypto v0.47.0 // indirect
+	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/exp v0.0.0-20251209150349-8475f28825e9 // indirect
-	golang.org/x/net v0.48.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/text v0.33.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251213004720-97cd9d5aeac2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251213004720-97cd9d5aeac2 // indirect
 	google.golang.org/grpc v1.77.0 // indirect
