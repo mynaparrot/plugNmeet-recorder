@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.0.3](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.2...v2.0.3) (2026-04-04)
+
+
+### Bug Fixes
+
+* bump dependencies ([bfc3b4c](https://github.com/mynaparrot/plugNmeet-recorder/commit/bfc3b4cd6173d918ca57cdcc38fb762f3867848a))
+* bump dependencies ([1511574](https://github.com/mynaparrot/plugNmeet-recorder/commit/1511574ba93e138e5e18578624284fd19422ccd5))
+* **deps:** update module github.com/chromedp/chromedp to v0.15.1 ([d7e8988](https://github.com/mynaparrot/plugNmeet-recorder/commit/d7e898893e9fe5186c5a55864090884a0df9c310))
+* **deps:** update module github.com/chromedp/chromedp to v0.15.1 ([e5be198](https://github.com/mynaparrot/plugNmeet-recorder/commit/e5be19812207350cbd9ceddb87aa004e47b217ec))
+* **deps:** update module github.com/nats-io/nats.go to v1.50.0 ([e772a64](https://github.com/mynaparrot/plugNmeet-recorder/commit/e772a646b18c080dcada51e4c151e1dcaca02b3a))
+* **deps:** update module github.com/nats-io/nats.go to v1.50.0 ([bb433e9](https://github.com/mynaparrot/plugNmeet-recorder/commit/bb433e98102b765e04ea291846e2ecf7ee249d6a))
+* **deps:** update module mvdan.cc/sh/v3 to v3.13.0 ([4f63bf9](https://github.com/mynaparrot/plugNmeet-recorder/commit/4f63bf9f854f8905a4991a2e27635f3fbc322c75))
+* **deps:** update module mvdan.cc/sh/v3 to v3.13.0 ([f1ea809](https://github.com/mynaparrot/plugNmeet-recorder/commit/f1ea809d527f536506a929754356e405630d37c4))
+* nats connection tag name ([883605f](https://github.com/mynaparrot/plugNmeet-recorder/commit/883605fd0ea6ee0ec65e3f6731ce18e0f3d33c65))
+
 ## [2.0.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.1...v2.0.2) (2026-01-30)
 
 
