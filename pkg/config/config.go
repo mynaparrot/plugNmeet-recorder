@@ -1,18 +1,19 @@
 package config
 
 import (
+	"sync/atomic"
+
 	"github.com/mynaparrot/plugnmeet-protocol/logging"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/atomic"
 )
 
 type AppConfig struct {
 	NatsConn       *nats.Conn
 	JetStream      jetstream.JetStream
 	Logger         *logrus.Logger
-	IsShuttingDown atomic.Bool
+	IsShuttingDown *atomic.Bool
 
 	RootWorkingDir string
 	Recorder       RecorderInfo        `yaml:"recorder"`
@@ -78,6 +79,8 @@ func New(a *AppConfig) *AppConfig {
 }
 
 func (a *AppConfig) setDefaultConfig() {
+	a.IsShuttingDown = new(atomic.Bool)
+
 	if a.Recorder.Mode == "" {
 		a.Recorder.Mode = "both"
 	}

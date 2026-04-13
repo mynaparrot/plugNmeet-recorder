@@ -143,7 +143,6 @@ github.com/moby/docker-image-spec v1.3.1 h1:jMKff3w6PgbfSa69GfNg+zN/XLhfXJGnEx3N
 github.com/moby/docker-image-spec v1.3.1/go.mod h1:eKmb5VW8vQEh/BAr2yvVNvuiJuY6UIocYsFu/DxxRpo=
 github.com/moby/term v0.5.0 h1:xt8Q1nalod/v7BqbG21f8mQPqH+xAaC9C3N3wfWbVP0=
 github.com/moby/term v0.5.0/go.mod h1:8FzsFHVUBGZdbDsJw/ot+X+d5HLUbvklYLJ9uGfcI3Y=
-github.com/mynaparrot/plugnmeet-protocol v1.2.2-0.20260328091936-21903c6a5e05/go.mod h1:aN7nEaXG1RQxfjjsxCC31NWqQndY2i5HJ+6/qen4KNI=
 github.com/mynaparrot/plugnmeet-protocol v1.2.2-0.20260413135111-811ad6a6db16 h1:liI3YCTW1+VUYT45vzwg4jj5WXeVK1XXsO/OjNqKaTo=
 github.com/mynaparrot/plugnmeet-protocol v1.2.2-0.20260413135111-811ad6a6db16/go.mod h1:ez9i2JGlIHWTB58Cn/IZAW0alCw7VPGFWwrCpKnySo4=
 github.com/nats-io/nats.go v1.50.0 h1:5zAeQrTvyrKrWLJ0fu02W3br8ym57qf7csDzgLOpcds=
