@@ -54,7 +54,7 @@ func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder,
 
 // onAfterStart now accepts a logger
 func (c *RecorderController) onAfterStart(req *plugnmeet.PlugNmeetToRecorder, logger *logrus.Entry) {
-	logger.Infoln("onAfterStart callback called")
+	logger.WithField("method", "onAfterStart").Infoln("onAfterStart callback called")
 
 	// notify to plugnmeet
 	toSend := &plugnmeet.RecorderToPlugNmeet{

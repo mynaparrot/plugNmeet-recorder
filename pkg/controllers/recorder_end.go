@@ -93,20 +93,20 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 		toSend.Status = false
 		toSend.Msg = processErr.Error()
 	}
-	log.Infof("notifying to plugnmeet with data: %+v", toSend)
+	log.Infof("Notifying to plugnmeet with data: %+v", toSend)
 
 	_, err := c.notifier.NotifyToPlugNmeet(toSend)
 	if err != nil {
-		log.WithError(err).Errorln("failed to notify to plugnmeet")
+		log.WithError(err).Errorln("Failed to notify to plugnmeet")
 	}
 
 	if req.Task == plugnmeet.RecordingTasks_START_RECORDING {
 		// if we used a temporary file, we must move it to the final destination first.
 		if recordingFilePath != finalRawFilePath {
-			log.Infof("moving temp file %s to final destination %s", recordingFilePath, finalRawFilePath)
+			log.Infof("Moving temp file %s to final destination %s", recordingFilePath, finalRawFilePath)
 			err = moveFile(recordingFilePath, finalRawFilePath, log)
 			if err != nil {
-				log.WithError(err).Errorln("failed to move file from temporary location")
+				log.WithError(err).Errorln("Failed to move file from temporary location")
 				// if we can't move the file, we can't transcode it.
 				return
 			}
@@ -121,7 +121,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 				// in this case, not found error is expected so, don't need to log
 				// otherwise will create confusion
 			default:
-				log.WithError(err).Errorln("failed to stat output file")
+				log.WithError(err).Errorln("Failed to stat output file")
 			}
 			return
 		}
@@ -138,16 +138,16 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 
 			marshal, err := proto.Marshal(task)
 			if err != nil {
-				log.WithError(err).Errorln("failed to marshal transcoding task")
+				log.WithError(err).Errorln("Failed to marshal transcoding task")
 				return
 			}
 
 			_, err = c.cnf.JetStream.Publish(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, marshal)
 			if err != nil {
-				log.WithError(err).Errorln("failed to publish transcoding task")
+				log.WithError(err).Errorln("Failed to publish transcoding task")
 			}
 		} else {
-			log.Errorf("avoiding to publish transcoding task of: %s file because of 0 size", finalRawFilePath)
+			log.Errorf("Avoiding to publish transcoding task of: %s file because of 0 size", finalRawFilePath)
 		}
 	}
 }
@@ -163,12 +163,12 @@ func moveFile(src, dst string, log *logrus.Entry) error {
 	// Attempt to rename first, as it's atomic and fast.
 	err := os.Rename(src, dst)
 	if err == nil {
-		log.Infof("successfully moved file using rename from %s to %s", src, dst)
+		log.Infof("Successfully moved file using rename from %s to %s", src, dst)
 		return nil
 	}
 
 	// If rename fails (e.g., across different filesystems), fall back to copy-then-delete.
-	log.Warnf("rename failed (possibly cross-device move), falling back to rsync: %v", err)
+	log.Warnf("Rename failed (possibly cross-device move), falling back to rsync: %v", err)
 
 	// -a: archive mode (preserves permissions, etc.)
 	// --partial: keep partially transferred files for resuming.
@@ -176,12 +176,12 @@ func moveFile(src, dst string, log *logrus.Entry) error {
 	// --mkpath: creates the destination directory path.
 	cmd := exec.Command("rsync", "-a", "--partial", "--remove-source-files", "--mkpath", src, dst)
 
-	log.Infof("executing rsync command: %s", cmd.String())
+	log.Infof("Executing rsync command: %s", cmd.String())
 	output, rsyncErr := cmd.CombinedOutput()
 	if rsyncErr != nil {
 		return fmt.Errorf("rsync failed with error: %w. Output: %s", rsyncErr, string(output))
 	}
 
-	log.Infof("rsync completed successfully. Output: %s", string(output))
+	log.Infof("Successfully moved file using rsync. Output: %s", string(output))
 	return nil
 }
