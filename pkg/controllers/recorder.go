@@ -49,11 +49,10 @@ func NewRecorderController(ctx context.Context, cnf *config.AppConfig, logger *l
 func (c *RecorderController) BootUp() {
 	// Only register as an active recorder if we are in a mode that can handle recordings.
 	if c.cnf.Recorder.Mode != "transcoderOnly" {
-		c.logger.Info("registering as an active recorder")
+		c.logger.Info("Registering as an active recorder")
 		// add this recorder to the bucket
-		err := c.ns.RegisterAsActiveRecorder(pingInterval)
-		if err != nil {
-			c.logger.WithError(err).Fatal("failed to add this recorder to the bucket")
+		if err := c.ns.RegisterAsActiveRecorder(pingInterval); err != nil {
+			c.logger.WithError(err).Fatal("Failed to add this recorder to the bucket")
 		}
 		// now start ping
 		go c.startPing()
@@ -62,7 +61,7 @@ func (c *RecorderController) BootUp() {
 	// try to recover if panic happens
 	defer func() {
 		if r := recover(); r != nil {
-			c.logger.Warnln("recovered from panic in", r)
+			c.logger.Warnln("Recovered from panic in", r)
 		}
 	}()
 
@@ -82,15 +81,15 @@ func (c *RecorderController) BootUp() {
 		"version":    version.Version,
 		"runtime":    runtime.Version(),
 		"mode":       c.cnf.Recorder.Mode,
-	}).Infof("=== recorder is ready v%s ====", version.Version)
+	}).Infof("=== Recorder is ready v%s ====", version.Version)
 }
 
 func (c *RecorderController) CallEndToAll() {
-	c.logger.Infoln("received request to shut down services")
+	c.logger.Infoln("Received request to shut down services")
 
 	// Only perform recorder-specific cleanup if we are not in transcoderOnly mode.
 	if c.cnf.Recorder.Mode != "transcoderOnly" {
-		c.logger.Infoln("closing all active recorders...")
+		c.logger.Infoln("Closing all active recorders...")
 		var wg sync.WaitGroup
 		c.recordersInProgress.Range(func(key, value interface{}) bool {
 			if process, ok := value.(*recorder.Recorder); ok {
@@ -106,10 +105,10 @@ func (c *RecorderController) CallEndToAll() {
 		wg.Wait()
 		close(c.closeTicker)
 		c.ns.DeleteRecorder()
-		c.logger.Infoln("all recorders closed and unregistered")
+		c.logger.Infoln("All recorders closed and unregistered")
 	}
 
-	c.logger.Infoln("shutdown complete")
+	c.logger.Infoln("Shutdown complete")
 }
 
 func (c *RecorderController) startPing() {
@@ -120,9 +119,11 @@ func (c *RecorderController) startPing() {
 		case <-c.closeTicker:
 			return
 		case <-ping.C:
-			err := c.ns.UpdateLastPing()
-			if err != nil {
-				c.logger.Errorln(err)
+			if c.cnf.IsShuttingDown.Load() {
+				return
+			}
+			if err := c.ns.UpdateStatus(); err != nil {
+				c.logger.WithError(err).Error("Failed to update status")
 			}
 		}
 	}
@@ -135,9 +136,8 @@ func (c *RecorderController) updateAndGetProgress() int {
 		return true
 	})
 
-	err := c.ns.UpdateCurrentProgress(count)
-	if err != nil {
-		c.logger.WithError(err).Errorln("failed to update current progress")
+	if err := c.ns.UpdateCurrentProgress(count); err != nil {
+		c.logger.WithError(err).Errorln("Failed to update current progress")
 	}
 
 	return count

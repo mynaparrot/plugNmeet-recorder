@@ -87,6 +87,7 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
-	appCnf.Logger.Infoln("exit requested, shutting down services...")
+	appCnf.IsShuttingDown.Store(true)
+	appCnf.Logger.Infoln("Exit requested, shutting down services...")
 	rc.CallEndToAll()
 }

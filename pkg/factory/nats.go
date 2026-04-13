@@ -43,9 +43,11 @@ func NewNatsConnection(appCnf *config.AppConfig) error {
 			log.Infof("NATS reconnected to %s", nc.ConnectedUrl())
 		}),
 		nats.ClosedHandler(func(nc *nats.Conn) {
-			// This will be called if MaxReconnects is reached or if the connection is closed by the server.
-			// Using log.Fatal will ensure the application exits if it can't maintain a connection.
-			log.Fatal("NATS connection is permanently closed.")
+			if !appCnf.IsShuttingDown.Load() {
+				// This will be called if MaxReconnects is reached or if the connection is closed by the server.
+				// Using log.Fatal will ensure the application exits if it can't maintain a connection.
+				log.Fatal("NATS connection is permanently closed.")
+			}
 		}),
 	}
 

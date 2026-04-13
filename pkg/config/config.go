@@ -5,12 +5,14 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/atomic"
 )
 
 type AppConfig struct {
-	NatsConn  *nats.Conn
-	JetStream jetstream.JetStream
-	Logger    *logrus.Logger
+	NatsConn       *nats.Conn
+	JetStream      jetstream.JetStream
+	Logger         *logrus.Logger
+	IsShuttingDown atomic.Bool
 
 	RootWorkingDir string
 	Recorder       RecorderInfo        `yaml:"recorder"`

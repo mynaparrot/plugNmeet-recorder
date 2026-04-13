@@ -3,18 +3,22 @@ package natsservice
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"strconv"
 	"time"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-protocol/utils"
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/shirou/gopsutil/v4/cpu"
 )
 
 var (
-	maxLimitField = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_MAX_LIMIT)
-	progressField = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_CURRENT_PROGRESS)
-	lastPingField = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_LAST_PING)
+	maxLimitField   = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_MAX_LIMIT)
+	progressField   = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_CURRENT_PROGRESS)
+	lastPingField   = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_LAST_PING)
+	totalCoresField = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_TOTAL_CORES)
+	cpuScoreField   = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_CPU_SCORE)
 )
 
 // RegisterAsActiveRecorder initializes a recorder's information and ensures it is the only active instance with this ID.
@@ -47,36 +51,53 @@ func (s *NatsService) RegisterAsActiveRecorder(pingInterval time.Duration) error
 	}
 
 	// It's safe to proceed. Write our own info.
-	s.logger.Infof("Registering recorder with ID: %s", recorderId)
 	data := map[string]string{
-		utils.FormatRecorderKey(recorderId, maxLimitField): fmt.Sprintf("%d", s.app.Recorder.MaxLimit),
-		utils.FormatRecorderKey(recorderId, progressField): "0",
-		utils.FormatRecorderKey(recorderId, lastPingField): fmt.Sprintf("%d", time.Now().UTC().UnixMilli()),
+		utils.FormatRecorderKey(recorderId, maxLimitField):   fmt.Sprintf("%d", s.app.Recorder.MaxLimit),
+		utils.FormatRecorderKey(recorderId, progressField):   "0",
+		utils.FormatRecorderKey(recorderId, lastPingField):   fmt.Sprintf("%d", time.Now().UTC().UnixMilli()),
+		utils.FormatRecorderKey(recorderId, totalCoresField): fmt.Sprintf("%d", runtime.NumCPU()),
 	}
 
 	// Put all fields into the consolidated bucket
 	for k, v := range data {
-		_, err = kv.PutString(s.ctx, k, v)
-		if err != nil {
+		if _, err = kv.PutString(s.ctx, k, v); err != nil {
 			s.logger.WithError(err).Errorln("failed to add recorder info field")
 		}
 	}
 
+	s.logger.Infof("Successfully registered recorder with ID: %s", recorderId)
 	return nil
 }
 
-// UpdateLastPing updates the last ping timestamp for a specific recorder.
-func (s *NatsService) UpdateLastPing() error {
+// UpdateStatus updates the last ping timestamp and current system load for current recorder.
+func (s *NatsService) UpdateStatus() error {
 	kv, err := s.js.KeyValue(s.ctx, s.app.NatsInfo.Recorder.RecorderInfoKv)
 	if err != nil {
 		return fmt.Errorf("recorder info bucket not found: %w", err)
 	}
 
 	recorderId := s.app.Recorder.Id
-	key := utils.FormatRecorderKey(recorderId, lastPingField)
 
-	_, err = kv.PutString(s.ctx, key, fmt.Sprintf("%d", time.Now().UTC().UnixMilli()))
-	return err
+	// Update last ping
+	pingKey := utils.FormatRecorderKey(recorderId, lastPingField)
+	_, err = kv.PutString(s.ctx, pingKey, fmt.Sprintf("%d", time.Now().UTC().UnixMilli()))
+	if err != nil {
+		return err
+	}
+
+	// Calculate and update CPU score
+	cpuPercentages, err := cpu.Percent(time.Second, false)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to get cpu usage")
+	} else if len(cpuPercentages) > 0 {
+		cpuScore := cpuPercentages[0] / 100 // Normalize to 0-1
+		cpuKey := utils.FormatRecorderKey(recorderId, cpuScoreField)
+		if _, err = kv.PutString(s.ctx, cpuKey, fmt.Sprintf("%.4f", cpuScore)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // UpdateCurrentProgress updates the current progress for a specific recorder.
@@ -109,13 +130,14 @@ func (s *NatsService) DeleteRecorder() {
 		maxLimitField,
 		progressField,
 		lastPingField,
+		totalCoresField,
+		cpuScoreField,
 	}
 
 	// Purge each key. Purge sends a specific marker that watchers can act on.
 	for _, field := range fields {
 		key := utils.FormatRecorderKey(recorderId, field)
-		err := kv.Purge(s.ctx, key)
-		if err != nil {
+		if err := kv.Purge(s.ctx, key); err != nil {
 			// Log the error but continue trying to delete other keys.
 			s.logger.WithError(err).Errorf("failed to purge recorder key: %s", key)
 		}
