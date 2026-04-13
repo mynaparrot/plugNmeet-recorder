@@ -16,7 +16,7 @@ import (
 // launch Chrome to access URL
 func (r *Recorder) launchChrome() {
 	log := r.Logger.WithField("joinUrl", r.joinUrl)
-	log.Infof("launching chrome")
+	log.Infof("Launching chrome")
 
 	opts := []chromedp.ExecAllocatorOption{
 		// ---- Performance & Stability Flags ----
@@ -75,10 +75,10 @@ func (r *Recorder) launchChrome() {
 	chromedp.ListenBrowser(chromeCtx, func(ev interface{}) {
 		switch ev.(type) {
 		case *target.EventDetachedFromTarget:
-			log.Errorln("browser detached from target unexpectedly")
+			log.Errorln("Browser detached from target unexpectedly")
 			r.Close(plugnmeet.RecordingTasks_STOP, errors.New("browser detached from target unexpectedly"))
 		case *target.EventTargetCrashed:
-			log.Errorln("browser crashed")
+			log.Errorln("Browser crashed")
 			r.Close(plugnmeet.RecordingTasks_STOP, errors.New("browser crashed"))
 		}
 	})
@@ -97,14 +97,14 @@ func (r *Recorder) launchChrome() {
 		}),
 		chromedp.WaitVisible("div[id=errorPage]"),
 		chromedp.ActionFunc(func(context.Context) error {
-			log.Infoln("got error page, closing recorder")
+			log.Infoln("Got error page, closing recorder")
 			r.Close(plugnmeet.RecordingTasks_STOP, nil)
 			return nil
 		}),
 	)
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
-			log.WithError(err).Errorln("chromedp run error")
+			log.WithError(err).Error("Chromedp run error")
 		}
 		r.Close(plugnmeet.RecordingTasks_STOP, err)
 	}
@@ -115,7 +115,7 @@ func (r *Recorder) closeChromeDp(log *logrus.Entry) {
 	defer r.Unlock()
 
 	if r.closeChrome != nil {
-		log.Infoln("closing chrome")
+		log.Infoln("Closing chrome")
 
 		r.closeChrome()
 		r.closeChrome = nil

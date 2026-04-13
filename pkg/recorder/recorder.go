@@ -53,7 +53,7 @@ func (r *Recorder) Start() error {
 	var err error
 	defer func() {
 		if err != nil {
-			r.Logger.Errorf("failed to start recorder: %v", err)
+			r.Logger.Errorf("Failed to start recorder: %v", err)
 			r.Close(plugnmeet.RecordingTasks_STOP, err)
 		}
 	}()
@@ -74,7 +74,7 @@ func (r *Recorder) Start() error {
 		recordPath := finalPath
 		if r.AppCnf.Recorder.TemporaryDir != nil && *r.AppCnf.Recorder.TemporaryDir != "" {
 			recordPath = path.Join(*r.AppCnf.Recorder.TemporaryDir, r.Req.GetRoomId())
-			r.Logger.Infof("using temporary recording path: %s", recordPath)
+			r.Logger.Infof("Using temporary recording path: %s", recordPath)
 		}
 		r.recordingFilePath = path.Join(recordPath, fileName)
 
@@ -107,7 +107,7 @@ func (r *Recorder) Start() error {
 func (r *Recorder) Close(task plugnmeet.RecordingTasks, err error) {
 	r.closeOnce.Do(func() {
 		log := r.Logger.WithField("closeTask", task)
-		log.Infoln("starting to close recorder")
+		log.Infoln("Closing recorder")
 
 		// timeout for graceful shutdown
 		shutdownCtx, cancel := context.WithTimeout(r.ctx, shutdownTimeout)
@@ -124,9 +124,9 @@ func (r *Recorder) Close(task plugnmeet.RecordingTasks, err error) {
 
 		select {
 		case <-done:
-			log.Infoln("graceful shutdown finished")
+			log.Infoln("Graceful shutdown finished")
 		case <-shutdownCtx.Done():
-			log.Errorln("graceful shutdown timed out, forcing close")
+			log.Errorln("Graceful shutdown timed out, forcing close")
 		}
 
 		if r.OnAfterCloseCallback != nil {

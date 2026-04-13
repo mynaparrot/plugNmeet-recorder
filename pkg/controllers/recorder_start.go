@@ -16,7 +16,7 @@ func (c *RecorderController) handleStartTask(req *plugnmeet.PlugNmeetToRecorder,
 	if ok {
 		return errors.New("this request in progress")
 	}
-	logger.Infoln("received new start task")
+	logger.Infoln("Received new start task")
 
 	rc := &recorder.Recorder{
 		AppCnf:               c.cnf,
@@ -66,10 +66,9 @@ func (c *RecorderController) onAfterStart(req *plugnmeet.PlugNmeetToRecorder, lo
 		RecorderId:  req.RecorderId,
 		RoomTableId: req.RoomTableId,
 	}
-	logger.Infof("notifying to plugnmeet: %+v", toSend)
+	logger.Infof("Notifying to plugnmeet: %+v", toSend)
 
-	_, err := c.notifier.NotifyToPlugNmeet(toSend)
-	if err != nil {
+	if _, err := c.notifier.NotifyToPlugNmeet(toSend); err != nil {
 		logger.WithError(err).Errorln("failed to notify to plugnmeet")
 	}
 }

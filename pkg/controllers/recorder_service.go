@@ -13,9 +13,8 @@ func (c *RecorderController) startRecordingService() {
 	// subscribe to channel for receiving tasks
 	_, err := c.cnf.NatsConn.Subscribe(c.cnf.NatsInfo.Recorder.RecorderChannel, func(msg *nats.Msg) {
 		req := new(plugnmeet.PlugNmeetToRecorder)
-		err := proto.Unmarshal(msg.Data, req)
-		if err != nil {
-			logger.Errorln(err)
+		if err := proto.Unmarshal(msg.Data, req); err != nil {
+			logger.WithError(err).Error("Failed to unmarshal message")
 			return
 		}
 		if req.From != "plugnmeet" {
@@ -68,12 +67,12 @@ func (c *RecorderController) startRecordingService() {
 				}
 			}
 		default:
-			taskLogger.Errorf("invalid task %s received", req.Task.String())
+			taskLogger.Errorf("Invalid task %s received", req.Task.String())
 		}
 	})
 
 	if err != nil {
-		logger.WithError(err).Fatalln("failed to subscribe to recorder channel")
+		logger.WithError(err).Fatalln("Failed to subscribe to recorder channel")
 	}
-	logger.Infoln("recorder service started successfully")
+	logger.Infoln("Recorder service started successfully")
 }

@@ -25,7 +25,7 @@ func (r *Recorder) launchXvfb() error {
 		"-dpi", fmt.Sprintf("%d", r.AppCnf.Recorder.XvfbDpi),
 		"+extension", "RANDR",
 	}
-	log.WithField("args", args).Infof("creating X display")
+	log.WithField("args", args).Infof("Creating X display")
 
 	xvfb := exec.CommandContext(r.ctx, "Xvfb", args...)
 	xvfb.Stderr = &infoLogger{cmd: "xvfb", logger: log}
@@ -39,8 +39,7 @@ func (r *Recorder) launchXvfb() error {
 	go func() {
 		err := r.xvfbCmd.Wait()
 		if err != nil {
-			var exitErr *exec.ExitError
-			if errors.As(err, &exitErr) {
+			if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
 				// Don't log expected exit codes during a graceful shutdown.
 				if exitErr.ExitCode() != -1 && exitErr.ExitCode() != 255 {
 					log.Errorf("xvfb exited with unexpected code: %d", exitErr.ExitCode())
@@ -57,7 +56,7 @@ func (r *Recorder) closeXvfb(log *logrus.Entry) {
 	defer r.Unlock()
 
 	if r.xvfbCmd != nil {
-		log.Infoln("closing X display")
+		log.Infoln("Closing X display")
 
 		if err := r.xvfbCmd.Process.Signal(os.Interrupt); err != nil && !errors.Is(err, os.ErrProcessDone) {
 			log.Errorf("failed to interrupt X display: %v, trying to kill", err)

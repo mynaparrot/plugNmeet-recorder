@@ -24,7 +24,7 @@ func NewNatsConnection(appCnf *config.AppConfig) error {
 		if err != nil {
 			// This will only be fatal on the first connection attempt.
 			// On reconnect, the NATS client logs the error from the handler but doesn't exit.
-			log.Fatalf("failed to generate nats auth token: %v", err)
+			log.Fatalf("Failed to generate NATS auth token: %v", err)
 		}
 		return token
 	}

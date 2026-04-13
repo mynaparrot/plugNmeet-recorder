@@ -21,7 +21,7 @@ func (c *RecorderController) handleStopTask(req *plugnmeet.PlugNmeetToRecorder, 
 		"roomId":      req.RoomId,
 		"method":      "handleStopTask",
 	})
-	log.Infoln("received new stop task")
+	log.Infoln("Received new stop task")
 
 	var tasksToCheck []plugnmeet.RecordingTasks
 	switch req.Task {
@@ -57,7 +57,7 @@ func (c *RecorderController) getAndDeleteRecorderInProgress(tableId int64, task 
 	}
 	process, ok := val.(*recorder.Recorder)
 	if !ok {
-		log.Errorf("invalid type in recordersInProgress for id %s", id)
+		log.Errorf("Invalid type in recordersInProgress for id %s", id)
 		return nil, false
 	}
 	return process, true

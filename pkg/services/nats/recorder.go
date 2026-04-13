@@ -118,12 +118,12 @@ func (s *NatsService) UpdateCurrentProgress(progress int) error {
 func (s *NatsService) DeleteRecorder() {
 	kv, err := s.js.KeyValue(s.ctx, s.app.NatsInfo.Recorder.RecorderInfoKv)
 	if err != nil {
-		s.logger.WithError(err).Errorln("recorder info bucket not found")
+		s.logger.WithError(err).Error("Recorder info bucket not found")
 		return
 	}
 
 	recorderId := s.app.Recorder.Id
-	s.logger.Infof("performing graceful shutdown for recorder: %s", recorderId)
+	s.logger.Infof("Performing graceful shutdown for recorder: %s", recorderId)
 
 	// Use the shared variables to define all fields.
 	fields := []string{
@@ -139,7 +139,7 @@ func (s *NatsService) DeleteRecorder() {
 		key := utils.FormatRecorderKey(recorderId, field)
 		if err := kv.Purge(s.ctx, key); err != nil {
 			// Log the error but continue trying to delete other keys.
-			s.logger.WithError(err).Errorf("failed to purge recorder key: %s", key)
+			s.logger.WithError(err).Errorf("Failed to purge recorder key: %s", key)
 		}
 	}
 }

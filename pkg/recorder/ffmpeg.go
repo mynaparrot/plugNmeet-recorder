@@ -51,7 +51,7 @@ func (r *Recorder) launchFfmpegProcess() error {
 		args = append(args, r.recordingFilePath)
 	}
 	log := r.Logger.WithField("args", args)
-	log.Infof("starting ffmpeg process")
+	log.Infof("Starting ffmpeg process")
 
 	ffmpegCmd := exec.CommandContext(r.ctx, "ffmpeg", args...)
 	// Pass the contextual logger to the infoLogger for stderr
@@ -66,8 +66,7 @@ func (r *Recorder) launchFfmpegProcess() error {
 	go func() {
 		err := r.ffmpegCmd.Wait()
 		if err != nil {
-			var exitErr *exec.ExitError
-			if errors.As(err, &exitErr) {
+			if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
 				// Don't log expected exit codes during shutdown.
 				if exitErr.ExitCode() != -1 && exitErr.ExitCode() != 255 {
 					log.Errorf("ffmpeg exited with unexpected code: %d", exitErr.ExitCode())
@@ -90,10 +89,10 @@ func (r *Recorder) closeFfmpeg(log *logrus.Entry) {
 	defer r.Unlock()
 
 	if r.ffmpegCmd != nil {
-		log.Infoln("closing ffmpeg")
+		log.Infoln("Closing ffmpeg")
 
 		if err := r.ffmpegCmd.Process.Signal(os.Interrupt); err != nil && !errors.Is(err, os.ErrProcessDone) {
-			log.Errorf("failed to interrupt ffmpeg: %v, trying to kill", err)
+			log.Errorf("Failed to interrupt ffmpeg: %v, trying to kill", err)
 			_ = r.ffmpegCmd.Process.Kill()
 		}
 		r.ffmpegCmd = nil

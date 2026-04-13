@@ -19,7 +19,7 @@ func (r *Recorder) createPulseSink() error {
 		fmt.Sprintf("sink_name=\"%s\"", r.pulseSinkName),
 		fmt.Sprintf("sink_properties=device.description=\"%s\"", r.pulseSinkName),
 	}
-	log.WithField("args", args).Infof("creating pulse sink")
+	log.WithField("args", args).Infof("Creating pulse sink")
 
 	cmd := exec.CommandContext(r.ctx, "pactl", args...)
 	b, err := cmd.CombinedOutput()
@@ -29,7 +29,7 @@ func (r *Recorder) createPulseSink() error {
 
 	r.Lock()
 	r.pulseSinkId = strings.TrimSpace(string(b))
-	log.WithField("pulseSinkId", r.pulseSinkId).Infof("pulse sink created successfully")
+	log.WithField("pulseSinkId", r.pulseSinkId).Infof("Pulse sink created successfully")
 	r.Unlock()
 
 	return nil
@@ -40,11 +40,11 @@ func (r *Recorder) closePulse(log *logrus.Entry, ctx context.Context) {
 	defer r.Unlock()
 
 	if r.pulseSinkId != "" {
-		log.Infof("unloading pulse module: %s", r.pulseSinkId)
+		log.Infof("Unloading pulse module: %s", r.pulseSinkId)
 
 		cmd := exec.CommandContext(ctx, "pactl", "unload-module", r.pulseSinkId)
 		if _, err := cmd.CombinedOutput(); err != nil {
-			log.Errorf("failed to unload pulse sink: %v", err)
+			log.Errorf("Failed to unload pulse sink: %v", err)
 		}
 		r.pulseSinkId = ""
 	}

@@ -28,16 +28,16 @@ func (c *RecorderController) startTranscodingService() {
 
 	consumer, err := c.cnf.JetStream.Consumer(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, utils.TranscoderConsumerDurable)
 	if err != nil {
-		logger.WithError(err).Fatalln("failed to create consumer for transcoding jobs")
+		logger.WithError(err).Fatalln("Failed to create consumer for transcoding jobs")
 	}
 
-	logger.Infoln("transcoding service started successfully")
+	logger.Infoln("Transcoding service started successfully")
 
 	// Single loop ensures that only one job is processed at a time by this worker instance.
 	for {
 		select {
 		case <-c.ctx.Done():
-			logger.Infoln("closing transcoding worker")
+			logger.Infoln("Closing transcoding worker")
 			return
 		default:
 			// Fetch will block until a message is available or the timeout is reached.
@@ -48,7 +48,7 @@ func (c *RecorderController) startTranscodingService() {
 				if errors.Is(err, context.DeadlineExceeded) {
 					continue
 				}
-				logger.WithError(err).Errorln("failed to fetch messages")
+				logger.WithError(err).Errorln("Failed to fetch messages")
 				// Backoff before retrying on other errors
 				time.Sleep(2 * time.Second)
 				continue
@@ -58,13 +58,13 @@ func (c *RecorderController) startTranscodingService() {
 			for msg := range batch.Messages() {
 				meta, err := msg.Metadata()
 				if err != nil {
-					logger.WithError(err).Errorln("failed to get message metadata")
+					logger.WithError(err).Errorln("Failed to get message metadata")
 					_ = msg.NakWithDelay(5 * time.Second)
 					continue
 				}
 
 				if meta.NumDelivered > maxTranscodingRetries {
-					logger.Warnf("transcoding job failed after %d attempts, removing from queue", maxTranscodingRetries)
+					logger.Warnf("Transcoding job failed after %d attempts, removing from queue", maxTranscodingRetries)
 					// Ack the message to prevent it from being redelivered
 					_ = msg.Ack()
 					continue
@@ -80,9 +80,8 @@ func (c *RecorderController) startTranscodingService() {
 
 func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus.Entry) {
 	task := new(plugnmeet.TranscodingTask)
-	err := proto.Unmarshal(msg.Data(), task)
-	if err != nil {
-		logger.WithError(err).Errorln("failed to unmarshal transcoding task, sending NAK")
+	if err := proto.Unmarshal(msg.Data(), task); err != nil {
+		logger.WithError(err).Errorln("Failed to unmarshal transcoding task, sending NAK")
 		// If we can't even unmarshal, it's likely a bad message. Nak it with a delay.
 		_ = msg.NakWithDelay(5 * time.Second)
 		return
@@ -101,7 +100,7 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 	defer func() {
 		if !acked {
 			// If we haven't acked by the end, something went wrong. Nak it.
-			log.Warnln("transcoding failed or not acknowledged, sending NAK to re-queue job")
+			log.Warnln("Transcoding failed or not acknowledged, sending NAK to re-queue job")
 			_ = msg.NakWithDelay(10 * time.Second) // Re-queue with a delay
 		}
 	}()
@@ -114,11 +113,11 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		"rawFilePath":   rawFilePath,
 		"finalFileName": finalFileName,
 		"outputFile":    outputFile,
-	}).Info("starting new transcoding job")
+	}).Info("Starting new transcoding job")
 
 	// Check if the raw file exists before proceeding
 	if _, err := os.Stat(rawFilePath); os.IsNotExist(err) {
-		log.WithError(err).Errorf("raw file not found: %s. Cannot transcode.", rawFilePath)
+		log.WithError(err).Errorf("Raw file not found: %s. Cannot transcode.", rawFilePath)
 		// This is a permanent error for this specific file, so we ACK it to remove from queue
 		// and prevent endless re-delivery.
 		_ = msg.Ack()
@@ -129,56 +128,54 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 	if c.cnf.Recorder.PostMp4Convert {
 		preArgs, err := shell.Fields(c.cnf.FfmpegSettings.PostRecording.PreInput, nil)
 		if err != nil {
-			log.WithError(err).Errorln("failed to parse ffmpeg pre-input args")
+			log.WithError(err).Errorln("Failed to parse ffmpeg pre-input args")
 			return // will be NAK'd
 		}
 		postArgs, err := shell.Fields(c.cnf.FfmpegSettings.PostRecording.PostInput, nil)
 		if err != nil {
-			log.WithError(err).Errorln("failed to parse ffmpeg post-input args")
+			log.WithError(err).Errorln("Filed to parse ffmpeg post-input args")
 			return // will be NAK'd
 		}
 
 		args := append(preArgs, "-i", rawFilePath)
 		args = append(args, postArgs...)
 		args = append(args, outputFile)
-		log.Infof("starting post recording ffmpeg process with args: %s", strings.Join(args, " "))
+		log.Infof("Starting post recording ffmpeg process with args: %s", strings.Join(args, " "))
 
 		cmd := exec.CommandContext(c.ctx, "ffmpeg", args...)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			log.WithError(err).Errorf("ffmpeg transcoding failed. Keeping raw file: %s as output because of error. Output: %s", task.FileName, string(output))
+			log.WithError(err).Errorf("Transcoding (ffmpeg) failed. Keeping raw file: %s as output because of error. Output: %s", task.FileName, string(output))
 			// remove the new file if it was partially created
 			_ = os.Remove(outputFile)
 			// keep the old file as output by setting finalFileName to raw file
 			finalFileName = task.FileName
 			outputFile = rawFilePath
 			return // Deferred NAK will handle re-queueing
-		} else {
-			log.Infoln("ffmpeg transcoding successful")
-			// Remove the raw file only if transcoding was successful and a new file was created
-			err = os.Remove(rawFilePath)
-			if err != nil {
-				log.WithError(err).Warnf("failed to remove raw file: %s", rawFilePath)
-			}
+		}
+
+		log.Infoln("Transcoding (ffmpeg) completed successfully")
+		// Remove the raw file only if transcoding was successful and a new file was created
+		if err = os.Remove(rawFilePath); err != nil {
+			log.WithError(err).Warnf("Failed to remove raw file: %s", rawFilePath)
 		}
 	} else {
 		// If PostMp4Convert is false, just rename the raw file to the final .mp4 name
 		// This assumes the raw file is already in a playable format or intended to be kept as is.
-		err := os.Rename(rawFilePath, outputFile)
-		if err != nil {
-			log.WithError(err).Errorf("keeping the raw file: %s as output because of error during rename: %s", task.FileName, err.Error())
+		if err := os.Rename(rawFilePath, outputFile); err != nil {
+			log.WithError(err).Errorf("Keeping the raw file: %s as output because of error during rename: %s", task.FileName, err.Error())
 			// keep the old file as output
 			finalFileName = task.FileName
 			outputFile = rawFilePath
 			return // Deferred NAK will handle re-queueing
 		}
-		log.Infoln("raw file renamed to final output file")
+		log.Infoln("Raw file renamed to final output file")
 	}
 
 	// Calculate file size and relative path for notification
 	stat, err := os.Stat(outputFile)
 	if err != nil {
-		log.WithError(err).Errorln("failed to stat final output file after processing")
+		log.WithError(err).Errorln("Failed to stat final output file after processing")
 		return // Deferred NAK will handle re-queueing
 	}
 
@@ -187,12 +184,12 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 
 	basePath, err := filepath.Abs(c.cnf.Recorder.CopyToPath.MainPath)
 	if err != nil {
-		log.WithError(err).Errorf("could not determine absolute path for main_path '%s', falling back to string trimming", c.cnf.Recorder.CopyToPath.MainPath)
+		log.WithError(err).Errorf("Could not determine absolute path for main_path '%s', falling back to string trimming", c.cnf.Recorder.CopyToPath.MainPath)
 		relativePath = strings.TrimPrefix(outputFile, c.cnf.Recorder.CopyToPath.MainPath) // fallback
 	} else {
 		absOutputFilePath, err := filepath.Abs(outputFile)
 		if err != nil {
-			log.WithError(err).Errorf("could not determine absolute path for output_file_path '%s', falling back to string trimming", outputFile)
+			log.WithError(err).Errorf("Could not determine absolute path for output_file_path '%s', falling back to string trimming", outputFile)
 			relativePath = strings.TrimPrefix(outputFile, c.cnf.Recorder.CopyToPath.MainPath) // fallback
 		} else {
 			relativePath, err = filepath.Rel(basePath, absOutputFilePath)
@@ -200,7 +197,7 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 				log.WithFields(logrus.Fields{
 					"base_path":   basePath,
 					"output_path": absOutputFilePath,
-				}).WithError(err).Warnf("could not make path relative for %s, falling back to string trimming", absOutputFilePath)
+				}).WithError(err).Warnf("Could not make path relative for %s, falling back to string trimming", absOutputFilePath)
 				relativePath = strings.TrimPrefix(absOutputFilePath, basePath)
 			}
 		}
@@ -220,11 +217,10 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		RecordingVariant: &task.RecordingVariant,
 	}
 
-	log.Infof("notifying plugnmeet with data: %+v", toSend)
+	log.Infof("Notifying plugnmeet with data: %+v", toSend)
 
-	_, err = c.notifier.NotifyToPlugNmeet(toSend)
-	if err != nil {
-		log.WithError(err).Errorln("failed to notify plugnmeet")
+	if _, err = c.notifier.NotifyToPlugNmeet(toSend); err != nil {
+		log.WithError(err).Errorln("Failed to notify plugnmeet")
 		// This is a critical failure, but the file is processed. We still ACK the NATS message.
 	}
 
@@ -242,27 +238,27 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		}
 		marshal, err := json.Marshal(data)
 		if err != nil {
-			log.WithError(err).Errorln("failed to marshal post-processing data for scripts")
+			log.WithError(err).Errorln("Failed to marshal post-processing data for scripts")
 		} else {
 			for _, script := range c.cnf.Recorder.PostProcessingScripts {
 				log.Infof("running post-processing script: %s", script)
 				cmd := exec.Command("/bin/sh", script, string(marshal))
 				scriptOutput, scriptErr := cmd.CombinedOutput()
 				if scriptErr != nil {
-					log.WithError(scriptErr).Errorf("post-processing script failed: %s, Output: %s", script, string(scriptOutput))
+					log.WithError(scriptErr).Errorf("Post-processing script failed: %s, Output: %s", script, string(scriptOutput))
 				} else {
-					log.Infof("post-processing script %s finished. Output: %s", script, string(scriptOutput))
+					log.Infof("Post-processing script %s finished. Output: %s", script, string(scriptOutput))
 				}
 			}
 		}
 	}
-	log.Infoln("post process recording has been finished")
+	log.Infoln("Post process recording has been finished")
 
 	// Everything was successful, ACK the message so it's not processed again.
 	if err := msg.Ack(); err != nil {
-		log.WithError(err).Errorln("failed to send ACK for completed job")
+		log.WithError(err).Errorln("Failed to send ACK for completed job")
 	} else {
 		acked = true // Mark as acked
-		log.Infoln("transcoding job completed and acknowledged")
+		log.Infoln("Transcoding job completed and acknowledged")
 	}
 }
