@@ -30,7 +30,7 @@ RUN apt-get update && \
     apt-get install -y curl wget gnupg unzip fonts-noto pulseaudio ffmpeg xvfb rsync
 
 # install chrome using livekit/chrome-installer
-COPY --from=livekit/chrome-installer:125.0.6422.141 /chrome-installer /chrome-installer
+COPY --from=livekit/chrome-installer:146.0.7680.177 /chrome-installer /chrome-installer
 RUN /chrome-installer/install-chrome "$TARGETPLATFORM"
 
 # clean up
