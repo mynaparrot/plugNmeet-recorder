@@ -16,6 +16,10 @@ recorder:
   # Enable this to post-process the raw MP4 recording for improved quality.
   # Note: This increases CPU usage and processing time.
   post_mp4_convert: true
+  # Optional: Set a CPU usage limit (in percent) for starting new transcoding jobs when running in "both" mode and post_mp4_convert = true
+  # If the current CPU usage exceeds this value, the transcoding task will be delayed. This helps prioritize live recordings over transcoding.
+  # Defaults to 80.0. Set to 0 to disable.
+  transcoding_cpu_limit_both_mode: 80.0
   # Specify a custom Chrome binary path if required.
   custom_chrome_path: ""
   # Optional: Set the dimensions of the virtual recording window.

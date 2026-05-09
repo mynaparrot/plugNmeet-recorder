@@ -24,18 +24,19 @@ type AppConfig struct {
 }
 
 type RecorderInfo struct {
-	Id                    string             `yaml:"id"`
-	Mode                  string             `yaml:"mode"`
-	MaxLimit              uint64             `yaml:"max_limit"`
-	Debug                 bool               `yaml:"debug"`
-	PostMp4Convert        bool               `yaml:"post_mp4_convert"`
-	CustomChromePath      *string            `yaml:"custom_chrome_path"`
-	Width                 uint64             `yaml:"width"`
-	Height                uint64             `yaml:"height"`
-	XvfbDpi               uint64             `yaml:"xvfb_dpi"`
-	TemporaryDir          *string            `yaml:"temporary_dir"`
-	CopyToPath            CopyToPathSettings `yaml:"copy_to_path"`
-	PostProcessingScripts []string           `yaml:"post_processing_scripts"`
+	Id                          string             `yaml:"id"`
+	Mode                        string             `yaml:"mode"`
+	MaxLimit                    uint64             `yaml:"max_limit"`
+	Debug                       bool               `yaml:"debug"`
+	PostMp4Convert              bool               `yaml:"post_mp4_convert"`
+	CustomChromePath            *string            `yaml:"custom_chrome_path"`
+	Width                       uint64             `yaml:"width"`
+	Height                      uint64             `yaml:"height"`
+	XvfbDpi                     uint64             `yaml:"xvfb_dpi"`
+	TemporaryDir                *string            `yaml:"temporary_dir"`
+	CopyToPath                  CopyToPathSettings `yaml:"copy_to_path"`
+	PostProcessingScripts       []string           `yaml:"post_processing_scripts"`
+	TranscodingCpuLimitBothMode *float64           `yaml:"transcoding_cpu_limit_both_mode"`
 }
 
 type CopyToPathSettings struct {
@@ -95,6 +96,9 @@ func (a *AppConfig) setDefaultConfig() {
 	}
 	if a.Recorder.XvfbDpi == 0 {
 		a.Recorder.XvfbDpi = 96
+	}
+	if a.Recorder.TranscodingCpuLimitBothMode == nil {
+		a.Recorder.TranscodingCpuLimitBothMode = new(80.0)
 	}
 
 	if a.FfmpegSettings == nil {

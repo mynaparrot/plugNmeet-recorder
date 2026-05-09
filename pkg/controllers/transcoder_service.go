@@ -16,6 +16,7 @@ import (
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-protocol/utils"
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"mvdan.cc/sh/v3/shell"
@@ -40,6 +41,28 @@ func (c *RecorderController) startTranscodingService() {
 			logger.Infoln("Closing transcoding worker")
 			return
 		default:
+			// In "both" mode, we check CPU usage before fetching a new transcoding job when PostMp4Convert = true
+			// If usage is high, the service pauses to prioritize active recordings.
+			// This prevents transcoding from blocking live sessions and avoids NATS message retry failures.
+			if c.cnf.Recorder.Mode == "both" && c.cnf.Recorder.PostMp4Convert && c.cnf.Recorder.TranscodingCpuLimitBothMode != nil && *c.cnf.Recorder.TranscodingCpuLimitBothMode > 0 {
+				percents, err := cpu.Percent(time.Second, false)
+				if err != nil {
+					logger.WithError(err).Errorln("failed to get cpu usage, will proceed to fetch job")
+				} else if len(percents) > 0 {
+					if percents[0] > *c.cnf.Recorder.TranscodingCpuLimitBothMode {
+						logger.Warnf("cpu usage %f is higher than threshold %f. delaying fetching new transcoding task", percents[0], *c.cnf.Recorder.TranscodingCpuLimitBothMode)
+						// wait before checking again, also check for context cancellation
+						select {
+						case <-time.After(15 * time.Second):
+							continue // restart the loop
+						case <-c.ctx.Done():
+							logger.Infoln("context cancelled, closing transcoding worker")
+							return
+						}
+					}
+				}
+			}
+
 			// Fetch will block until a message is available or the timeout is reached.
 			// Using FetchMaxWait to prevent indefinite blocking if context is canceled.
 			batch, err := consumer.Fetch(1, jetstream.FetchMaxWait(5*time.Second))
