@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.4](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.3...v2.0.4) (2026-05-09)
+
+
+### Bug Fixes
+
+* added missing `-threads 1` ([15d8beb](https://github.com/mynaparrot/plugNmeet-recorder/commit/15d8beb5d0367b171e057acb948a67d01e838878))
+* added optional config param `transcoding_cpu_limit_both_mode` ([4e2862e](https://github.com/mynaparrot/plugNmeet-recorder/commit/4e2862e5075f9f2d86cd2e9c7704356a9908dd61))
+* bump proto ([7f70097](https://github.com/mynaparrot/plugNmeet-recorder/commit/7f700972cfb86dddd7ca4b36e29ac883cbb9b665))
+* consider CPU usage during selecting recorder ([70c24eb](https://github.com/mynaparrot/plugNmeet-recorder/commit/70c24ebee29798b49c2ca455252c73abfdf4e27e))
+* declared app mode clearly ([854956f](https://github.com/mynaparrot/plugNmeet-recorder/commit/854956f2249705300ddd2fe33231833a976fed12))
+* **deps:** update module github.com/nats-io/nats.go to v1.51.0 ([448df7b](https://github.com/mynaparrot/plugNmeet-recorder/commit/448df7b1aa47f04272c8bf811fede6206a6f6f2a))
+* **deps:** update module github.com/nats-io/nats.go to v1.51.0 ([1443759](https://github.com/mynaparrot/plugNmeet-recorder/commit/1443759e2e122f317bfde39ccbd0e984939d8a40))
+* updated logs ([d220ccb](https://github.com/mynaparrot/plugNmeet-recorder/commit/d220ccbfa0a499120903a83b46bb7635bb9e8d47))
+* updated logs ([7ab6b25](https://github.com/mynaparrot/plugNmeet-recorder/commit/7ab6b253757a409fcebdb351aea69c9cd7e6e05f))
+* use `sync/atomic` ([0b275a2](https://github.com/mynaparrot/plugNmeet-recorder/commit/0b275a2d43067386b08b48e82bad5469e3748300))
+
 ## [2.0.3](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.2...v2.0.3) (2026-04-04)
 
 
