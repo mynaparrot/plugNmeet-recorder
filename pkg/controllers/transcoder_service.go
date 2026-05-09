@@ -15,6 +15,7 @@ import (
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-protocol/utils"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/sirupsen/logrus"
@@ -45,7 +46,7 @@ func (c *RecorderController) startTranscodingService() {
 			// In "both" mode, we check CPU usage before fetching a new transcoding job when PostMp4Convert = true
 			// If usage is high, the service pauses to prioritize active recordings.
 			// This prevents transcoding from blocking live sessions and avoids NATS message retry failures.
-			if cnf.Mode == "both" && cnf.PostMp4Convert && cnf.TranscodingCpuLimitBothMode != nil && *cnf.TranscodingCpuLimitBothMode > 0 {
+			if cnf.Mode == config.ModeBoth && cnf.PostMp4Convert && cnf.TranscodingCpuLimitBothMode != nil && *cnf.TranscodingCpuLimitBothMode > 0 {
 				percents, err := cpu.Percent(time.Second, false)
 				if err != nil {
 					logger.WithError(err).Errorln("failed to get cpu usage, will proceed to fetch job")

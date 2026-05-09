@@ -48,7 +48,7 @@ func NewRecorderController(ctx context.Context, cnf *config.AppConfig, logger *l
 
 func (c *RecorderController) BootUp() {
 	// Only register as an active recorder if we are in a mode that can handle recordings.
-	if c.cnf.Recorder.Mode != "transcoderOnly" {
+	if c.cnf.Recorder.Mode != config.ModeTranscoderOnly {
 		c.logger.Info("Registering as an active recorder")
 		// add this recorder to the bucket
 		if err := c.ns.RegisterAsActiveRecorder(pingInterval); err != nil {
@@ -66,9 +66,9 @@ func (c *RecorderController) BootUp() {
 	}()
 
 	switch c.cnf.Recorder.Mode {
-	case "recorderOnly":
+	case config.ModeRecorderOnly:
 		go c.startRecordingService()
-	case "transcoderOnly":
+	case config.ModeTranscoderOnly:
 		go c.startTranscodingService()
 	default:
 		// by default, it will be both
@@ -88,7 +88,7 @@ func (c *RecorderController) CallEndToAll() {
 	c.logger.Infoln("Received request to shut down services")
 
 	// Only perform recorder-specific cleanup if we are not in transcoderOnly mode.
-	if c.cnf.Recorder.Mode != "transcoderOnly" {
+	if c.cnf.Recorder.Mode != config.ModeTranscoderOnly {
 		c.logger.Infoln("Closing all active recorders...")
 		var wg sync.WaitGroup
 		c.recordersInProgress.Range(func(key, value interface{}) bool {

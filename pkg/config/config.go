@@ -9,6 +9,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// AppMode defines the application's operating mode.
+type AppMode string
+
+const (
+	ModeRecorderOnly   AppMode = "recorderOnly"   // only recording and RTMP broadcasting
+	ModeTranscoderOnly AppMode = "transcoderOnly" // only post-processing files e.g. transcoding in MP4
+	ModeBoth           AppMode = "both"           // both recording/RTMP and post-processing
+)
+
 type AppConfig struct {
 	NatsConn       *nats.Conn
 	JetStream      jetstream.JetStream
@@ -25,7 +34,7 @@ type AppConfig struct {
 
 type RecorderInfo struct {
 	Id                          string             `yaml:"id"`
-	Mode                        string             `yaml:"mode"`
+	Mode                        AppMode            `yaml:"mode"`
 	MaxLimit                    uint64             `yaml:"max_limit"`
 	Debug                       bool               `yaml:"debug"`
 	PostMp4Convert              bool               `yaml:"post_mp4_convert"`
@@ -82,9 +91,18 @@ func New(a *AppConfig) *AppConfig {
 func (a *AppConfig) setDefaultConfig() {
 	a.IsShuttingDown = new(atomic.Bool)
 
-	if a.Recorder.Mode == "" {
-		a.Recorder.Mode = "both"
+	// Set default mode or validate the provided one.
+	switch a.Recorder.Mode {
+	case ModeBoth, ModeRecorderOnly, ModeTranscoderOnly:
+		// valid mode, do nothing
+	case "":
+		// if not set, default to both
+		a.Recorder.Mode = ModeBoth
+	default:
+		// if the value is not recognized, exit
+		logrus.Fatalf("Invalid value for -mode flag: '%s'. Allowed values are 'both', 'recorderOnly', 'transcoderOnly'.", a.Recorder.Mode)
 	}
+
 	if a.Recorder.MaxLimit == 0 {
 		a.Recorder.MaxLimit = 10
 	}
