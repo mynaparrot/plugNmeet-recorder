@@ -31,6 +31,7 @@ func (c *RecorderController) startTranscodingService() {
 	if err != nil {
 		logger.WithError(err).Fatalln("Failed to create consumer for transcoding jobs")
 	}
+	cnf := c.cnf.Recorder
 
 	logger.Infoln("Transcoding service started successfully")
 
@@ -44,13 +45,13 @@ func (c *RecorderController) startTranscodingService() {
 			// In "both" mode, we check CPU usage before fetching a new transcoding job when PostMp4Convert = true
 			// If usage is high, the service pauses to prioritize active recordings.
 			// This prevents transcoding from blocking live sessions and avoids NATS message retry failures.
-			if c.cnf.Recorder.Mode == "both" && c.cnf.Recorder.PostMp4Convert && c.cnf.Recorder.TranscodingCpuLimitBothMode != nil && *c.cnf.Recorder.TranscodingCpuLimitBothMode > 0 {
+			if cnf.Mode == "both" && cnf.PostMp4Convert && cnf.TranscodingCpuLimitBothMode != nil && *cnf.TranscodingCpuLimitBothMode > 0 {
 				percents, err := cpu.Percent(time.Second, false)
 				if err != nil {
 					logger.WithError(err).Errorln("failed to get cpu usage, will proceed to fetch job")
 				} else if len(percents) > 0 {
-					if percents[0] > *c.cnf.Recorder.TranscodingCpuLimitBothMode {
-						logger.Warnf("cpu usage %f is higher than threshold %f. delaying fetching new transcoding task", percents[0], *c.cnf.Recorder.TranscodingCpuLimitBothMode)
+					if percents[0] > *cnf.TranscodingCpuLimitBothMode {
+						logger.Warnf("cpu usage %f is higher than threshold %f. delaying fetching new transcoding task", percents[0], *cnf.TranscodingCpuLimitBothMode)
 						// wait before checking again, also check for context cancellation
 						select {
 						case <-time.After(15 * time.Second):
