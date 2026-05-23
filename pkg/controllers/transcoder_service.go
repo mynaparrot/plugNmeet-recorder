@@ -95,44 +95,82 @@ func (c *RecorderController) startTranscodingService() {
 					continue
 				}
 
-				// This is a blocking call. The loop will not continue
-				// to the next Fetch until this transcoding is finished.
-				c.handleTranscoding(msg, logger)
+				task := new(plugnmeet.TranscodingTask)
+				if err := proto.Unmarshal(msg.Data(), task); err != nil {
+					logger.WithError(err).Errorln("Failed to unmarshal transcoding task, sending NAK")
+					// If we can't even unmarshal, it's likely a bad message. Nak it with a delay.
+					_ = msg.NakWithDelay(5 * time.Second)
+					return
+				}
+
+				// All the tasks are a blocking call. The loop will not continue to the next Fetch until this transcoding is finished.
+				log := logger.WithFields(logrus.Fields{
+					"recordingId": task.RecordingId,
+					"roomId":      task.RoomId,
+				})
+				var procErr error
+				switch v := task.TaskDetails.(type) {
+				case *plugnmeet.TranscodingTask_PostRecording:
+					log = log.WithField("task", "post_recording")
+					if procErr = c.handlePostRecordingTranscoding(task, v.PostRecording, log); procErr != nil {
+						// If we haven't acked by the end, something went wrong. Nak it.
+						log.WithError(procErr).Warnln("Transcoding failed or not acknowledged, sending NAK to re-queue job")
+						_ = msg.NakWithDelay(10 * time.Second) // Re-queue with a delay
+					} else {
+						// Everything was successful, ACK the message so it's not processed again.
+						if err := msg.Ack(); err != nil {
+							log.WithError(err).Errorln("Failed to send ACK for completed job")
+						} else {
+							log.Infoln("Transcoding job completed and acknowledged")
+						}
+					}
+				case *plugnmeet.TranscodingTask_MergeRecordings:
+					log = log.WithField("task", "merge_recordings")
+					if procErr = c.handleMergeRecordings(task, v.MergeRecordings, log); procErr != nil {
+						log.WithError(procErr).Warnln("Merging failed, sending NAK to re-queue job")
+						_ = msg.NakWithDelay(10 * time.Second)
+					} else {
+						// Everything was successful, ACK the message so it's not processed again.
+						if err := msg.Ack(); err != nil {
+							log.WithError(err).Errorln("Failed to send ACK for completed job")
+						} else {
+							log.Infoln("Merging job completed and acknowledged")
+						}
+					}
+				}
+
+				// send transcoding status finish event
+				toSend := &plugnmeet.RecorderToPlugNmeet{
+					From:        "recorder",
+					Status:      true,
+					Task:        plugnmeet.RecordingTasks_RECORDING_TRANSCODING_FINISHED,
+					Msg:         "success",
+					RecordingId: task.RecordingId,
+					RecorderId:  task.RecorderId,
+					RoomTableId: task.RoomTableId,
+				}
+				if procErr != nil {
+					toSend.Status = false
+					toSend.Msg = procErr.Error()
+				}
+				if _, err := c.notifier.NotifyToPlugNmeet(toSend); err != nil {
+					log.WithError(err).Errorln("failed to notify plugnmeet")
+				}
 			}
 		}
 	}
 }
 
-func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus.Entry) {
-	task := new(plugnmeet.TranscodingTask)
-	if err := proto.Unmarshal(msg.Data(), task); err != nil {
-		logger.WithError(err).Errorln("Failed to unmarshal transcoding task, sending NAK")
-		// If we can't even unmarshal, it's likely a bad message. Nak it with a delay.
-		_ = msg.NakWithDelay(5 * time.Second)
-		return
-	}
-
-	log := logger.WithFields(logrus.Fields{
-		"recordingId": task.RecordingId,
-		"roomId":      task.RoomId,
-		"filePath":    task.FilePath,
-		"fileName":    task.FileName,
-		"method":      "handleTranscoding",
+func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.TranscodingTask, taskDetails *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) error {
+	log = log.WithFields(logrus.Fields{
+		"filePath": taskDetails.FilePath,
+		"fileName": taskDetails.FileName,
+		"method":   "handlePostRecordingTranscoding",
 	})
 
-	// Use a deferred function to ensure the message is always NAK'd if not explicitly ACK'd.
-	acked := false
-	defer func() {
-		if !acked {
-			// If we haven't acked by the end, something went wrong. Nak it.
-			log.Warnln("Transcoding failed or not acknowledged, sending NAK to re-queue job")
-			_ = msg.NakWithDelay(10 * time.Second) // Re-queue with a delay
-		}
-	}()
-
-	rawFilePath := path.Join(task.FilePath, task.FileName)
+	rawFilePath := path.Join(taskDetails.FilePath, taskDetails.FileName)
 	finalFileName := fmt.Sprintf("%s.mp4", task.RecordingId)
-	outputFile := path.Join(task.FilePath, finalFileName)
+	outputFile := path.Join(taskDetails.FilePath, finalFileName)
 
 	log.WithFields(logrus.Fields{
 		"rawFilePath":   rawFilePath,
@@ -145,21 +183,19 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		log.WithError(err).Errorf("Raw file not found: %s. Cannot transcode.", rawFilePath)
 		// This is a permanent error for this specific file, so we ACK it to remove from queue
 		// and prevent endless re-delivery.
-		_ = msg.Ack()
-		acked = true
-		return
+		return nil
 	}
 
 	if c.cnf.Recorder.PostMp4Convert {
 		preArgs, err := shell.Fields(c.cnf.FfmpegSettings.PostRecording.PreInput, nil)
 		if err != nil {
 			log.WithError(err).Errorln("Failed to parse ffmpeg pre-input args")
-			return // will be NAK'd
+			return err
 		}
 		postArgs, err := shell.Fields(c.cnf.FfmpegSettings.PostRecording.PostInput, nil)
 		if err != nil {
 			log.WithError(err).Errorln("Filed to parse ffmpeg post-input args")
-			return // will be NAK'd
+			return err
 		}
 
 		args := append(preArgs, "-i", rawFilePath)
@@ -170,13 +206,13 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		cmd := exec.CommandContext(c.ctx, "ffmpeg", args...)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			log.WithError(err).Errorf("Transcoding (ffmpeg) failed. Keeping raw file: %s as output because of error. Output: %s", task.FileName, string(output))
+			log.WithError(err).Errorf("Transcoding (ffmpeg) failed. Keeping raw file: %s as output because of error. Output: %s", taskDetails.FileName, string(output))
 			// remove the new file if it was partially created
 			_ = os.Remove(outputFile)
 			// keep the old file as output by setting finalFileName to raw file
-			finalFileName = task.FileName
+			finalFileName = taskDetails.FileName
 			outputFile = rawFilePath
-			return // Deferred NAK will handle re-queueing
+			return err // NAK will handle re-queueing
 		}
 
 		log.Infoln("Transcoding (ffmpeg) completed successfully")
@@ -188,11 +224,11 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		// If PostMp4Convert is false, just rename the raw file to the final .mp4 name
 		// This assumes the raw file is already in a playable format or intended to be kept as is.
 		if err := os.Rename(rawFilePath, outputFile); err != nil {
-			log.WithError(err).Errorf("Keeping the raw file: %s as output because of error during rename: %s", task.FileName, err.Error())
+			log.WithError(err).Errorf("Keeping the raw file: %s as output because of error during rename: %s", taskDetails.FileName, err.Error())
 			// keep the old file as output
-			finalFileName = task.FileName
+			finalFileName = taskDetails.FileName
 			outputFile = rawFilePath
-			return // Deferred NAK will handle re-queueing
+			return err // NAK will handle re-queueing
 		}
 		log.Infoln("Raw file renamed to final output file")
 	}
@@ -201,7 +237,7 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 	stat, err := os.Stat(outputFile)
 	if err != nil {
 		log.WithError(err).Errorln("Failed to stat final output file after processing")
-		return // Deferred NAK will handle re-queueing
+		return err // NAK will handle re-queueing
 	}
 
 	size := float32(stat.Size()) / 1000000.0
@@ -239,51 +275,146 @@ func (c *RecorderController) handleTranscoding(msg jetstream.Msg, logger *logrus
 		RoomTableId:      task.RoomTableId,
 		FilePath:         relativePath,
 		FileSize:         float32(math.Round(float64(size)*100) / 100),
-		RecordingVariant: &task.RecordingVariant,
+		RecordingVariant: &taskDetails.RecordingVariant,
 	}
 
-	log.Infof("Notifying plugnmeet with data: %+v", toSend)
+	c.notifyAndRunPostProcessingScripts(toSend, outputFile, finalFileName, size, log)
+	log.Infoln("Post process recording has been finished")
 
-	if _, err = c.notifier.NotifyToPlugNmeet(toSend); err != nil {
-		log.WithError(err).Errorln("Failed to notify plugnmeet")
-		// This is a critical failure, but the file is processed. We still ACK the NATS message.
+	return nil
+}
+
+func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTask, taskDetails *plugnmeet.TranscodingTaskMergeRecordings, log *logrus.Entry) error {
+	if len(taskDetails.FilePaths) == 0 {
+		log.Errorln("no file paths provided for merging")
+		return errors.New("no file paths provided for merging")
+	}
+
+	// All files should be in the same directory. We'll use the path from the first file.
+	relativeOutputDir := filepath.Dir(taskDetails.FilePaths[0])
+	fullOutputDir := path.Join(c.cnf.Recorder.CopyToPath.MainPath, relativeOutputDir)
+
+	// Ensure the output directory exists
+	if err := os.MkdirAll(fullOutputDir, 0755); err != nil {
+		log.WithError(err).Errorf("failed to create output directory: %s", fullOutputDir)
+		return err
+	}
+
+	finalFileName := fmt.Sprintf("%s.mp4", task.RecordingId)
+	outputFile := path.Join(fullOutputDir, finalFileName)
+	log.Infof("merging files into: %s", outputFile)
+
+	// Create the file list for ffmpeg concat
+	fileListPath := path.Join(os.TempDir(), fmt.Sprintf("ffmpeg-concat-%s.txt", task.RecordingId))
+	file, err := os.Create(fileListPath)
+	if err != nil {
+		log.WithError(err).Errorln("failed to create ffmpeg file list")
+		return err
+	}
+	defer os.Remove(fileListPath) // Clean up the temp file
+
+	for _, p := range taskDetails.FilePaths {
+		abs, err := filepath.Abs(path.Join(c.cnf.Recorder.CopyToPath.MainPath, p))
+		if err != nil {
+			file.Close()
+			return err
+		}
+
+		// Check if file exists before adding to list
+		if _, err := os.Stat(abs); os.IsNotExist(err) {
+			file.Close()
+			log.WithError(err).Errorf("file not found for merging: %s", abs)
+			return err
+		}
+
+		// Write to the concat file for ffmpeg
+		if _, err := file.WriteString(fmt.Sprintf("file '%s'\n", abs)); err != nil {
+			log.WithError(err).Errorln("failed to write to ffmpeg file list")
+			file.Close()
+			return err
+		}
+	}
+	file.Close() // Close the file so ffmpeg can read it
+
+	// Execute FFMPEG command: ffmpeg -f concat -safe 0 -i file_list.txt -c copy output.mp4
+	args := []string{
+		"-f", "concat",
+		"-safe", "0",
+		"-i", fileListPath,
+		"-c", "copy",
+		outputFile,
+	}
+	log.Infof("Starting ffmpeg merge process with args: %s", strings.Join(args, " "))
+
+	cmd := exec.CommandContext(c.ctx, "ffmpeg", args...)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.WithError(err).Errorf("ffmpeg merge failed. Output: %s", string(output))
+		_ = os.Remove(outputFile) // remove partially created file
+		return err
+	}
+
+	log.Infoln("ffmpeg merge completed successfully")
+
+	// Notify plugnmeet
+	stat, err := os.Stat(outputFile)
+	if err != nil {
+		log.WithError(err).Errorln("failed to stat final output file after merging")
+		return err
+	}
+
+	size := float32(stat.Size()) / 1000000.0
+	relativePath := path.Join(relativeOutputDir, finalFileName)
+
+	toSend := &plugnmeet.RecorderToPlugNmeet{
+		From:        "recorder",
+		Status:      true,
+		Task:        plugnmeet.RecordingTasks_RECORDING_PROCEEDED, // Using existing task type
+		Msg:         "success",
+		RecordingId: task.RecordingId,
+		RecorderId:  task.RecorderId,
+		RoomTableId: task.RoomTableId,
+		FilePath:    relativePath,
+		FileSize:    float32(math.Round(float64(size)*100) / 100),
+	}
+	c.notifyAndRunPostProcessingScripts(toSend, outputFile, finalFileName, size, log)
+
+	log.Infoln("merge recordings process has been finished")
+	return nil
+}
+
+func (c *RecorderController) notifyAndRunPostProcessingScripts(toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, log *logrus.Entry) {
+	log.Infof("notifying plugnmeet with data: %+v", toSend)
+
+	if _, err := c.notifier.NotifyToPlugNmeet(toSend); err != nil {
+		log.WithError(err).Errorln("failed to notify plugnmeet")
 	}
 
 	// Execute post-processing scripts
 	if len(c.cnf.Recorder.PostProcessingScripts) > 0 {
 		data := map[string]interface{}{
-			"recording_id":  task.GetRecordingId(),
-			"room_table_id": task.GetRoomTableId(),
-			"room_id":       task.GetRoomId(),
-			"room_sid":      task.GetRoomSid(),
+			"recording_id":  toSend.GetRecordingId(),
+			"room_table_id": toSend.GetRoomTableId(),
+			"room_id":       toSend.GetRoomId(),
+			"room_sid":      toSend.GetRoomSid(),
 			"file_name":     finalFileName,
-			"file_path":     outputFile, // this will be the full path of the final file
+			"file_path":     outputFile,
 			"file_size":     size,
-			"recorder_id":   task.GetRecorderId(),
+			"recorder_id":   toSend.GetRecorderId(),
 		}
 		marshal, err := json.Marshal(data)
 		if err != nil {
-			log.WithError(err).Errorln("Failed to marshal post-processing data for scripts")
+			log.WithError(err).Errorln("failed to marshal post-processing data for scripts")
 		} else {
 			for _, script := range c.cnf.Recorder.PostProcessingScripts {
 				log.Infof("running post-processing script: %s", script)
 				cmd := exec.Command("/bin/sh", script, string(marshal))
 				scriptOutput, scriptErr := cmd.CombinedOutput()
 				if scriptErr != nil {
-					log.WithError(scriptErr).Errorf("Post-processing script failed: %s, Output: %s", script, string(scriptOutput))
+					log.WithError(scriptErr).Errorf("post-processing script failed: %s, Output: %s", script, string(scriptOutput))
 				} else {
-					log.Infof("Post-processing script %s finished. Output: %s", script, string(scriptOutput))
+					log.Infof("post-processing script %s finished. Output: %s", script, string(scriptOutput))
 				}
 			}
 		}
-	}
-	log.Infoln("Post process recording has been finished")
-
-	// Everything was successful, ACK the message so it's not processed again.
-	if err := msg.Ack(); err != nil {
-		log.WithError(err).Errorln("Failed to send ACK for completed job")
-	} else {
-		acked = true // Mark as acked
-		log.Infoln("Transcoding job completed and acknowledged")
 	}
 }

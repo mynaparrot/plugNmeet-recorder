@@ -6,7 +6,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20260427013145-5737772c319b
 	github.com/chromedp/chromedp v0.15.1
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/mynaparrot/plugnmeet-protocol v1.2.2-0.20260507112457-3a36db6571ad
+	github.com/mynaparrot/plugnmeet-protocol v1.2.2-0.20260523182947-0ae8e4753393
 	github.com/nats-io/nats.go v1.52.0
 	github.com/shirou/gopsutil/v4 v4.26.4
 	github.com/sirupsen/logrus v1.9.4
@@ -26,7 +26,6 @@ require (
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
-	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/dennwc/iters v1.2.2 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/ebitengine/purego v0.10.0 // indirect
@@ -41,7 +40,9 @@ require (
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
-	github.com/gofiber/fiber/v2 v2.52.13 // indirect
+	github.com/gofiber/fiber/v3 v3.3.0 // indirect
+	github.com/gofiber/schema v1.7.1 // indirect
+	github.com/gofiber/utils/v2 v2.0.6 // indirect
 	github.com/google/cel-go v0.27.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -55,9 +56,9 @@ require (
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
-	github.com/mattn/go-runewidth v0.0.23 // indirect
 	github.com/nats-io/nkeys v0.4.15 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
+	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pion/datachannel v1.6.0 // indirect
 	github.com/pion/dtls/v3 v3.1.2 // indirect
 	github.com/pion/ice/v4 v4.2.5 // indirect
@@ -77,11 +78,12 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/puzpuzpuz/xsync/v3 v3.5.1 // indirect
 	github.com/redis/go-redis/v9 v9.18.0 // indirect
+	github.com/tinylib/msgp v1.6.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.16 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/twitchtv/twirp v8.1.3+incompatible // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.69.0 // indirect
+	github.com/valyala/fasthttp v1.71.0 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
@@ -92,7 +94,7 @@ require (
 	go.uber.org/zap/exp v0.3.0 // indirect
 	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
-	golang.org/x/net v0.53.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/text v0.37.0 // indirect

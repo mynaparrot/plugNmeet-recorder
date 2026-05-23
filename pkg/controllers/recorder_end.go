@@ -130,10 +130,14 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 				RecordingId: req.RecordingId,
 				RoomId:      req.RoomId,
 				RoomSid:     req.RoomSid,
-				FilePath:    finalFilePath, // this is now the final path
-				FileName:    finalFileName, // this is the raw file name
 				RoomTableId: req.RoomTableId,
 				RecorderId:  req.RecorderId,
+				TaskDetails: &plugnmeet.TranscodingTask_PostRecording{
+					PostRecording: &plugnmeet.TranscodingTaskPostRecording{
+						FileName: finalFileName, // this is the raw file name
+						FilePath: finalFilePath, // this is now the final path
+					},
+				},
 			}
 
 			marshal, err := proto.Marshal(task)
@@ -142,8 +146,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 				return
 			}
 
-			_, err = c.cnf.JetStream.Publish(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, marshal)
-			if err != nil {
+			if _, err = c.cnf.JetStream.Publish(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, marshal); err != nil {
 				log.WithError(err).Errorln("Failed to publish transcoding task")
 			}
 		} else {
