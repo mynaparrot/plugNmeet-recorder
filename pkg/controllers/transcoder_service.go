@@ -112,30 +112,21 @@ func (c *RecorderController) startTranscodingService() {
 				switch v := task.TaskDetails.(type) {
 				case *plugnmeet.TranscodingTask_PostRecording:
 					log = log.WithField("task", "post_recording")
-					if procErr = c.handlePostRecordingTranscoding(task, v.PostRecording, log); procErr != nil {
-						// If we haven't acked by the end, something went wrong. Nak it.
-						log.WithError(procErr).Warnln("Transcoding failed or not acknowledged, sending NAK to re-queue job")
-						_ = msg.NakWithDelay(10 * time.Second) // Re-queue with a delay
-					} else {
-						// Everything was successful, ACK the message so it's not processed again.
-						if err := msg.Ack(); err != nil {
-							log.WithError(err).Errorln("Failed to send ACK for completed job")
-						} else {
-							log.Infoln("Transcoding job completed and acknowledged")
-						}
-					}
+					procErr = c.handlePostRecordingTranscoding(task, v.PostRecording, log)
 				case *plugnmeet.TranscodingTask_MergeRecordings:
 					log = log.WithField("task", "merge_recordings")
-					if procErr = c.handleMergeRecordings(task, v.MergeRecordings, log); procErr != nil {
-						log.WithError(procErr).Warnln("Merging failed, sending NAK to re-queue job")
-						_ = msg.NakWithDelay(10 * time.Second)
+					procErr = c.handleMergeRecordings(task, v.MergeRecordings, log)
+				}
+
+				if procErr != nil {
+					log.WithError(procErr).Warnln("Merging failed, sending NAK to re-queue job")
+					_ = msg.NakWithDelay(10 * time.Second)
+				} else {
+					// Everything was successful, ACK the message so it's not processed again.
+					if err := msg.Ack(); err != nil {
+						log.WithError(err).Errorln("Failed to send ACK for completed job")
 					} else {
-						// Everything was successful, ACK the message so it's not processed again.
-						if err := msg.Ack(); err != nil {
-							log.WithError(err).Errorln("Failed to send ACK for completed job")
-						} else {
-							log.Infoln("Merging job completed and acknowledged")
-						}
+						log.Infoln("Merging job completed and acknowledged")
 					}
 				}
 
@@ -143,8 +134,8 @@ func (c *RecorderController) startTranscodingService() {
 				toSend := &plugnmeet.RecorderToPlugNmeet{
 					From:        "recorder",
 					Status:      true,
-					Task:        plugnmeet.RecordingTasks_RECORDING_TRANSCODING_FINISHED,
 					Msg:         "success",
+					Task:        plugnmeet.RecordingTasks_RECORDING_TRANSCODING_FINISHED,
 					RecordingId: task.RecordingId,
 					RecorderId:  task.RecorderId,
 					RoomTableId: task.RoomTableId,
