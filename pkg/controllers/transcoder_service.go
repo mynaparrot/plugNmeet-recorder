@@ -55,7 +55,7 @@ func (c *RecorderController) startTranscodingService() {
 						logger.Warnf("cpu usage %f is higher than threshold %f. delaying fetching new transcoding task", percents[0], *cnf.TranscodingCpuLimitBothMode)
 						// wait before checking again, also check for context cancellation
 						select {
-						case <-time.After(15 * time.Second):
+						case <-time.After(30 * time.Second):
 							continue // restart the loop
 						case <-c.ctx.Done():
 							logger.Infoln("context cancelled, closing transcoding worker")
@@ -88,13 +88,6 @@ func (c *RecorderController) startTranscodingService() {
 					continue
 				}
 
-				if meta.NumDelivered > maxTranscodingRetries {
-					logger.Warnf("Transcoding job failed after %d attempts, removing from queue", maxTranscodingRetries)
-					// Ack the message to prevent it from being redelivered
-					_ = msg.Ack()
-					continue
-				}
-
 				task := new(plugnmeet.TranscodingTask)
 				if err := proto.Unmarshal(msg.Data(), task); err != nil {
 					logger.WithError(err).Errorln("Failed to unmarshal transcoding task, sending NAK")
@@ -102,12 +95,23 @@ func (c *RecorderController) startTranscodingService() {
 					_ = msg.NakWithDelay(5 * time.Second)
 					return
 				}
+				log := logger.WithFields(logrus.Fields{
+					"recording_id":  task.RecordingId,
+					"room_id":       task.RoomId,
+					"room_sid":      task.RoomSid,
+					"room_table_id": task.RoomTableId,
+					"recorder_id":   task.RecorderId,
+					"NumDelivered":  meta.NumDelivered,
+				})
+
+				if meta.NumDelivered > maxTranscodingRetries {
+					log.Warnf("Transcoding job failed after %d attempts, removing from queue", maxTranscodingRetries)
+					// Ack the message to prevent it from being redelivered
+					_ = msg.Ack()
+					continue
+				}
 
 				// All the tasks are a blocking call. The loop will not continue to the next Fetch until this transcoding is finished.
-				log := logger.WithFields(logrus.Fields{
-					"recordingId": task.RecordingId,
-					"roomId":      task.RoomId,
-				})
 				var procErr error
 				switch v := task.TaskDetails.(type) {
 				case *plugnmeet.TranscodingTask_PostRecording:
@@ -120,7 +124,7 @@ func (c *RecorderController) startTranscodingService() {
 
 				if procErr != nil {
 					log.WithError(procErr).Warnln("Merging failed, sending NAK to re-queue job")
-					_ = msg.NakWithDelay(10 * time.Second)
+					_ = msg.NakWithDelay(30 * time.Second)
 				} else {
 					// Everything was successful, ACK the message so it's not processed again.
 					if err := msg.Ack(); err != nil {
