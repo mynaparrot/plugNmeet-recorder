@@ -21,7 +21,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH GO111MODULE=on \
     go build -trimpath -ldflags '-w -s -buildid=' \
     -a -o plugnmeet-recorder main.go
 
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 ARG TARGETPLATFORM
 
