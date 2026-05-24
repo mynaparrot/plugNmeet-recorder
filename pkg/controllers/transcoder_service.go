@@ -112,25 +112,28 @@ func (c *RecorderController) startTranscodingService() {
 				}
 
 				// All the tasks are a blocking call. The loop will not continue to the next Fetch until this transcoding is finished.
+				started := time.Now()
 				var procErr error
 				switch v := task.TaskDetails.(type) {
 				case *plugnmeet.TranscodingTask_PostRecording:
 					log = log.WithField("task", "post_recording")
+					log.Info("Starting new 'post_recording' transcoding task")
 					procErr = c.handlePostRecordingTranscoding(task, v.PostRecording, log)
 				case *plugnmeet.TranscodingTask_MergeRecordings:
 					log = log.WithField("task", "merge_recordings")
+					log.Info("Starting new 'merge_recordings' transcoding task")
 					procErr = c.handleMergeRecordings(task, v.MergeRecordings, log)
 				}
 
 				if procErr != nil {
-					log.WithError(procErr).Warnln("Merging failed, sending NAK to re-queue job")
+					log.WithError(procErr).Warnln("Transcoding failed, sending NAK to re-queue job")
 					_ = msg.NakWithDelay(30 * time.Second)
 				} else {
 					// Everything was successful, ACK the message so it's not processed again.
 					if err := msg.Ack(); err != nil {
 						log.WithError(err).Errorln("Failed to send ACK for completed job")
 					} else {
-						log.Infoln("Merging job completed and acknowledged")
+						log.Infof("Transcoding job completed and acknowledged after %s", time.Since(started))
 					}
 				}
 
