@@ -6,7 +6,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20260427013145-5737772c319b
 	github.com/chromedp/chromedp v0.15.1
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/mynaparrot/plugnmeet-protocol v1.2.2-0.20260523182947-0ae8e4753393
+	github.com/mynaparrot/plugnmeet-protocol v1.3.0
 	github.com/nats-io/nats.go v1.52.0
 	github.com/shirou/gopsutil/v4 v4.26.4
 	github.com/sirupsen/logrus v1.9.4
@@ -20,7 +20,7 @@ require (
 	buf.build/go/protovalidate v1.1.3 // indirect
 	buf.build/go/protoyaml v0.6.0 // indirect
 	cel.dev/expr v0.25.1 // indirect
-	github.com/DeRuina/timberjack v1.4.2 // indirect
+	github.com/DeRuina/timberjack v1.4.5 // indirect
 	github.com/andybalholm/brotli v1.2.1 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
@@ -51,7 +51,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/lithammer/shortuuid/v4 v4.2.0 // indirect
 	github.com/livekit/mageutil v0.0.0-20250511045019-0f1ff63f7731 // indirect
-	github.com/livekit/protocol v1.45.8 // indirect
+	github.com/livekit/protocol v1.46.0 // indirect
 	github.com/livekit/psrpc v0.7.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
