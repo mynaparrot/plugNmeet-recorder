@@ -37,7 +37,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ./c-recorder/docker-build/Dockerfile.base
+          file: ./docker-build/Dockerfile.base
           push: true
           platforms: ${{ matrix.platform }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/plugnmeet-recorder:base-${{ matrix.arch }}
