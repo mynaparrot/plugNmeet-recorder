@@ -1,11 +1,11 @@
-name: Build and push c-recorder base image
+name: Build and push recorder base image
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual triggering
   push:
     branches:
       - 'main'
     paths:
-      - 'c-recorder/docker-build/Dockerfile.base'
+      - 'docker-build/Dockerfile.base' # Triggers on changes to the base Dockerfile
 
 jobs:
   build:
