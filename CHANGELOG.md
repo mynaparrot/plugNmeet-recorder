@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.1.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.4...v2.1.0) (2026-05-31)
+
+
+### Features
+
+* handle merge recordings transcoding request ([ef25447](https://github.com/mynaparrot/plugNmeet-recorder/commit/ef2544764bc194d36629bd4ea0f25f9a6121ddc2))
+
+
+### Bug Fixes
+
+* added logs ([df67933](https://github.com/mynaparrot/plugNmeet-recorder/commit/df679332fba96015694f4dd54e45e74ebe26bce0))
+* bump `chrome-installer` to fix `libasound2` install as correct `libasound2t64` ([36d47d2](https://github.com/mynaparrot/plugNmeet-recorder/commit/36d47d251587e9590dd75559e2a9897af6cb1d80))
+* cleanup + merge duplicate code ([5ba04f5](https://github.com/mynaparrot/plugNmeet-recorder/commit/5ba04f54f630a2619714f2944fbd15074e87ecc7))
+* replace `QEMU` with native runner ([ecfd215](https://github.com/mynaparrot/plugNmeet-recorder/commit/ecfd215b466b8fa2a09cb29a35133191176773ff))
+* use base tag for faster build ([76ef9b6](https://github.com/mynaparrot/plugNmeet-recorder/commit/76ef9b6902bc2751665fbbe240d1496658a70260))
+
 ## [2.0.4](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.3...v2.0.4) (2026-05-09)
 
 
