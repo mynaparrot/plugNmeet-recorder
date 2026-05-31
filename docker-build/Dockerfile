@@ -21,20 +21,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH GO111MODULE=on \
     go build -trimpath -ldflags '-w -s -buildid=' \
     -a -o plugnmeet-recorder main.go
 
-FROM ubuntu:24.04
-
-ARG TARGETPLATFORM
-
-# install deps
-RUN apt-get update && \
-    apt-get install -y curl wget gnupg unzip fonts-noto pulseaudio ffmpeg xvfb rsync
-
-# install chrome using livekit/chrome-installer
-COPY --from=livekit/chrome-installer:146.0.7680.177-1 /chrome-installer /chrome-installer
-RUN /chrome-installer/install-chrome "$TARGETPLATFORM"
-
-# clean up
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+FROM mynaparrot/plugnmeet-recorder:base
 
 # copy files
 COPY --from=builder /go/src/app/plugnmeet-recorder /usr/bin/plugnmeet-recorder
