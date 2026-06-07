@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.1.0...v2.1.1) (2026-06-07)
+
+
+### Bug Fixes
+
+* **transcoder:** make the heartbeat concurrency-safe (review feedback) ([082812e](https://github.com/mynaparrot/plugNmeet-recorder/commit/082812eae528683f13ebd8a107b13ecaa58101ad))
+* **transcoder:** renew ack deadline for long transcodes (InProgress heartbeat) ([17aee71](https://github.com/mynaparrot/plugNmeet-recorder/commit/17aee718faea97547566d4dbe2fabe2f263e7f1a))
+* **transcoder:** renew ack deadline for long transcodes to prevent duplicate processing ([66b0268](https://github.com/mynaparrot/plugNmeet-recorder/commit/66b0268ca131e2cb868b684127ed0b4d45ab170d))
+* wrap processing in a function to leverage defer for panic-safe cleanup ([328d238](https://github.com/mynaparrot/plugNmeet-recorder/commit/328d238d329796201ef2f5d20e16e83b02bb98e4))
+
 ## [2.1.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.0.4...v2.1.0) (2026-05-31)
 
 
