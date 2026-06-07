@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/mynaparrot/plugnmeet-protocol v1.3.0
 	github.com/nats-io/nats.go v1.52.0
-	github.com/shirou/gopsutil/v4 v4.26.4
+	github.com/shirou/gopsutil/v4 v4.26.5
 	github.com/sirupsen/logrus v1.9.4
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
