@@ -122,8 +122,22 @@ func (c *RecorderController) startTranscodingService() {
 				// transcode + a race on rsync --remove-source-files. Periodically
 				// signaling InProgress renews the ack deadline until the transcode
 				// finishes, keeping the job assigned to this worker.
+				// hbLog is a stable copy: the switch below reassigns `log`, which the
+				// heartbeat goroutine must not read concurrently. hbStopped lets us
+				// wait for the goroutine to fully exit before Ack/Nak, so InProgress
+				// never races with Ack/NakWithDelay on the same message.
+				//
+				// The heartbeat is intentionally NOT tied to c.ctx: the transcode
+				// itself does not observe ctx, so bailing on cancel would stop
+				// renewing the ack while the transcode keeps running, letting the
+				// message be redelivered to another worker mid-transcode — the exact
+				// duplication this guards against. It exits only via hbDone, once the
+				// (always-terminating) transcode returns.
+				hbLog := log
 				hbDone := make(chan struct{})
+				hbStopped := make(chan struct{})
 				go func() {
+					defer close(hbStopped)
 					t := time.NewTicker(15 * time.Second)
 					defer t.Stop()
 					for {
@@ -132,7 +146,7 @@ func (c *RecorderController) startTranscodingService() {
 							return
 						case <-t.C:
 							if err := msg.InProgress(); err != nil {
-								log.WithError(err).Warnln("Failed to send InProgress heartbeat")
+								hbLog.WithError(err).Warnln("Failed to send InProgress heartbeat")
 							}
 						}
 					}
@@ -148,7 +162,8 @@ func (c *RecorderController) startTranscodingService() {
 					log.Info("Starting new 'merge_recordings' transcoding task")
 					procErr = c.handleMergeRecordings(task, v.MergeRecordings, log)
 				}
-				close(hbDone) // stop the heartbeat before Ack/Nak
+				close(hbDone) // stop the heartbeat...
+				<-hbStopped   // ...and wait for it to exit before Ack/Nak
 
 				if procErr != nil {
 					log.WithError(procErr).Warnln("Transcoding failed, sending NAK to re-queue job")
