@@ -114,25 +114,11 @@ func (c *RecorderController) startTranscodingService() {
 				// All the tasks are a blocking call. The loop will not continue to the next Fetch until this transcoding is finished.
 				started := time.Now()
 
-				// Heartbeat: transcoding is a blocking call that can run for far
-				// longer than the consumer's AckWait (30s by default, as the
-				// consumer sets no explicit AckWait). Without this, JetStream marks
-				// the message for redelivery and a second worker on the shared
-				// work-queue consumer picks up the SAME job -> duplicate concurrent
-				// transcode + a race on rsync --remove-source-files. Periodically
-				// signaling InProgress renews the ack deadline until the transcode
-				// finishes, keeping the job assigned to this worker.
-				// hbLog is a stable copy: the switch below reassigns `log`, which the
-				// heartbeat goroutine must not read concurrently. hbStopped lets us
-				// wait for the goroutine to fully exit before Ack/Nak, so InProgress
-				// never races with Ack/NakWithDelay on the same message.
-				//
-				// The heartbeat is intentionally NOT tied to c.ctx: the transcode
-				// itself does not observe ctx, so bailing on cancel would stop
-				// renewing the ack while the transcode keeps running, letting the
-				// message be redelivered to another worker mid-transcode — the exact
-				// duplication this guards against. It exits only via hbDone, once the
-				// (always-terminating) transcode returns.
+				// Heartbeat: renew the ack deadline (msg.InProgress) every 15s so a
+				// transcode longer than the consumer's AckWait isn't redelivered to a
+				// second worker and processed twice. hbLog is a stable copy (the switch
+				// reassigns log); hbStopped lets us wait for the goroutine to exit
+				// before Ack/Nak so InProgress never races with them.
 				hbLog := log
 				hbDone := make(chan struct{})
 				hbStopped := make(chan struct{})
