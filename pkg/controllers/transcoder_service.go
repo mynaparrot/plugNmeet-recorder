@@ -113,6 +113,30 @@ func (c *RecorderController) startTranscodingService() {
 
 				// All the tasks are a blocking call. The loop will not continue to the next Fetch until this transcoding is finished.
 				started := time.Now()
+
+				// Heartbeat: renew the ack deadline (msg.InProgress) every 15s so a
+				// transcode longer than the consumer's AckWait isn't redelivered to a
+				// second worker and processed twice. hbLog is a stable copy (the switch
+				// reassigns log); hbStopped lets us wait for the goroutine to exit
+				// before Ack/Nak so InProgress never races with them.
+				hbLog := log
+				hbDone := make(chan struct{})
+				hbStopped := make(chan struct{})
+				go func() {
+					defer close(hbStopped)
+					t := time.NewTicker(15 * time.Second)
+					defer t.Stop()
+					for {
+						select {
+						case <-hbDone:
+							return
+						case <-t.C:
+							if err := msg.InProgress(); err != nil {
+								hbLog.WithError(err).Warnln("Failed to send InProgress heartbeat")
+							}
+						}
+					}
+				}()
 				var procErr error
 				switch v := task.TaskDetails.(type) {
 				case *plugnmeet.TranscodingTask_PostRecording:
@@ -124,6 +148,8 @@ func (c *RecorderController) startTranscodingService() {
 					log.Info("Starting new 'merge_recordings' transcoding task")
 					procErr = c.handleMergeRecordings(task, v.MergeRecordings, log)
 				}
+				close(hbDone) // stop the heartbeat...
+				<-hbStopped   // ...and wait for it to exit before Ack/Nak
 
 				if procErr != nil {
 					log.WithError(procErr).Warnln("Transcoding failed, sending NAK to re-queue job")
