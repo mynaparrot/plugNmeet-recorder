@@ -113,6 +113,30 @@ func (c *RecorderController) startTranscodingService() {
 
 				// All the tasks are a blocking call. The loop will not continue to the next Fetch until this transcoding is finished.
 				started := time.Now()
+
+				// Heartbeat: transcoding is a blocking call that can run for far
+				// longer than the consumer's AckWait (30s by default, as the
+				// consumer sets no explicit AckWait). Without this, JetStream marks
+				// the message for redelivery and a second worker on the shared
+				// work-queue consumer picks up the SAME job -> duplicate concurrent
+				// transcode + a race on rsync --remove-source-files. Periodically
+				// signaling InProgress renews the ack deadline until the transcode
+				// finishes, keeping the job assigned to this worker.
+				hbDone := make(chan struct{})
+				go func() {
+					t := time.NewTicker(15 * time.Second)
+					defer t.Stop()
+					for {
+						select {
+						case <-hbDone:
+							return
+						case <-t.C:
+							if err := msg.InProgress(); err != nil {
+								log.WithError(err).Warnln("Failed to send InProgress heartbeat")
+							}
+						}
+					}
+				}()
 				var procErr error
 				switch v := task.TaskDetails.(type) {
 				case *plugnmeet.TranscodingTask_PostRecording:
@@ -124,6 +148,7 @@ func (c *RecorderController) startTranscodingService() {
 					log.Info("Starting new 'merge_recordings' transcoding task")
 					procErr = c.handleMergeRecordings(task, v.MergeRecordings, log)
 				}
+				close(hbDone) // stop the heartbeat before Ack/Nak
 
 				if procErr != nil {
 					log.WithError(procErr).Warnln("Transcoding failed, sending NAK to re-queue job")
