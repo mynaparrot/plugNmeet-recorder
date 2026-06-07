@@ -137,19 +137,27 @@ func (c *RecorderController) startTranscodingService() {
 						}
 					}
 				}()
-				var procErr error
-				switch v := task.TaskDetails.(type) {
-				case *plugnmeet.TranscodingTask_PostRecording:
-					log = log.WithField("task", "post_recording")
-					log.Info("Starting new 'post_recording' transcoding task")
-					procErr = c.handlePostRecordingTranscoding(task, v.PostRecording, log)
-				case *plugnmeet.TranscodingTask_MergeRecordings:
-					log = log.WithField("task", "merge_recordings")
-					log.Info("Starting new 'merge_recordings' transcoding task")
-					procErr = c.handleMergeRecordings(task, v.MergeRecordings, log)
-				}
-				close(hbDone) // stop the heartbeat...
-				<-hbStopped   // ...and wait for it to exit before Ack/Nak
+
+				// Wrap processing in a function to leverage defer for panic-safe cleanup.
+				// This ensures the heartbeat goroutine is always stopped.
+				procErr := func() error {
+					defer func() {
+						close(hbDone) // stop the heartbeat...
+						<-hbStopped   // ...and wait for it to exit before Ack/Nak
+					}()
+
+					switch v := task.TaskDetails.(type) {
+					case *plugnmeet.TranscodingTask_PostRecording:
+						log = log.WithField("task", "post_recording")
+						log.Info("Starting new 'post_recording' transcoding task")
+						return c.handlePostRecordingTranscoding(task, v.PostRecording, log)
+					case *plugnmeet.TranscodingTask_MergeRecordings:
+						log = log.WithField("task", "merge_recordings")
+						log.Info("Starting new 'merge_recordings' transcoding task")
+						return c.handleMergeRecordings(task, v.MergeRecordings, log)
+					}
+					return nil
+				}()
 
 				if procErr != nil {
 					log.WithError(procErr).Warnln("Transcoding failed, sending NAK to re-queue job")
@@ -340,13 +348,13 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 	for _, p := range taskDetails.FilePaths {
 		abs, err := filepath.Abs(path.Join(c.cnf.Recorder.CopyToPath.MainPath, p))
 		if err != nil {
-			file.Close()
+			_ = file.Close()
 			return err
 		}
 
 		// Check if file exists before adding to list
 		if _, err := os.Stat(abs); os.IsNotExist(err) {
-			file.Close()
+			_ = file.Close()
 			log.WithError(err).Errorf("file not found for merging: %s", abs)
 			return err
 		}
@@ -354,11 +362,11 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 		// Write to the concat file for ffmpeg
 		if _, err := file.WriteString(fmt.Sprintf("file '%s'\n", abs)); err != nil {
 			log.WithError(err).Errorln("failed to write to ffmpeg file list")
-			file.Close()
+			_ = file.Close()
 			return err
 		}
 	}
-	file.Close() // Close the file so ffmpeg can read it
+	_ = file.Close() // Close the file so ffmpeg can read it
 
 	// Execute FFMPEG command: ffmpeg -f concat -safe 0 -i file_list.txt -c copy output.mp4
 	args := []string{
