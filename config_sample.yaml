@@ -41,11 +41,19 @@ recorder:
     # Optional: Specify a subdirectory for this recorder instance.
     # This path must reside within main_path and will be stored in the database.
     sub_path: "node_01"
+  # Optional: Define pre-transcode scripts to run before transcoding.
+  # These scripts can move files from the recorder's local storage to a shared
+  # storage (like NFS or CIFS) accessible by the transcoder. The script must
+  # return a modified JSON with the new file path for the transcoder to use.
+  # See the example script for more details. Ensure scripts have executable permissions (e.g., chmod +x).
+  #pre_transcode_scripts:
+  #  - "./scripts/pre/example.sh"
+  #
   # Optional: Define post-processing scripts to further process recordings.
-  # Example script available at post_processing_scripts/example.sh
+  # Example script available at scripts/post/example.sh
   # Ensure scripts have executable permissions (e.g., chmod +x).
   #post_processing_scripts:
-  #  - "./post_processing_scripts/example.sh"
+  #  - "./scripts/post/example.sh"
 
 log_settings:
   log_file: "./logs/recorder.log"

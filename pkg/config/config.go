@@ -44,6 +44,7 @@ type RecorderInfo struct {
 	XvfbDpi                     uint64             `yaml:"xvfb_dpi"`
 	TemporaryDir                *string            `yaml:"temporary_dir"`
 	CopyToPath                  CopyToPathSettings `yaml:"copy_to_path"`
+	PreTranscodeScripts         []string           `yaml:"pre_transcode_scripts"`
 	PostProcessingScripts       []string           `yaml:"post_processing_scripts"`
 	TranscodingCpuLimitBothMode *float64           `yaml:"transcoding_cpu_limit_both_mode"`
 }

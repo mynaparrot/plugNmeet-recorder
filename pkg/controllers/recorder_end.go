@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -126,6 +128,21 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 			return
 		}
 		if stat.Size() > 0 {
+			postRecording := &plugnmeet.TranscodingTaskPostRecording{
+				FileName: finalFileName, // this is the raw file name
+				FilePath: finalFilePath, // this is now the final path
+			}
+
+			// Run pre-transcode scripts
+			if len(c.cnf.Recorder.PreTranscodeScripts) > 0 {
+				modifiedPostRecording, err := c.runPreTranscodeScripts(req, postRecording, log)
+				if err != nil {
+					log.WithError(err).Errorln("Pre-transcode script execution failed")
+					return
+				}
+				postRecording = modifiedPostRecording
+			}
+
 			task := &plugnmeet.TranscodingTask{
 				RecordingId: req.RecordingId,
 				RoomId:      req.RoomId,
@@ -133,10 +150,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 				RoomTableId: req.RoomTableId,
 				RecorderId:  req.RecorderId,
 				TaskDetails: &plugnmeet.TranscodingTask_PostRecording{
-					PostRecording: &plugnmeet.TranscodingTaskPostRecording{
-						FileName: finalFileName, // this is the raw file name
-						FilePath: finalFilePath, // this is now the final path
-					},
+					PostRecording: postRecording,
 				},
 			}
 
@@ -153,6 +167,57 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 			log.Errorf("Avoiding to publish transcoding task of: %s file because of 0 size", finalRawFilePath)
 		}
 	}
+}
+
+func (c *RecorderController) runPreTranscodeScripts(req *plugnmeet.PlugNmeetToRecorder, postRecording *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, error) {
+	data := map[string]interface{}{
+		"recording_id":  req.GetRecordingId(),
+		"room_table_id": req.GetRoomTableId(),
+		"room_id":       req.GetRoomId(),
+		"room_sid":      req.GetRoomSid(),
+		"file_name":     postRecording.FileName,
+		"file_path":     postRecording.FilePath,
+		"recorder_id":   req.GetRecorderId(),
+	}
+
+	var err error
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal initial data for pre-transcode script: %w", err)
+	}
+
+	for _, script := range c.cnf.Recorder.PreTranscodeScripts {
+		log.Infof("Running pre-transcode script: %s", script)
+		cmd := exec.Command("/bin/sh", script)
+		cmd.Stdin = bytes.NewReader(jsonData)
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+
+		if err := cmd.Run(); err != nil {
+			return nil, fmt.Errorf("pre-transcode script %s failed: %w, stderr: %s", script, err, stderr.String())
+		}
+
+		// The output of the script becomes the input for the next one
+		jsonData = out.Bytes()
+	}
+
+	// After all scripts, unmarshal the final JSON back into our struct
+	var finalData map[string]interface{}
+	if err := json.Unmarshal(jsonData, &finalData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal final JSON from pre-transcode scripts: %w", err)
+	}
+
+	// Update the postRecording struct with the modified values
+	if filePath, ok := finalData["file_path"].(string); ok {
+		postRecording.FilePath = filePath
+	}
+	if fileName, ok := finalData["file_name"].(string); ok {
+		postRecording.FileName = fileName
+	}
+
+	return postRecording, nil
 }
 
 // moveFile moves a file from src to dst. It creates the destination directory if it doesn't exist.

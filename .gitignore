@@ -1,10 +1,28 @@
+# IDE
 .idea
+
+# Local configurations
 config.yaml
 docker-compose.yaml
+
+# Logs and temporary files
 logs/
-bin/
 tmp/
+
+# Local recordings
 recording_files/
-post_processing_scripts/*
-!post_processing_scripts/example.sh
+
+# Scripts - ignore all scripts except the examples
+scripts/*
+!scripts/pre
+!scripts/post
+scripts/pre/*
+!scripts/pre/example.sh
+scripts/post/*
+!scripts/post/example.sh
+
+# Test files
 docker-build/DockerfileTest
+
+# Binaries
+bin/
