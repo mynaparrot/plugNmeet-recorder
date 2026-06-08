@@ -433,19 +433,24 @@ func (c *RecorderController) notifyAndRunPostProcessingScripts(toSend *plugnmeet
 			"file_size":     size,
 			"recorder_id":   toSend.GetRecorderId(),
 		}
-		marshal, err := json.Marshal(data)
+		jsonData, err := json.Marshal(data)
 		if err != nil {
 			log.WithError(err).Errorln("failed to marshal post-processing data for scripts")
-		} else {
-			for _, script := range c.cnf.Recorder.PostProcessingScripts {
-				log.Infof("running post-processing script: %s", script)
-				cmd := exec.Command("/bin/sh", script, string(marshal))
-				scriptOutput, scriptErr := cmd.CombinedOutput()
-				if scriptErr != nil {
-					log.WithError(scriptErr).Errorf("post-processing script failed: %s, Output: %s", script, string(scriptOutput))
-				} else {
-					log.Infof("post-processing script %s finished. Output: %s", script, string(scriptOutput))
-				}
+			return
+		}
+
+		for _, script := range c.cnf.Recorder.PostProcessingScripts {
+			log.Infof("running post-processing script: %s", script)
+
+			// Execute the script directly, passing data as a command-line argument.
+			// The script's lifecycle is tied to the main application context.
+			cmd := exec.CommandContext(c.ctx, script, string(jsonData))
+			output, err := cmd.CombinedOutput()
+
+			if err != nil {
+				log.WithError(err).Errorf("post-processing script %s failed, output: %s", script, string(output))
+			} else {
+				log.Infof("post-processing script %s finished successfully. output: %s", script, string(output))
 			}
 		}
 	}

@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status.
+set -e
 
 # This is an example pre-transcode script.
 # It reads a JSON payload from stdin, can perform actions,

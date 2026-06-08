@@ -188,7 +188,10 @@ func (c *RecorderController) runPreTranscodeScripts(req *plugnmeet.PlugNmeetToRe
 
 	for _, script := range c.cnf.Recorder.PreTranscodeScripts {
 		log.Infof("Running pre-transcode script: %s", script)
-		cmd := exec.Command("/bin/sh", script)
+
+		// Execute the script directly, allowing the OS to respect the shebang.
+		// The script's lifecycle is tied to the main application context.
+		cmd := exec.CommandContext(c.ctx, script)
 		cmd.Stdin = bytes.NewReader(jsonData)
 		var out bytes.Buffer
 		var stderr bytes.Buffer
