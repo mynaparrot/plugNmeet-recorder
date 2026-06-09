@@ -55,7 +55,7 @@ type RecorderInfo struct {
 
 	// Deprecated fields for backward compatibility. They are unexported and will be migrated
 	// to the top-level `hooks` section during config initialization.
-	postProcessingScripts []string `yaml:"post_processing_scripts"` // Deprecated
+	PostProcessingScripts []string `yaml:"post_processing_scripts"` // Deprecated
 }
 
 type CopyToPathSettings struct {
@@ -131,8 +131,8 @@ func (a *AppConfig) setDefaultConfig() {
 
 	// For backward compatibility, migrate any scripts defined in the old `recorder` block
 	// to the new top-level `hooks` block.
-	if len(a.Recorder.postProcessingScripts) > 0 {
-		a.Hooks.PostTranscoding = append(a.Hooks.PostTranscoding, a.Recorder.postProcessingScripts...)
+	if len(a.Recorder.PostProcessingScripts) > 0 {
+		a.Hooks.PostTranscoding = append(a.Hooks.PostTranscoding, a.Recorder.PostProcessingScripts...)
 	}
 
 	if a.FfmpegSettings == nil {
