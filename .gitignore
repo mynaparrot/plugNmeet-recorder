@@ -14,12 +14,18 @@ recording_files/
 
 # Scripts - ignore all scripts except the examples
 scripts/*
-!scripts/pre
-!scripts/post
-scripts/pre/*
-!scripts/pre/example.sh
-scripts/post/*
-!scripts/post/example.sh
+!scripts/post-recording
+!scripts/pre-transcoding
+!scripts/post-transcoding
+
+scripts/post-recording/*
+!scripts/post-recording/upload.sh
+
+scripts/pre-transcoding/*
+!scripts/pre-transcoding/download.sh
+
+scripts/post-transcoding/*
+!scripts/post-transcoding/notify.sh
 
 # Test files
 docker-build/DockerfileTest

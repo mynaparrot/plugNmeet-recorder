@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 )
@@ -133,11 +133,11 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 				FilePath: finalFilePath, // this is now the final path
 			}
 
-			// Run pre-transcode scripts
-			if len(c.cnf.Recorder.PreTranscodeScripts) > 0 {
-				modifiedPostRecording, err := c.runPreTranscodeScripts(req, postRecording, log)
+			// Run post-recording scripts
+			if len(c.cnf.Hooks.PostRecording) > 0 {
+				modifiedPostRecording, err := c.runPostRecordingScripts(req, postRecording, log)
 				if err != nil {
-					log.WithError(err).Errorln("Pre-transcode script execution failed")
+					log.WithError(err).Errorln("Post-recording script execution failed")
 					return
 				}
 				postRecording = modifiedPostRecording
@@ -169,56 +169,29 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 	}
 }
 
-func (c *RecorderController) runPreTranscodeScripts(req *plugnmeet.PlugNmeetToRecorder, postRecording *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, error) {
-	data := map[string]interface{}{
-		"recording_id":  req.GetRecordingId(),
-		"room_table_id": req.GetRoomTableId(),
-		"room_id":       req.GetRoomId(),
-		"room_sid":      req.GetRoomSid(),
-		"file_name":     postRecording.FileName,
-		"file_path":     postRecording.FilePath,
-		"recorder_id":   req.GetRecorderId(),
+func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToRecorder, postRecording *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, error) {
+	data := &utils.ScriptData{
+		RecordingID: req.GetRecordingId(),
+		RoomTableID: req.GetRoomTableId(),
+		RoomID:      req.GetRoomId(),
+		RoomSID:     req.GetRoomSid(),
+		FileName:    postRecording.FileName,
+		FilePath:    postRecording.FilePath,
+		RecorderID:  req.GetRecorderId(),
 	}
 
-	var err error
-	jsonData, err := json.Marshal(data)
+	jsonData, err := utils.RunScriptsWithData(c.ctx, c.cnf.Hooks.PostRecording, data, log, "post-recording")
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal initial data for pre-transcode script: %w", err)
+		return nil, err
 	}
 
-	for _, script := range c.cnf.Recorder.PreTranscodeScripts {
-		log.Infof("Running pre-transcode script: %s", script)
-
-		// Execute the script directly, allowing the OS to respect the shebang.
-		// The script's lifecycle is tied to the main application context.
-		cmd := exec.CommandContext(c.ctx, script)
-		cmd.Stdin = bytes.NewReader(jsonData)
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-
-		if err := cmd.Run(); err != nil {
-			return nil, fmt.Errorf("pre-transcode script %s failed: %w, stderr: %s", script, err, stderr.String())
-		}
-
-		// The output of the script becomes the input for the next one
-		jsonData = out.Bytes()
-	}
-
-	// After all scripts, unmarshal the final JSON back into our struct
-	var finalData map[string]interface{}
+	var finalData utils.ScriptData
 	if err := json.Unmarshal(jsonData, &finalData); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal final JSON from pre-transcode scripts: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal final JSON from post-recording scripts: %w", err)
 	}
 
-	// Update the postRecording struct with the modified values
-	if filePath, ok := finalData["file_path"].(string); ok {
-		postRecording.FilePath = filePath
-	}
-	if fileName, ok := finalData["file_name"].(string); ok {
-		postRecording.FileName = fileName
-	}
+	postRecording.FilePath = finalData.FilePath
+	postRecording.FileName = finalData.FileName
 
 	return postRecording, nil
 }

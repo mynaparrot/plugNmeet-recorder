@@ -16,6 +16,7 @@ import (
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-protocol/utils"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
+	pnmutils "github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/sirupsen/logrus"
@@ -200,6 +201,16 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 		"method":   "handlePostRecordingTranscoding",
 	})
 
+	// Run pre-transcoding scripts to get the file ready locally
+	if len(c.cnf.Hooks.PreTranscoding) > 0 {
+		modifiedTaskDetails, err := c.runPreTranscodingScripts(task, taskDetails, log)
+		if err != nil {
+			log.WithError(err).Errorln("Pre-transcoding script execution failed")
+			return err
+		}
+		taskDetails = modifiedTaskDetails
+	}
+
 	rawFilePath := path.Join(taskDetails.FilePath, taskDetails.FileName)
 	finalFileName := fmt.Sprintf("%s.mp4", task.RecordingId)
 	outputFile := path.Join(taskDetails.FilePath, finalFileName)
@@ -310,8 +321,8 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 		RecordingVariant: &taskDetails.RecordingVariant,
 	}
 
-	c.notifyAndRunPostProcessingScripts(toSend, outputFile, finalFileName, size, log)
-	log.Infoln("Post process recording has been finished")
+	c.runPostTranscodingScripts(toSend, outputFile, finalFileName, size, log)
+	log.Infoln("Post-transcoding process has been finished")
 
 	return nil
 }
@@ -322,11 +333,42 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 		return errors.New("no file paths provided for merging")
 	}
 
-	// All files should be in the same directory. We'll use the path from the first file.
+	// This is the base path where the transcoder expects to find the final merged file.
+	// It's based on the original job request.
 	relativeOutputDir := filepath.Dir(taskDetails.FilePaths[0])
-	fullOutputDir := path.Join(c.cnf.Recorder.CopyToPath.MainPath, relativeOutputDir)
+	// This is the initial location where the transcoder will look for the source files.
+	// It might be a network path.
+	inputPath := path.Join(c.cnf.Recorder.CopyToPath.MainPath, relativeOutputDir)
 
-	// Ensure the output directory exists
+	if len(c.cnf.Hooks.PreTranscoding) > 0 {
+		// For merge tasks, we pass the list of file paths to the script.
+		// The script is expected to make all files available in a single local directory
+		// and return the path to that directory.
+		data := &pnmutils.ScriptData{
+			Task:        "merge",
+			RecordingID: task.GetRecordingId(),
+			RoomTableID: task.GetRoomTableId(),
+			RoomID:      task.GetRoomId(),
+			RoomSID:     task.GetRoomSid(),
+			FilePaths:   taskDetails.FilePaths,
+			RecorderID:  task.GetRecorderId(),
+		}
+
+		jsonData, err := pnmutils.RunScriptsWithData(c.ctx, c.cnf.Hooks.PreTranscoding, data, log, "pre-transcoding")
+		if err != nil {
+			return fmt.Errorf("pre-transcoding script execution failed for merge task: %w", err)
+		}
+
+		var finalData pnmutils.ScriptData
+		if err := json.Unmarshal(jsonData, &finalData); err != nil {
+			return fmt.Errorf("failed to unmarshal final JSON from pre-transcoding scripts for merge task: %w", err)
+		}
+		// The script returns the new local base path for the source files.
+		inputPath = finalData.FilePath
+	}
+
+	// The final output will still be placed relative to the original MainPath.
+	fullOutputDir := path.Join(c.cnf.Recorder.CopyToPath.MainPath, relativeOutputDir)
 	if err := os.MkdirAll(fullOutputDir, 0755); err != nil {
 		log.WithError(err).Errorf("failed to create output directory: %s", fullOutputDir)
 		return err
@@ -346,7 +388,9 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 	defer os.Remove(fileListPath) // Clean up the temp file
 
 	for _, p := range taskDetails.FilePaths {
-		abs, err := filepath.Abs(path.Join(c.cnf.Recorder.CopyToPath.MainPath, p))
+		// Use the (potentially new) inputPath as the base for finding the source files.
+		// We only need the base name of the original path `p`.
+		abs, err := filepath.Abs(path.Join(inputPath, filepath.Base(p)))
 		if err != nil {
 			_ = file.Close()
 			return err
@@ -387,7 +431,6 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 
 	log.Infoln("ffmpeg merge completed successfully")
 
-	// Notify plugnmeet
 	stat, err := os.Stat(outputFile)
 	if err != nil {
 		log.WithError(err).Errorln("failed to stat final output file after merging")
@@ -400,7 +443,7 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 	toSend := &plugnmeet.RecorderToPlugNmeet{
 		From:        "recorder",
 		Status:      true,
-		Task:        plugnmeet.RecordingTasks_RECORDING_PROCEEDED, // Using existing task type
+		Task:        plugnmeet.RecordingTasks_RECORDING_PROCEEDED,
 		Msg:         "success",
 		RecordingId: task.RecordingId,
 		RecorderId:  task.RecorderId,
@@ -408,50 +451,58 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 		FilePath:    relativePath,
 		FileSize:    float32(math.Round(float64(size)*100) / 100),
 	}
-	c.notifyAndRunPostProcessingScripts(toSend, outputFile, finalFileName, size, log)
+	c.runPostTranscodingScripts(toSend, outputFile, finalFileName, size, log)
 
 	log.Infoln("merge recordings process has been finished")
 	return nil
 }
 
-func (c *RecorderController) notifyAndRunPostProcessingScripts(toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, log *logrus.Entry) {
+func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.TranscodingTask, taskDetails *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, error) {
+	data := &pnmutils.ScriptData{
+		Task:        "single",
+		RecordingID: task.GetRecordingId(),
+		RoomTableID: task.GetRoomTableId(),
+		RoomID:      task.GetRoomId(),
+		RoomSID:     task.GetRoomSid(),
+		FileName:    taskDetails.FileName,
+		FilePath:    taskDetails.FilePath,
+		RecorderID:  task.GetRecorderId(),
+	}
+
+	jsonData, err := pnmutils.RunScriptsWithData(c.ctx, c.cnf.Hooks.PreTranscoding, data, log, "pre-transcoding")
+	if err != nil {
+		return nil, err
+	}
+
+	var finalData pnmutils.ScriptData
+	if err := json.Unmarshal(jsonData, &finalData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal final JSON from pre-transcoding scripts: %w", err)
+	}
+
+	taskDetails.FilePath = finalData.FilePath
+	taskDetails.FileName = finalData.FileName
+
+	return taskDetails, nil
+}
+
+func (c *RecorderController) runPostTranscodingScripts(toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, log *logrus.Entry) {
 	log.Infof("notifying plugnmeet with data: %+v", toSend)
 
 	if _, err := c.notifier.NotifyToPlugNmeet(toSend); err != nil {
 		log.WithError(err).Errorln("failed to notify plugnmeet")
 	}
 
-	// Execute post-processing scripts
-	if len(c.cnf.Recorder.PostProcessingScripts) > 0 {
-		data := map[string]interface{}{
-			"recording_id":  toSend.GetRecordingId(),
-			"room_table_id": toSend.GetRoomTableId(),
-			"room_id":       toSend.GetRoomId(),
-			"room_sid":      toSend.GetRoomSid(),
-			"file_name":     finalFileName,
-			"file_path":     outputFile,
-			"file_size":     size,
-			"recorder_id":   toSend.GetRecorderId(),
+	if len(c.cnf.Hooks.PostTranscoding) > 0 {
+		data := &pnmutils.ScriptData{
+			RecordingID: toSend.GetRecordingId(),
+			RoomTableID: toSend.GetRoomTableId(),
+			RoomID:      toSend.GetRoomId(),
+			RoomSID:     toSend.GetRoomSid(),
+			FileName:    finalFileName,
+			FilePath:    outputFile,
+			FileSize:    size,
+			RecorderID:  toSend.GetRecorderId(),
 		}
-		jsonData, err := json.Marshal(data)
-		if err != nil {
-			log.WithError(err).Errorln("failed to marshal post-processing data for scripts")
-			return
-		}
-
-		for _, script := range c.cnf.Recorder.PostProcessingScripts {
-			log.Infof("running post-processing script: %s", script)
-
-			// Execute the script directly, passing data as a command-line argument.
-			// The script's lifecycle is tied to the main application context.
-			cmd := exec.CommandContext(c.ctx, script, string(jsonData))
-			output, err := cmd.CombinedOutput()
-
-			if err != nil {
-				log.WithError(err).Errorf("post-processing script %s failed, output: %s", script, string(output))
-			} else {
-				log.Infof("post-processing script %s finished successfully. output: %s", script, string(output))
-			}
-		}
+		pnmutils.RunFireAndForgetScripts(c.ctx, c.cnf.Hooks.PostTranscoding, data, log, "post-transcoding")
 	}
 }

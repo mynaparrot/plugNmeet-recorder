@@ -41,19 +41,40 @@ recorder:
     # Optional: Specify a subdirectory for this recorder instance.
     # This path must reside within main_path and will be stored in the database.
     sub_path: "node_01"
-  # Optional: Define pre-transcode scripts to run before transcoding.
-  # These scripts can move files from the recorder's local storage to a shared
-  # storage (like NFS or CIFS) accessible by the transcoder. The script must
-  # return a modified JSON with the new file path for the transcoder to use.
-  # See the example script for more details. Ensure scripts have executable permissions (e.g., chmod +x).
-  #pre_transcode_scripts:
-  #  - "./scripts/pre/example.sh"
-  #
-  # Optional: Define post-processing scripts to further process recordings.
-  # Example script available at scripts/post/example.sh
-  # Ensure scripts have executable permissions (e.g., chmod +x).
-  #post_processing_scripts:
-  #  - "./scripts/post/example.sh"
+
+# ----------------------------------------------------------------
+# Scripting Hooks
+#
+# Scripts are executed in three stages:
+# 1. post_recording: Runs on the RECORDER after the raw file is saved.
+#    - Purpose: Upload the raw file to shared storage (NFS, S3, etc.).
+#    - Interface: Receives JSON via stdin, returns modified JSON via stdout
+#      with the new network-accessible path.
+#
+# 2. pre_transcoding: Runs on the TRANSCODER before ffmpeg starts.
+#    - Purpose: Download the file from shared storage to a local path.
+#    - Interface: Receives JSON via stdin, returns modified JSON via stdout
+#      with the final local path for ffmpeg to use.
+#
+# 3. post_transcoding: Runs on the TRANSCODER after ffmpeg finishes.
+#    - Purpose: Final cleanup, notification, or upload of the processed file.
+#    - Interface: "Fire-and-forget". Receives JSON as a command-line argument.
+#
+# Ensure all scripts have executable permissions (e.g., chmod +x).
+#
+# For backward compatibility, if you have defined scripts under the `recorder`
+# section (e.g., `recorder.post_recording_scripts`), they will be automatically
+# migrated to these top-level `hooks` during startup.
+# ----------------------------------------------------------------
+hooks:
+  #post_recording:
+  #  - "./scripts/post-recording/upload.sh"
+
+  #pre_transcoding:
+  #  - "./scripts/pre-transcoding/download.sh"
+
+  #post_transcoding:
+  #  - "./scripts/post-transcoding/notify.sh"
 
 log_settings:
   log_file: "./logs/recorder.log"
