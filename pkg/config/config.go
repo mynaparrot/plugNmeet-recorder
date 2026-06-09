@@ -136,9 +136,13 @@ func (a *AppConfig) setDefaultConfig() {
 	}
 
 	// Validate all defined hook scripts
-	validateScripts(a.Hooks.PostRecording)
-	validateScripts(a.Hooks.PreTranscoding)
-	validateScripts(a.Hooks.PostTranscoding)
+	if a.Recorder.Mode == ModeBoth || a.Recorder.Mode == ModeRecorderOnly {
+		validateScripts(a.Hooks.PostRecording)
+	}
+	if a.Recorder.Mode == ModeBoth || a.Recorder.Mode == ModeTranscoderOnly {
+		validateScripts(a.Hooks.PreTranscoding)
+		validateScripts(a.Hooks.PostTranscoding)
+	}
 
 	if a.FfmpegSettings == nil {
 		a.FfmpegSettings = &FfmpegSettings{
