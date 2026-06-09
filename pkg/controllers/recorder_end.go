@@ -180,18 +180,20 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 		RecorderID:  req.GetRecorderId(),
 	}
 
-	jsonData, err := utils.RunScriptsWithData(c.ctx, c.cnf.Hooks.PostRecording, data, log, "post-recording")
+	jsonData, err := utils.RunScriptsWithData(c.ctx, "post-recording", c.cnf.Hooks.PostRecording, data, log)
 	if err != nil {
 		return nil, err
 	}
 
-	var finalData utils.ScriptData
-	if err := json.Unmarshal(jsonData, &finalData); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal final JSON from post-recording scripts: %w", err)
+	if len(jsonData) > 0 {
+		var finalData utils.ScriptData
+		if err := json.Unmarshal(jsonData, &finalData); err != nil {
+			log.WithError(err).Error("failed to unmarshal final JSON from post-recording scripts, will use original data")
+		} else {
+			postRecording.FilePath = finalData.FilePath
+			postRecording.FileName = finalData.FileName
+		}
 	}
-
-	postRecording.FilePath = finalData.FilePath
-	postRecording.FileName = finalData.FileName
 
 	return postRecording, nil
 }

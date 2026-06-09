@@ -127,10 +127,6 @@ Scripts are executed in three stages:
 
 Ensure all scripts have executable permissions (e.g., `chmod +x`).
 
-For backward compatibility, if you have defined scripts under the `recorder`
-section (e.g., `recorder.post_recording_scripts`), they will be automatically
-migrated to these top-level `hooks` during startup.
-
 ### How to Use
 
 1.  **Create a Script:** Write a standard shell script (e.g., `my_script.sh`) that performs your desired actions.
