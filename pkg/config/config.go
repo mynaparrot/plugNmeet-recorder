@@ -173,6 +173,9 @@ func validateScripts(scriptPaths []string) {
 		} else if err != nil {
 			logrus.Fatalf("Configuration error: failed to stat script '%s': %v", script, err)
 		}
+		if info.IsDir() {
+			logrus.Fatalf("Configuration error: script '%s' is a directory, not a file.", script)
+		}
 
 		// Check for execute permission for user, group, or others.
 		if info.Mode()&0111 == 0 {

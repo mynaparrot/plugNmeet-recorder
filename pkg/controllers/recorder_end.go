@@ -190,8 +190,12 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 		if err := json.Unmarshal(jsonData, &finalData); err != nil {
 			log.WithError(err).Error("failed to unmarshal final JSON from post-recording scripts, will use original data")
 		} else {
-			postRecording.FilePath = finalData.FilePath
-			postRecording.FileName = finalData.FileName
+			if finalData.FilePath != "" {
+				postRecording.FilePath = finalData.FilePath
+			}
+			if finalData.FileName != "" {
+				postRecording.FileName = finalData.FileName
+			}
 		}
 	}
 

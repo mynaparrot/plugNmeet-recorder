@@ -321,7 +321,7 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 		RecordingVariant: &taskDetails.RecordingVariant,
 	}
 
-	c.runPostTranscodingScripts("single", toSend, outputFile, finalFileName, size, log)
+	c.runPostTranscodingScripts(task, "single", toSend, outputFile, finalFileName, size, log)
 	log.Infoln("Post-transcoding process has been finished")
 
 	return nil
@@ -365,7 +365,9 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 				log.WithError(err).Error("failed to unmarshal final JSON from pre-transcoding scripts for merge task, will use original data")
 			} else {
 				// The script returns the new local base path for the source files.
-				inputPath = finalData.FilePath
+				if finalData.FilePath != "" {
+					inputPath = finalData.FilePath
+				}
 			}
 		}
 	}
@@ -454,7 +456,7 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 		FilePath:    relativePath,
 		FileSize:    float32(math.Round(float64(size)*100) / 100),
 	}
-	c.runPostTranscodingScripts("merge", toSend, outputFile, finalFileName, size, log)
+	c.runPostTranscodingScripts(task, "merge", toSend, outputFile, finalFileName, size, log)
 	log.Infoln("merge recordings process has been finished")
 	return nil
 }
@@ -481,26 +483,30 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 		if err := json.Unmarshal(jsonData, &finalData); err != nil {
 			log.WithError(err).Error("failed to unmarshal final JSON from pre-transcoding scripts, will use original data")
 		} else {
-			taskDetails.FilePath = finalData.FilePath
-			taskDetails.FileName = finalData.FileName
+			if finalData.FilePath != "" {
+				taskDetails.FilePath = finalData.FilePath
+			}
+			if finalData.FileName != "" {
+				taskDetails.FileName = finalData.FileName
+			}
 		}
 	}
 
 	return taskDetails, nil
 }
 
-func (c *RecorderController) runPostTranscodingScripts(taskType string, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, log *logrus.Entry) {
+func (c *RecorderController) runPostTranscodingScripts(task *plugnmeet.TranscodingTask, taskType string, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, log *logrus.Entry) {
 	if len(c.cnf.Hooks.PostTranscoding) > 0 {
 		data := &pnmutils.ScriptData{
 			Task:        taskType,
-			RecordingID: toSend.RecordingId,
-			RoomTableID: toSend.RoomTableId,
-			RoomID:      toSend.RoomId,
-			RoomSID:     toSend.RoomSid,
+			RecordingID: task.RecordingId,
+			RoomTableID: task.RoomTableId,
+			RoomID:      task.RoomId,
+			RoomSID:     task.RoomSid,
 			FileName:    finalFileName,
 			FilePath:    outputFile,
 			FileSize:    size,
-			RecorderID:  toSend.RecorderId,
+			RecorderID:  task.RecorderId,
 		}
 
 		jsonData, err := pnmutils.RunScriptsWithData(c.ctx, "post-transcoding", c.cnf.Hooks.PostTranscoding, data, log)
