@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 )
@@ -126,6 +128,21 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 			return
 		}
 		if stat.Size() > 0 {
+			postRecording := &plugnmeet.TranscodingTaskPostRecording{
+				FileName: finalFileName, // this is the raw file name
+				FilePath: finalFilePath, // this is now the final path
+			}
+
+			// Run post-recording scripts
+			if len(c.cnf.Hooks.PostRecording) > 0 {
+				modifiedPostRecording, err := c.runPostRecordingScripts(req, postRecording, log)
+				if err != nil {
+					log.WithError(err).Errorln("Post-recording script execution failed")
+					return
+				}
+				postRecording = modifiedPostRecording
+			}
+
 			task := &plugnmeet.TranscodingTask{
 				RecordingId: req.RecordingId,
 				RoomId:      req.RoomId,
@@ -133,10 +150,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 				RoomTableId: req.RoomTableId,
 				RecorderId:  req.RecorderId,
 				TaskDetails: &plugnmeet.TranscodingTask_PostRecording{
-					PostRecording: &plugnmeet.TranscodingTaskPostRecording{
-						FileName: finalFileName, // this is the raw file name
-						FilePath: finalFilePath, // this is now the final path
-					},
+					PostRecording: postRecording,
 				},
 			}
 
@@ -153,6 +167,33 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 			log.Errorf("Avoiding to publish transcoding task of: %s file because of 0 size", finalRawFilePath)
 		}
 	}
+}
+
+func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToRecorder, postRecording *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, error) {
+	data := &utils.ScriptData{
+		RecordingID: req.GetRecordingId(),
+		RoomTableID: req.GetRoomTableId(),
+		RoomID:      req.GetRoomId(),
+		RoomSID:     req.GetRoomSid(),
+		FileName:    postRecording.FileName,
+		FilePath:    postRecording.FilePath,
+		RecorderID:  req.GetRecorderId(),
+	}
+
+	jsonData, err := utils.RunScriptsWithData(c.ctx, c.cnf.Hooks.PostRecording, data, log, "post-recording")
+	if err != nil {
+		return nil, err
+	}
+
+	var finalData utils.ScriptData
+	if err := json.Unmarshal(jsonData, &finalData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal final JSON from post-recording scripts: %w", err)
+	}
+
+	postRecording.FilePath = finalData.FilePath
+	postRecording.FileName = finalData.FileName
+
+	return postRecording, nil
 }
 
 // moveFile moves a file from src to dst. It creates the destination directory if it doesn't exist.

@@ -26,10 +26,17 @@ type AppConfig struct {
 
 	RootWorkingDir string
 	Recorder       RecorderInfo        `yaml:"recorder"`
+	Hooks          HooksConfig         `yaml:"hooks"`
 	LogSettings    logging.LogSettings `yaml:"log_settings"`
 	FfmpegSettings *FfmpegSettings     `yaml:"ffmpeg_settings"`
 	NatsInfo       NatsInfo            `yaml:"nats_info"`
 	PlugNmeetInfo  PlugNmeetInfo       `yaml:"plugNmeet_info"`
+}
+
+type HooksConfig struct {
+	PostRecording   []string `yaml:"post_recording"`
+	PreTranscoding  []string `yaml:"pre_transcoding"`
+	PostTranscoding []string `yaml:"post_transcoding"`
 }
 
 type RecorderInfo struct {
@@ -44,8 +51,11 @@ type RecorderInfo struct {
 	XvfbDpi                     uint64             `yaml:"xvfb_dpi"`
 	TemporaryDir                *string            `yaml:"temporary_dir"`
 	CopyToPath                  CopyToPathSettings `yaml:"copy_to_path"`
-	PostProcessingScripts       []string           `yaml:"post_processing_scripts"`
 	TranscodingCpuLimitBothMode *float64           `yaml:"transcoding_cpu_limit_both_mode"`
+
+	// Deprecated fields for backward compatibility. They are unexported and will be migrated
+	// to the top-level `hooks` section during config initialization.
+	PostProcessingScripts []string `yaml:"post_processing_scripts"` // Deprecated
 }
 
 type CopyToPathSettings struct {
@@ -117,6 +127,12 @@ func (a *AppConfig) setDefaultConfig() {
 	}
 	if a.Recorder.TranscodingCpuLimitBothMode == nil {
 		a.Recorder.TranscodingCpuLimitBothMode = new(80.0)
+	}
+
+	// For backward compatibility, migrate any scripts defined in the old `recorder` block
+	// to the new top-level `hooks` block.
+	if len(a.Recorder.PostProcessingScripts) > 0 {
+		a.Hooks.PostTranscoding = append(a.Hooks.PostTranscoding, a.Recorder.PostProcessingScripts...)
 	}
 
 	if a.FfmpegSettings == nil {
