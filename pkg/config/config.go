@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"sync/atomic"
 
 	"github.com/mynaparrot/plugnmeet-protocol/logging"
@@ -129,10 +130,18 @@ func (a *AppConfig) setDefaultConfig() {
 		a.Recorder.TranscodingCpuLimitBothMode = new(80.0)
 	}
 
-	// For backward compatibility, migrate any scripts defined in the old `recorder` block
-	// to the new top-level `hooks` block.
+	// For backward compatibility, we'll show error message if user still using old format
 	if len(a.Recorder.PostProcessingScripts) > 0 {
-		a.Hooks.PostTranscoding = append(a.Hooks.PostTranscoding, a.Recorder.PostProcessingScripts...)
+		logrus.Fatalf("Configuration error: 'recorder.post_processing_scripts' is deprecated. Please move your scripts to the top-level 'hooks.post_transcoding' section. IMPORTANT: Scripts now receive data via stdin instead of command-line arguments. Please update your scripts to read from stdin.")
+	}
+
+	// Validate all defined hook scripts
+	if a.Recorder.Mode == ModeBoth || a.Recorder.Mode == ModeRecorderOnly {
+		validateScripts(a.Hooks.PostRecording)
+	}
+	if a.Recorder.Mode == ModeBoth || a.Recorder.Mode == ModeTranscoderOnly {
+		validateScripts(a.Hooks.PreTranscoding)
+		validateScripts(a.Hooks.PostTranscoding)
 	}
 
 	if a.FfmpegSettings == nil {
@@ -153,5 +162,28 @@ func (a *AppConfig) setDefaultConfig() {
 	}
 	if a.NatsInfo.Recorder.TranscodingJobs == "" {
 		a.NatsInfo.Recorder.TranscodingJobs = "pnm-RecorderTranscoderJobs"
+	}
+}
+
+// validateScripts checks if the provided script paths are valid and executable.
+func validateScripts(scriptPaths []string) {
+	for _, script := range scriptPaths {
+		if script == "" {
+			continue // Ignore empty entries
+		}
+		info, err := os.Stat(script)
+		if os.IsNotExist(err) {
+			logrus.Fatalf("Configuration error: script '%s' not found.", script)
+		} else if err != nil {
+			logrus.Fatalf("Configuration error: failed to stat script '%s': %v", script, err)
+		}
+		if info.IsDir() {
+			logrus.Fatalf("Configuration error: script '%s' is a directory, not a file.", script)
+		}
+
+		// Check for execute permission for user, group, or others.
+		if info.Mode()&0111 == 0 {
+			logrus.Fatalf("Configuration error: script '%s' is not executable. Please grant execute permission (e.g., 'chmod +x %s').", script, script)
+		}
 	}
 }

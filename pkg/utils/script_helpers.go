@@ -26,7 +26,7 @@ type ScriptData struct {
 
 // RunScriptsWithData executes a series of scripts, passing data from one to the next via stdin/stdout.
 // It's used for script stages that need to modify the job payload.
-func RunScriptsWithData(ctx context.Context, scripts []string, initialData *ScriptData, log *logrus.Entry, scriptType string) (json.RawMessage, error) {
+func RunScriptsWithData(ctx context.Context, scriptType string, scripts []string, initialData *ScriptData, log *logrus.Entry) (json.RawMessage, error) {
 	jsonData, err := json.Marshal(initialData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal initial data for %s script: %w", scriptType, err)
@@ -47,31 +47,11 @@ func RunScriptsWithData(ctx context.Context, scripts []string, initialData *Scri
 		}
 
 		// The output of the script becomes the input for the next one.
-		jsonData = out.Bytes()
+		// If output is empty, we stick with the previous jsonData to allow scripts in the chain to optionally modify the data.
+		if len(bytes.TrimSpace(out.Bytes())) > 0 {
+			jsonData = out.Bytes()
+		}
 	}
 
 	return jsonData, nil
-}
-
-// RunFireAndForgetScripts executes a series of scripts for notification or cleanup purposes.
-// It passes data as a command-line argument and does not process stdout.
-func RunFireAndForgetScripts(ctx context.Context, scripts []string, data *ScriptData, log *logrus.Entry, scriptType string) {
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		log.WithError(err).Errorf("failed to marshal data for %s scripts", scriptType)
-		return
-	}
-
-	for _, script := range scripts {
-		log.Infof("Running %s script: %s", scriptType, script)
-
-		cmd := exec.CommandContext(ctx, script, string(jsonData))
-		output, err := cmd.CombinedOutput()
-
-		if err != nil {
-			log.WithError(err).Errorf("%s script %s failed, output: %s", scriptType, script, string(output))
-		} else {
-			log.Infof("%s script %s finished successfully. output: %s", scriptType, script, string(output))
-		}
-	}
 }

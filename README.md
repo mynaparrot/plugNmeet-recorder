@@ -110,31 +110,27 @@ For a streamlined and automated installation on a single server, you can use the
 
 Scripting hooks allow you to automate tasks at different stages of the recording and transcoding process. This is especially powerful in a multi-server setup where recording and transcoding happen on different machines. For example, you can use hooks to automatically upload a raw recording to cloud storage from a `recorderOnly` instance, and then download it on a `transcoderOnly` instance for processing. This decouples your workflow and makes your storage management flexible.
 
+All scripts follow a standard interface: they receive a JSON payload via **stdin** and can optionally return a modified JSON payload via **stdout**. If multiple scripts are defined for a single hook, they form a pipeline: the **stdout** of the first script becomes the **stdin** for the second, and so on. If a script in the chain produces no output, the data from the previous step is passed along to the next.
+
+The application will validate that all configured scripts exist and have executable permissions on startup.
+
 Scripts are executed in three stages:
 1. **post_recording**: Runs on the RECORDER after the raw file is saved.
    - **Purpose**: Upload the raw file to shared storage (NFS, S3, etc.).
-   - **Interface**: Receives JSON via stdin, returns modified JSON via stdout
-     with the new network-accessible path.
+   - **Action**: Should return JSON with the `file_path` updated to the new network-accessible location for the transcoder.
 
 2. **pre_transcoding**: Runs on the TRANSCODER before ffmpeg starts.
    - **Purpose**: Download the file from shared storage to a local path.
-   -   **Interface**: Receives JSON via stdin, returns modified JSON via stdout
-     with the final local path for ffmpeg to use.
+   - **Action**: Should return JSON with the `file_path` updated to the final local path for ffmpeg to use.
 
 3. **post_transcoding**: Runs on the TRANSCODER after ffmpeg finishes.
    - **Purpose**: Final cleanup, notification, or upload of the processed file.
-   - **Interface**: "Fire-and-forget". Receives JSON as a command-line argument.
-
-Ensure all scripts have executable permissions (e.g., `chmod +x`).
-
-For backward compatibility, if you have defined scripts under the `recorder`
-section (e.g., `recorder.post_recording_scripts`), they will be automatically
-migrated to these top-level `hooks` during startup.
+   - **Action**: Can optionally return JSON with the `file_path` updated (e.g., to an S3 URL) to be sent to the main plugNmeet server.
 
 ### How to Use
 
-1.  **Create a Script:** Write a standard shell script (e.g., `my_script.sh`) that performs your desired actions.
-2.  **Enable in Config:** Add the path to your script (or multiple scripts) in the `hooks` section of your `config.yaml`:
+1.  **Create a Script:** Write a standard shell script (e.g., `my_script.sh`) that reads from `stdin` to get the job data.
+2.  **Enable in Config:** Add the path to your script (or multiple scripts) in the `hooks` section of your `config.yaml`. The order of scripts in the list defines the execution order of the chain.
 
     ```yaml
     # config.yaml
@@ -144,7 +140,8 @@ migrated to these top-level `hooks` during startup.
       pre_transcoding:
         - "./scripts/pre-transcoding/download.sh"
       post_transcoding:
-        - "./scripts/post-transcoding/notify.sh"
+        - "./scripts/post-transcoding/upload-to-s3.sh"
+        - "./scripts/post-transcoding/notify-slack.sh"
     ```
 
 3.  **Make it Executable:** Ensure your script has execute permissions:
@@ -155,12 +152,13 @@ migrated to these top-level `hooks` during startup.
 
 ### Script Data
 
-When a script is executed, it receives a single argument: a JSON string containing metadata about the completed recording. Your script can parse this JSON to get the information it needs.
+When a script is executed, it receives a JSON payload via **stdin**. Your script can parse this JSON to get the information it needs.
 
 **Example JSON Data:**
 
 ```json
 {
+  "task": "single",
   "recording_id": "REC_ax9s3djn2s",
   "room_table_id": 123,
   "room_id": "room01",
