@@ -61,10 +61,6 @@ recorder:
 #    - Interface: "Fire-and-forget". Receives JSON as a command-line argument.
 #
 # Ensure all scripts have executable permissions (e.g., chmod +x).
-#
-# For backward compatibility, if you have defined scripts under the `recorder`
-# section (e.g., `recorder.post_recording_scripts`), they will be automatically
-# migrated to these top-level `hooks` during startup.
 # ----------------------------------------------------------------
 hooks:
   #post_recording:

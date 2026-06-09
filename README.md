@@ -51,7 +51,7 @@ Edit `config.yaml` to configure the recorder.
 
 *   **`nats_info`**: This section must match the NATS configuration in your `plugnmeet-server`'s `config.yaml`.
 *   **`main_path`**: This should be the same as `recording_files_path` in your `plugnmeet-server`'s `config.yaml`.
-*   **`plugNmeet_info`**: Update this section with your plugNmeet server details.
+*   **`plugNmeet_info`**: Update this section with your plugnmeet server details.
 
 **Important:** If you use NFS or other network-mounted storage for `main_path`, ensure both the recorder and the `plugnmeet-server` can access it. Otherwise, users won't be able to download recordings. To prevent I/O errors and dropped frames caused by this network latency, it is **highly recommended** to set a local `temporary_dir` in `config.yaml`. The recorder will write to this local directory first and then automatically move the file to the final network path after the recording is complete.
 
@@ -106,28 +106,51 @@ Review the "Operational Modes" section above. Based on your specific use case an
 
 For a streamlined and automated installation on a single server, you can use the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script.
 
-## Post-Processing Scripts
+## Scripting Hooks
 
-The recorder offers a powerful feature to run custom shell scripts after a recording has been successfully transcoded. This allows you to automate tasks like uploading the final file to cloud storage (e.g., Amazon S3), notifying an external API, or performing additional media processing.
+Scripting hooks allow you to automate tasks at different stages of the recording and transcoding process. This is especially powerful in a multi-server setup where recording and transcoding happen on different machines. For example, you can use hooks to automatically upload a raw recording to cloud storage from a `recorderOnly` instance, and then download it on a `transcoderOnly` instance for processing. This decouples your workflow and makes your storage management flexible.
+
+Scripts are executed in three stages:
+1. **post_recording**: Runs on the RECORDER after the raw file is saved.
+   - **Purpose**: Upload the raw file to shared storage (NFS, S3, etc.).
+   - **Interface**: Receives JSON via stdin, returns modified JSON via stdout
+     with the new network-accessible path.
+
+2. **pre_transcoding**: Runs on the TRANSCODER before ffmpeg starts.
+   - **Purpose**: Download the file from shared storage to a local path.
+   -   **Interface**: Receives JSON via stdin, returns modified JSON via stdout
+     with the final local path for ffmpeg to use.
+
+3. **post_transcoding**: Runs on the TRANSCODER after ffmpeg finishes.
+   - **Purpose**: Final cleanup, notification, or upload of the processed file.
+   - **Interface**: "Fire-and-forget". Receives JSON as a command-line argument.
+
+Ensure all scripts have executable permissions (e.g., `chmod +x`).
+
+For backward compatibility, if you have defined scripts under the `recorder`
+section (e.g., `recorder.post_recording_scripts`), they will be automatically
+migrated to these top-level `hooks` during startup.
 
 ### How to Use
 
 1.  **Create a Script:** Write a standard shell script (e.g., `my_script.sh`) that performs your desired actions.
-2.  **Enable in Config:** Add the path to your script (or multiple scripts) in the `post_processing_scripts` section of your `config.yaml`:
+2.  **Enable in Config:** Add the path to your script (or multiple scripts) in the `hooks` section of your `config.yaml`:
 
     ```yaml
     # config.yaml
-    recorder:
-      # ... other settings
-      post_processing_scripts:
-        - "./post_processing_scripts/example.sh"
-        - "/path/to/your/other_script.sh"
+    hooks:
+      post_recording:
+        - "./scripts/post-recording/upload.sh"
+      pre_transcoding:
+        - "./scripts/pre-transcoding/download.sh"
+      post_transcoding:
+        - "./scripts/post-transcoding/notify.sh"
     ```
 
 3.  **Make it Executable:** Ensure your script has execute permissions:
 
     ```bash
-    chmod +x ./post_processing_scripts/example.sh
+    chmod +x ./scripts/post-recording/upload.sh
     ```
 
 ### Script Data
@@ -149,7 +172,7 @@ When a script is executed, it receives a single argument: a JSON string containi
 }
 ```
 
-An example script (`post_processing_scripts/example.sh`) is provided to demonstrate how to parse this JSON using tools like `jq` and log the output. You can use this as a template for your own custom workflows.
+Example scripts are provided in the `./scripts` directory to demonstrate how to parse this JSON using tools like `jq` and log the output. You can use these as a template for your own custom workflows.
 
 ## Development
 
