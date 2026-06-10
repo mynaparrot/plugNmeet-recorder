@@ -129,8 +129,8 @@ Scripts are executed in three stages:
 
 ### How to Use
 
-1.  **Create a Script:** Write a standard shell script (e.g., `my_script.sh`) that reads from `stdin` to get the job data.
-2.  **Enable in Config:** Add the path to your script (or multiple scripts) in the `hooks` section of your `config.yaml`. The order of scripts in the list defines the execution order of the chain.
+1.  **Create a Script:** A "script" can be any executable file (a shell script, a compiled Go program, a NodeJS script, etc.) that can read from `stdin`.
+2.  **Enable in Config:** Add the path to your executable (or multiple executables) in the `hooks` section of your `config.yaml`. The order of scripts in the list defines the execution order of the chain.
 
     ```yaml
     # config.yaml
@@ -144,7 +144,7 @@ Scripts are executed in three stages:
         - "./scripts/post-transcoding/notify-slack.sh"
     ```
 
-3.  **Make it Executable:** Ensure your script has execute permissions:
+3.  **Make it Executable:** Ensure your script or program has execute permissions:
 
     ```bash
     chmod +x ./scripts/post-recording/upload.sh
