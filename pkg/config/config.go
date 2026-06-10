@@ -1,9 +1,11 @@
 package config
 
 import (
-	"os"
+	"path/filepath"
+	"strings"
 	"sync/atomic"
 
+	"github.com/mynaparrot/plugnmeet-protocol/hooks"
 	"github.com/mynaparrot/plugnmeet-protocol/logging"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -137,11 +139,31 @@ func (a *AppConfig) setDefaultConfig() {
 
 	// Validate all defined hook scripts
 	if a.Recorder.Mode == ModeBoth || a.Recorder.Mode == ModeRecorderOnly {
-		validateScripts(a.Hooks.PostRecording)
+		for i, script := range a.Hooks.PostRecording {
+			resolved := a.resolvePath(script)
+			a.Hooks.PostRecording[i] = resolved
+			if err := hooks.ValidateHookScript(resolved, "post_recording"); err != nil {
+				logrus.WithError(err).Fatal("Error validating hook script")
+			}
+		}
 	}
+
 	if a.Recorder.Mode == ModeBoth || a.Recorder.Mode == ModeTranscoderOnly {
-		validateScripts(a.Hooks.PreTranscoding)
-		validateScripts(a.Hooks.PostTranscoding)
+		for i, script := range a.Hooks.PreTranscoding {
+			resolved := a.resolvePath(script)
+			a.Hooks.PostRecording[i] = resolved
+			if err := hooks.ValidateHookScript(resolved, "pre_transcoding"); err != nil {
+				logrus.WithError(err).Fatal("Error validating hook script")
+			}
+		}
+
+		for i, script := range a.Hooks.PostTranscoding {
+			resolved := a.resolvePath(script)
+			a.Hooks.PostRecording[i] = resolved
+			if err := hooks.ValidateHookScript(resolved, "post_transcoding"); err != nil {
+				logrus.WithError(err).Fatal("Error validating hook script")
+			}
+		}
 	}
 
 	if a.FfmpegSettings == nil {
@@ -165,25 +187,9 @@ func (a *AppConfig) setDefaultConfig() {
 	}
 }
 
-// validateScripts checks if the provided script paths are valid and executable.
-func validateScripts(scriptPaths []string) {
-	for _, script := range scriptPaths {
-		if script == "" {
-			continue // Ignore empty entries
-		}
-		info, err := os.Stat(script)
-		if os.IsNotExist(err) {
-			logrus.Fatalf("Configuration error: script '%s' not found.", script)
-		} else if err != nil {
-			logrus.Fatalf("Configuration error: failed to stat script '%s': %v", script, err)
-		}
-		if info.IsDir() {
-			logrus.Fatalf("Configuration error: script '%s' is a directory, not a file.", script)
-		}
-
-		// Check for execute permission for user, group, or others.
-		if info.Mode()&0111 == 0 {
-			logrus.Fatalf("Configuration error: script '%s' is not executable. Please grant execute permission (e.g., 'chmod +x %s').", script, script)
-		}
+func (a *AppConfig) resolvePath(scriptPath string) string {
+	if strings.HasPrefix(scriptPath, "./") {
+		return filepath.Join(a.RootWorkingDir, scriptPath)
 	}
+	return scriptPath
 }

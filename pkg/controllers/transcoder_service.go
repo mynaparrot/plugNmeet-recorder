@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mynaparrot/plugnmeet-protocol/hooks"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-protocol/utils"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
-	pnmutils "github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/sirupsen/logrus"
@@ -344,7 +344,7 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 		// For merge tasks, we pass the list of file paths to the script.
 		// The script is expected to make all files available in a single local directory
 		// and return the path to that directory.
-		data := &pnmutils.ScriptData{
+		data := &hooks.RecordingHookData{
 			Task:        "merge",
 			RecordingID: task.GetRecordingId(),
 			RoomTableID: task.GetRoomTableId(),
@@ -354,13 +354,13 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 			RecorderID:  task.GetRecorderId(),
 		}
 
-		jsonData, err := pnmutils.RunScriptsWithData(c.ctx, "pre-transcoding", c.cnf.Hooks.PreTranscoding, data, log)
+		jsonData, err := hooks.ExecuteHookPipeline(c.ctx, c.cnf.Hooks.PreTranscoding, data, log)
 		if err != nil {
 			return fmt.Errorf("pre-transcoding script execution failed for merge task: %w", err)
 		}
 
 		if len(jsonData) > 0 {
-			var finalData pnmutils.ScriptData
+			var finalData hooks.RecordingHookData
 			if err := json.Unmarshal(jsonData, &finalData); err != nil {
 				log.WithError(err).Error("failed to unmarshal final JSON from pre-transcoding scripts for merge task, will use original data")
 			} else {
@@ -462,7 +462,7 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 }
 
 func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.TranscodingTask, taskDetails *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, error) {
-	data := &pnmutils.ScriptData{
+	data := &hooks.RecordingHookData{
 		Task:        "single",
 		RecordingID: task.GetRecordingId(),
 		RoomTableID: task.GetRoomTableId(),
@@ -473,13 +473,13 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 		RecorderID:  task.GetRecorderId(),
 	}
 
-	jsonData, err := pnmutils.RunScriptsWithData(c.ctx, "pre-transcoding", c.cnf.Hooks.PreTranscoding, data, log)
+	jsonData, err := hooks.ExecuteHookPipeline(c.ctx, c.cnf.Hooks.PreTranscoding, data, log)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(jsonData) > 0 {
-		var finalData pnmutils.ScriptData
+		var finalData hooks.RecordingHookData
 		if err := json.Unmarshal(jsonData, &finalData); err != nil {
 			log.WithError(err).Error("failed to unmarshal final JSON from pre-transcoding scripts, will use original data")
 		} else {
@@ -497,7 +497,7 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 
 func (c *RecorderController) runPostTranscodingScripts(task *plugnmeet.TranscodingTask, taskType string, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, log *logrus.Entry) {
 	if len(c.cnf.Hooks.PostTranscoding) > 0 {
-		data := &pnmutils.ScriptData{
+		data := &hooks.RecordingHookData{
 			Task:        taskType,
 			RecordingID: task.RecordingId,
 			RoomTableID: task.RoomTableId,
@@ -509,11 +509,11 @@ func (c *RecorderController) runPostTranscodingScripts(task *plugnmeet.Transcodi
 			RecorderID:  task.RecorderId,
 		}
 
-		jsonData, err := pnmutils.RunScriptsWithData(c.ctx, "post-transcoding", c.cnf.Hooks.PostTranscoding, data, log)
+		jsonData, err := hooks.ExecuteHookPipeline(c.ctx, c.cnf.Hooks.PostTranscoding, data, log)
 		if err != nil {
 			log.WithError(err).Error("post-transcoding script execution failed")
 		} else if len(jsonData) > 0 {
-			var finalData pnmutils.ScriptData
+			var finalData hooks.RecordingHookData
 			if err := json.Unmarshal(jsonData, &finalData); err == nil {
 				if finalData.FilePath != "" {
 					toSend.FilePath = finalData.FilePath

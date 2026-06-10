@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"path"
 
+	"github.com/mynaparrot/plugnmeet-protocol/hooks"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
-	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 )
@@ -170,7 +170,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 }
 
 func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToRecorder, postRecording *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, error) {
-	data := &utils.ScriptData{
+	data := &hooks.RecordingHookData{
 		RecordingID: req.GetRecordingId(),
 		RoomTableID: req.GetRoomTableId(),
 		RoomID:      req.GetRoomId(),
@@ -180,13 +180,13 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 		RecorderID:  req.GetRecorderId(),
 	}
 
-	jsonData, err := utils.RunScriptsWithData(c.ctx, "post-recording", c.cnf.Hooks.PostRecording, data, log)
+	jsonData, err := hooks.ExecuteHookPipeline(c.ctx, c.cnf.Hooks.PostRecording, data, log)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(jsonData) > 0 {
-		var finalData utils.ScriptData
+		var finalData hooks.RecordingHookData
 		if err := json.Unmarshal(jsonData, &finalData); err != nil {
 			log.WithError(err).Error("failed to unmarshal final JSON from post-recording scripts, will use original data")
 		} else {
