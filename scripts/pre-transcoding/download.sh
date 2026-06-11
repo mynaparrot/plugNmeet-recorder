@@ -27,12 +27,13 @@ mkdir -p "$local_staging_dir"
 
 # 5. Perform the download/copy operation based on the task type
 if [ "$task_type" == "merge" ]; then
-  # For merge tasks, 'file_paths' is an array.
+  # For merge tasks, 'input_paths' is an array.
   # We iterate through it and copy each file to our local staging directory.
   echo "Pre-Transcoding: Handling 'merge' task." >&2
 
   # Read the file paths into a bash array
-  mapfile -t file_paths < <(echo "$input_json" | jq -r '.file_paths[]')
+  # Using 'input_paths' as per the new naming convention.
+  mapfile -t file_paths < <(echo "$input_json" | jq -r '.input_paths[]')
 
   for file_path in "${file_paths[@]}"; do
     echo "Copying file: $file_path" >&2
@@ -42,7 +43,8 @@ if [ "$task_type" == "merge" ]; then
 else
   # For "single" tasks, we just copy the one file.
   echo "Pre-Transcoding: Handling 'single' task." >&2
-  network_path=$(echo "$input_json" | jq -r .file_path)
+  # Using 'input_path' as per the new naming convention.
+  network_path=$(echo "$input_json" | jq -r .input_path)
   original_filename=$(echo "$input_json" | jq -r .file_name)
   full_network_path="$network_path/$original_filename"
 
@@ -52,6 +54,7 @@ fi
 
 # 6. Modify the JSON with the new *local* path and print it to stdout.
 # The Go application will now use this path as the base for ffmpeg operations.
-output_json=$(echo "$input_json" | jq --arg new_path "$local_staging_dir" '.file_path = $new_path')
+# Using 'output_path' as per the new naming convention for the result path.
+output_json=$(echo "$input_json" | jq --arg new_path "$local_staging_dir" '.output_path = $new_path')
 
 echo "$output_json"

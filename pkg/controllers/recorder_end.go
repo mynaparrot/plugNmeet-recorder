@@ -182,7 +182,7 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 		RoomID:      req.GetRoomId(),
 		RoomSID:     req.GetRoomSid(),
 		FileName:    postRecording.FileName,
-		FilePath:    absFilePath, // scripts need absolute path not with filename
+		InputPath:   absFilePath, // scripts need absolute path not with filename
 		RecorderID:  req.GetRecorderId(),
 	}
 
@@ -196,10 +196,10 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 		if err := json.Unmarshal(jsonData, &finalData); err != nil {
 			log.WithError(err).Error("failed to unmarshal final JSON from post-recording scripts, will use original data")
 		} else {
-			if finalData.FilePath != "" {
-				postRecording.FilePath = finalData.FilePath
+			if finalData.OutputPath != "" {
+				postRecording.FilePath = finalData.OutputPath
 			}
-			if finalData.FileName != "" {
+			if finalData.FileName != postRecording.FileName {
 				postRecording.FileName = finalData.FileName
 			}
 			if finalData.Error != "" {

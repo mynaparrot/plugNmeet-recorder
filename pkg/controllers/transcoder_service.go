@@ -215,13 +215,13 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 			return err
 		}
 		// If the hook returned a path that needs cleanup, defer the cleanup
-		if preTranscodeHookResult != nil && preTranscodeHookResult.ShouldCleanup && preTranscodeHookResult.FilePath != "" {
+		if preTranscodeHookResult != nil && preTranscodeHookResult.ShouldCleanup && preTranscodeHookResult.OutputPath != "" {
 			defer func(path string) {
 				log.Infof("Cleaning up temporary directory/file: %s", path)
 				if err := os.RemoveAll(path); err != nil {
 					log.WithError(err).Errorf("Failed to clean up temporary directory/file: %s", path)
 				}
-			}(preTranscodeHookResult.FilePath)
+			}(preTranscodeHookResult.OutputPath)
 		}
 	}
 
@@ -365,7 +365,7 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 			RoomTableID: task.GetRoomTableId(),
 			RoomID:      task.GetRoomId(),
 			RoomSID:     task.GetRoomSid(),
-			FilePaths:   taskDetails.FilePaths,
+			InputPaths:  taskDetails.FilePaths,
 			RecorderID:  task.GetRecorderId(),
 		}
 
@@ -380,8 +380,8 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 				log.WithError(err).Error("failed to unmarshal final JSON from pre-transcoding scripts for merge task, will use original data")
 			} else {
 				// The script returns the new local base path for the source files.
-				if finalData.FilePath != "" {
-					inputPath = finalData.FilePath
+				if finalData.OutputPath != "" {
+					inputPath = finalData.OutputPath
 				}
 				preTranscodeHookResult = &finalData // Capture the result for cleanup
 			}
@@ -389,13 +389,13 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 	}
 
 	// If the hook returned a path that needs cleanup, defer the cleanup
-	if preTranscodeHookResult != nil && preTranscodeHookResult.ShouldCleanup && preTranscodeHookResult.FilePath != "" {
+	if preTranscodeHookResult != nil && preTranscodeHookResult.ShouldCleanup && preTranscodeHookResult.OutputPath != "" {
 		defer func(path string) {
 			log.Infof("Cleaning up temporary directory/file: %s", path)
 			if err := os.RemoveAll(path); err != nil {
 				log.WithError(err).Errorf("Failed to clean up temporary directory/file: %s", path)
 			}
-		}(preTranscodeHookResult.FilePath)
+		}(preTranscodeHookResult.OutputPath)
 	}
 
 	// The final output will still be placed relative to the original MainPath.
@@ -495,7 +495,7 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 		RoomID:      task.GetRoomId(),
 		RoomSID:     task.GetRoomSid(),
 		FileName:    taskDetails.FileName,
-		FilePath:    taskDetails.FilePath,
+		InputPath:   taskDetails.FilePath,
 		RecorderID:  task.GetRecorderId(),
 	}
 
@@ -512,10 +512,10 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 			return taskDetails, &hooks.RecordingHookData{}, nil
 		}
 
-		if finalData.FilePath != "" {
-			taskDetails.FilePath = finalData.FilePath
+		if finalData.OutputPath != "" {
+			taskDetails.FilePath = finalData.OutputPath
 		}
-		if finalData.FileName != "" {
+		if finalData.FileName != taskDetails.FileName {
 			taskDetails.FileName = finalData.FileName
 		}
 		if finalData.Error != "" {
@@ -542,7 +542,7 @@ func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.
 			RoomID:           task.RoomId,
 			RoomSID:          task.RoomSid,
 			FileName:         finalFileName,
-			FilePath:         filepath.Dir(absPath), // scripts will expect full path not with filename
+			InputPath:        filepath.Dir(absPath), // scripts will expect full path not with filename
 			FileSize:         size,
 			RecorderID:       task.RecorderId,
 			SourceForCleanup: sourceForCleanup,
@@ -554,9 +554,9 @@ func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.
 		} else if len(jsonData) > 0 {
 			var finalData hooks.RecordingHookData
 			if err := json.Unmarshal(jsonData, &finalData); err == nil {
-				if finalData.FilePath != "" {
-					toSend.FilePath = finalData.FilePath
-					log.Infof("post-transcoding script updated FilePath to: %s", finalData.FilePath)
+				if finalData.OutputPath != "" {
+					toSend.FilePath = finalData.OutputPath
+					log.Infof("post-transcoding script updated FilePath to: %s", finalData.OutputPath)
 				}
 				if finalData.Error != "" {
 					log.Errorf("Script responded with error msg: %s", finalData.Error)

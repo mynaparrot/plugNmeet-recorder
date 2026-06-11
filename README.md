@@ -117,15 +117,15 @@ The application will validate that all configured scripts exist and have executa
 Scripts are executed in three stages:
 1. **post_recording**: Runs on the RECORDER after the raw file is saved.
    - **Purpose**: Upload the raw file to shared storage (NFS, S3, etc.).
-   - **Action**: Should return JSON with the `file_path` updated to the new network-accessible location for the transcoder.
+   - **Action**: Should return JSON with the `output_path` updated to the new network-accessible location for the transcoder.
 
 2. **pre_transcoding**: Runs on the TRANSCODER before ffmpeg starts.
    - **Purpose**: Download the file from shared storage to a local path.
-   - **Action**: Should return JSON with the `file_path` updated to the final local path for ffmpeg to use.
+   - **Action**: Should return JSON with the `output_path` updated to the final local path for ffmpeg to use.
 
 3. **post_transcoding**: Runs on the TRANSCODER after ffmpeg finishes.
    - **Purpose**: Final cleanup, notification, or upload of the processed file.
-   - **Action**: Can optionally return JSON with the `file_path` updated (e.g., to an S3 URL) to be sent to the main plugNmeet server.
+   - **Action**: Can optionally return JSON with the `output_path` updated (e.g., to an S3 URL) to be sent to the main plugNmeet server.
 
 ### How to Use
 
@@ -154,7 +154,12 @@ Scripts are executed in three stages:
 
 When a script is executed, it receives a JSON payload via **stdin**. Your script can parse this JSON to get the information it needs.
 
-**Example JSON Data:**
+**Key Fields for Path Handling:**
+*   **`input_path`**: (string, optional) The primary path for the script to process. This could be a local file path or a remote storage URL, depending on the stage.
+*   **`input_paths`**: (array of strings, optional) Used for tasks involving multiple files (e.g., merging multiple recordings).
+*   **`output_path`**: (string, optional) The path that the script returns as the result of its operation. This could be a new local path, a remote storage URL, or any identifier for the processed file.
+
+**Example Initial JSON Data (received by the first script in a chain):**
 
 ```json
 {
@@ -164,7 +169,24 @@ When a script is executed, it receives a JSON payload via **stdin**. Your script
   "room_id": "room01",
   "room_sid": "SID_d82k3s9d2l",
   "file_name": "REC_ax9s3djn2s.mp4",
-  "file_path": "/path/to/recording/files/node_01/room01/REC_ax9s3djn2s.mp4",
+  "input_path": "/path/to/recording/files/node_01/room01/REC_ax9s3djn2s.mkv",
+  "file_size": 123.45, // in MB
+  "recorder_id": "node_01"
+}
+```
+
+**Example JSON Data (returned by a script, or received by a subsequent script in a chain):**
+
+```json
+{
+  "task": "single",
+  "recording_id": "REC_ax9s3djn2s",
+  "room_table_id": 123,
+  "room_id": "room01",
+  "room_sid": "SID_d82k3s9d2l",
+  "file_name": "REC_ax9s3djn2s.mp4",
+  "input_path": "/path/to/recording/files/node_01/room01/REC_ax9s3djn2s.mkv",
+  "output_path": "s3://my-bucket/recordings/REC_ax9s3djn2s.mkv",
   "file_size": 123.45, // in MB
   "recorder_id": "node_01"
 }

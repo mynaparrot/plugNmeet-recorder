@@ -18,7 +18,8 @@ input_json=$(cat)
 # echo "Post-Recording: Received input: $input_json" >&2
 
 # 3. Use 'jq' to extract values
-original_path=$(echo "$input_json" | jq -r .file_path)
+# Using 'input_path' as per the new naming convention for the primary input path.
+original_path=$(echo "$input_json" | jq -r .input_path)
 original_filename=$(echo "$input_json" | jq -r .file_name)
 recording_id=$(echo "$input_json" | jq -r .recording_id)
 full_original_path="$original_path/$original_filename"
@@ -38,6 +39,7 @@ rsync -av --remove-source-files "$full_original_path" "$new_full_path"
 
 # 5. Modify the JSON with the new path and print it to stdout.
 # This new path is what the transcoder will receive in its job payload.
-output_json=$(echo "$input_json" | jq --arg new_path "$new_path_on_shared_storage" '.file_path = $new_path')
+# Using 'output_path' as per the new naming convention for the result path.
+output_json=$(echo "$input_json" | jq --arg new_path "$new_path_on_shared_storage" '.output_path = $new_path')
 
 echo "$output_json"
