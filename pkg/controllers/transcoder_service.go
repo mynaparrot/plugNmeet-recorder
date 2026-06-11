@@ -201,14 +201,27 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 		"method":   "handlePostRecordingTranscoding",
 	})
 
+	// Capture the initial remote path for potential cleanup after post-transcoding
+	initialRemoteFilePath := taskDetails.FilePath
+
 	// Run pre-transcoding scripts to get the file ready locally
 	if len(c.cnf.Hooks.PreTranscoding) > 0 {
-		modifiedTaskDetails, err := c.runPreTranscodingScripts(task, taskDetails, log)
+		var err error
+		var preTranscodeHookResult *hooks.RecordingHookData
+		taskDetails, preTranscodeHookResult, err = c.runPreTranscodingScripts(task, taskDetails, log)
 		if err != nil {
 			log.WithError(err).Errorln("Pre-transcoding script execution failed")
 			return err
 		}
-		taskDetails = modifiedTaskDetails
+		// If the hook returned a path that needs cleanup, defer the cleanup
+		if preTranscodeHookResult != nil && preTranscodeHookResult.ShouldCleanup && preTranscodeHookResult.FilePath != "" {
+			defer func(path string) {
+				log.Infof("Cleaning up temporary directory/file: %s", path)
+				if err := os.RemoveAll(path); err != nil {
+					log.WithError(err).Errorf("Failed to clean up temporary directory/file: %s", path)
+				}
+			}(preTranscodeHookResult.FilePath)
+		}
 	}
 
 	rawFilePath := path.Join(taskDetails.FilePath, taskDetails.FileName)
@@ -321,7 +334,7 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 		RecordingVariant: &taskDetails.RecordingVariant,
 	}
 
-	c.runPostTranscodingScripts(task, "single", toSend, outputFile, finalFileName, size, log)
+	c.runPostTranscodingScriptsAndNotify(task, "single", toSend, outputFile, finalFileName, size, initialRemoteFilePath, log)
 	log.Infoln("Post-transcoding process has been finished")
 
 	return nil
@@ -340,10 +353,8 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 	// It might be a network path.
 	inputPath := path.Join(c.cnf.Recorder.CopyToPath.MainPath, relativeOutputDir)
 
+	var preTranscodeHookResult *hooks.RecordingHookData
 	if len(c.cnf.Hooks.PreTranscoding) > 0 {
-		// For merge tasks, we pass the list of file paths to the script.
-		// The script is expected to make all files available in a single local directory
-		// and return the path to that directory.
 		data := &hooks.RecordingHookData{
 			Task:        "merge",
 			RecordingID: task.GetRecordingId(),
@@ -368,8 +379,19 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 				if finalData.FilePath != "" {
 					inputPath = finalData.FilePath
 				}
+				preTranscodeHookResult = &finalData // Capture the result for cleanup
 			}
 		}
+	}
+
+	// If the hook returned a path that needs cleanup, defer the cleanup
+	if preTranscodeHookResult != nil && preTranscodeHookResult.ShouldCleanup && preTranscodeHookResult.FilePath != "" {
+		defer func(path string) {
+			log.Infof("Cleaning up temporary directory/file: %s", path)
+			if err := os.RemoveAll(path); err != nil {
+				log.WithError(err).Errorf("Failed to clean up temporary directory/file: %s", path)
+			}
+		}(preTranscodeHookResult.FilePath)
 	}
 
 	// The final output will still be placed relative to the original MainPath.
@@ -456,12 +478,12 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 		FilePath:    relativePath,
 		FileSize:    float32(math.Round(float64(size)*100) / 100),
 	}
-	c.runPostTranscodingScripts(task, "merge", toSend, outputFile, finalFileName, size, log)
+	c.runPostTranscodingScriptsAndNotify(task, "merge", toSend, outputFile, finalFileName, size, "", log) // No initial remote path for merge
 	log.Infoln("merge recordings process has been finished")
 	return nil
 }
 
-func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.TranscodingTask, taskDetails *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, error) {
+func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.TranscodingTask, taskDetails *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, *hooks.RecordingHookData, error) {
 	data := &hooks.RecordingHookData{
 		Task:        "single",
 		RecordingID: task.GetRecordingId(),
@@ -475,38 +497,41 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 
 	jsonData, err := hooks.ExecuteHookPipeline(c.ctx, c.cnf.Hooks.PreTranscoding, data, log)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
+	var finalData hooks.RecordingHookData
 	if len(jsonData) > 0 {
-		var finalData hooks.RecordingHookData
 		if err := json.Unmarshal(jsonData, &finalData); err != nil {
 			log.WithError(err).Error("failed to unmarshal final JSON from pre-transcoding scripts, will use original data")
-		} else {
-			if finalData.FilePath != "" {
-				taskDetails.FilePath = finalData.FilePath
-			}
-			if finalData.FileName != "" {
-				taskDetails.FileName = finalData.FileName
-			}
+			// In case of unmarshal error, we still return the original taskDetails and an empty finalData
+			return taskDetails, &hooks.RecordingHookData{}, nil
+		}
+
+		if finalData.FilePath != "" {
+			taskDetails.FilePath = finalData.FilePath
+		}
+		if finalData.FileName != "" {
+			taskDetails.FileName = finalData.FileName
 		}
 	}
 
-	return taskDetails, nil
+	return taskDetails, &finalData, nil
 }
 
-func (c *RecorderController) runPostTranscodingScripts(task *plugnmeet.TranscodingTask, taskType string, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, log *logrus.Entry) {
+func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.TranscodingTask, taskType string, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, sourceForCleanup string, log *logrus.Entry) {
 	if len(c.cnf.Hooks.PostTranscoding) > 0 {
 		data := &hooks.RecordingHookData{
-			Task:        taskType,
-			RecordingID: task.RecordingId,
-			RoomTableID: task.RoomTableId,
-			RoomID:      task.RoomId,
-			RoomSID:     task.RoomSid,
-			FileName:    finalFileName,
-			FilePath:    outputFile,
-			FileSize:    size,
-			RecorderID:  task.RecorderId,
+			Task:             taskType,
+			RecordingID:      task.RecordingId,
+			RoomTableID:      task.RoomTableId,
+			RoomID:           task.RoomId,
+			RoomSID:          task.RoomSid,
+			FileName:         finalFileName,
+			FilePath:         outputFile,
+			FileSize:         size,
+			RecorderID:       task.RecorderId,
+			SourceForCleanup: sourceForCleanup,
 		}
 
 		jsonData, err := hooks.ExecuteHookPipeline(c.ctx, c.cnf.Hooks.PostTranscoding, data, log)
