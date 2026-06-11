@@ -17,6 +17,7 @@ import (
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-protocol/utils"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
+	recorderUtils "github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/sirupsen/logrus"
@@ -226,7 +227,10 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 
 	rawFilePath := path.Join(taskDetails.FilePath, taskDetails.FileName)
 	finalFileName := fmt.Sprintf("%s.mp4", task.RecordingId)
-	outputFile := path.Join(taskDetails.FilePath, finalFileName)
+
+	// we'll need to build final file path for this task
+	finalPath := recorderUtils.BuildFinalPath(c.cnf.Recorder.CopyToPath.MainPath, c.cnf.Recorder.CopyToPath.SubPath, task.GetRoomId())
+	outputFile := path.Join(finalPath, finalFileName)
 
 	log.WithFields(logrus.Fields{
 		"rawFilePath":   rawFilePath,
@@ -514,6 +518,9 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 		if finalData.FileName != "" {
 			taskDetails.FileName = finalData.FileName
 		}
+		if finalData.Error != "" {
+			log.Errorf("Script responded with error msg: %s", finalData.Error)
+		}
 	}
 
 	return taskDetails, &finalData, nil
@@ -521,6 +528,13 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 
 func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.TranscodingTask, taskType string, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, sourceForCleanup string, log *logrus.Entry) {
 	if len(c.cnf.Hooks.PostTranscoding) > 0 {
+		// Note: outputFile is the final path including file name
+		absPath, err := filepath.Abs(outputFile)
+		if err != nil {
+			log.WithError(err).Errorf("Could not determine absolute path for output_file_path '%s', falling back to string trimming", outputFile)
+			return
+		}
+
 		data := &hooks.RecordingHookData{
 			Task:             taskType,
 			RecordingID:      task.RecordingId,
@@ -528,7 +542,7 @@ func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.
 			RoomID:           task.RoomId,
 			RoomSID:          task.RoomSid,
 			FileName:         finalFileName,
-			FilePath:         outputFile,
+			FilePath:         filepath.Dir(absPath), // scripts will expect full path not with filename
 			FileSize:         size,
 			RecorderID:       task.RecorderId,
 			SourceForCleanup: sourceForCleanup,
@@ -543,6 +557,9 @@ func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.
 				if finalData.FilePath != "" {
 					toSend.FilePath = finalData.FilePath
 					log.Infof("post-transcoding script updated FilePath to: %s", finalData.FilePath)
+				}
+				if finalData.Error != "" {
+					log.Errorf("Script responded with error msg: %s", finalData.Error)
 				}
 			} else {
 				log.Errorf("failed to unmarshal post-transcoding script output, will use original data. output: %s", string(jsonData))

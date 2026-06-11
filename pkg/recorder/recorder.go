@@ -12,6 +12,7 @@ import (
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -67,7 +68,7 @@ func (r *Recorder) Start() error {
 		}
 
 		// Final destination path on the network drive
-		finalPath := path.Join(r.AppCnf.Recorder.CopyToPath.MainPath, r.AppCnf.Recorder.CopyToPath.SubPath, r.Req.GetRoomId())
+		finalPath := utils.BuildFinalPath(r.AppCnf.Recorder.CopyToPath.MainPath, r.AppCnf.Recorder.CopyToPath.SubPath, r.Req.GetRoomId())
 		r.finalRawFilePath = path.Join(finalPath, fileName)
 
 		// Determine the recording path (temporary or final)

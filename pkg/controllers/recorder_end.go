@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 
 	"github.com/mynaparrot/plugnmeet-protocol/hooks"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
@@ -106,8 +107,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 		// if we used a temporary file, we must move it to the final destination first.
 		if recordingFilePath != finalRawFilePath {
 			log.Infof("Moving temp file %s to final destination %s", recordingFilePath, finalRawFilePath)
-			err = moveFile(recordingFilePath, finalRawFilePath, log)
-			if err != nil {
+			if err := moveFile(recordingFilePath, finalRawFilePath, log); err != nil {
 				log.WithError(err).Errorln("Failed to move file from temporary location")
 				// if we can't move the file, we can't transcode it.
 				return
@@ -170,13 +170,19 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 }
 
 func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToRecorder, postRecording *plugnmeet.TranscodingTaskPostRecording, log *logrus.Entry) (*plugnmeet.TranscodingTaskPostRecording, error) {
+	// Note: postRecording.FilePath don't contain file name
+	absFilePath, err := filepath.Abs(postRecording.FilePath) // Convert to absolute path
+	if err != nil {
+		return nil, err
+	}
+
 	data := &hooks.RecordingHookData{
 		RecordingID: req.GetRecordingId(),
 		RoomTableID: req.GetRoomTableId(),
 		RoomID:      req.GetRoomId(),
 		RoomSID:     req.GetRoomSid(),
 		FileName:    postRecording.FileName,
-		FilePath:    postRecording.FilePath,
+		FilePath:    absFilePath, // scripts need absolute path not with filename
 		RecorderID:  req.GetRecorderId(),
 	}
 
@@ -195,6 +201,9 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 			}
 			if finalData.FileName != "" {
 				postRecording.FileName = finalData.FileName
+			}
+			if finalData.Error != "" {
+				log.Errorf("Script responded with error msg: %s", finalData.Error)
 			}
 		}
 	}
