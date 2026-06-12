@@ -369,7 +369,7 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 			RecorderID:  task.GetRecorderId(),
 		}
 
-		jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PreTranscoding, data, log)
+		jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PreTranscoding, data, c.cnf.Hooks.HookTimeout, log)
 		if err != nil {
 			return fmt.Errorf("pre-transcoding script execution failed for merge task: %w", err)
 		}
@@ -499,7 +499,7 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 		RecorderID:  task.GetRecorderId(),
 	}
 
-	jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PreTranscoding, data, log)
+	jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PreTranscoding, data, c.cnf.Hooks.HookTimeout, log)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -520,6 +520,7 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 		}
 		if finalData.Error != "" {
 			log.Errorf("Script responded with error msg: %s", finalData.Error)
+			return nil, nil, fmt.Errorf("script responded with error msg: %s", finalData.Error)
 		}
 	}
 
@@ -548,7 +549,7 @@ func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.
 			SourceForCleanup: sourceForCleanup,
 		}
 
-		jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PostTranscoding, data, log)
+		jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PostTranscoding, data, c.cnf.Hooks.HookTimeout, log)
 		if err != nil {
 			log.WithError(err).Error("post-transcoding script execution failed")
 		} else if len(jsonData) > 0 {

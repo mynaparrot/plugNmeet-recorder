@@ -186,7 +186,7 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 		RecorderID:  req.GetRecorderId(),
 	}
 
-	jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PostRecording, data, log)
+	jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PostRecording, data, c.cnf.Hooks.HookTimeout, log)
 	if err != nil {
 		return nil, err
 	}
@@ -204,6 +204,7 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 			}
 			if finalData.Error != "" {
 				log.Errorf("Script responded with error msg: %s", finalData.Error)
+				return nil, fmt.Errorf("script responded with error msg: %s", finalData.Error)
 			}
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/mynaparrot/plugnmeet-protocol/hooks"
 	"github.com/mynaparrot/plugnmeet-protocol/logging"
@@ -40,9 +41,10 @@ type AppConfig struct {
 }
 
 type HooksConfig struct {
-	PostRecording   []string `yaml:"post_recording"`
-	PreTranscoding  []string `yaml:"pre_transcoding"`
-	PostTranscoding []string `yaml:"post_transcoding"`
+	HookTimeout     time.Duration `yaml:"hook_timeout"`
+	PostRecording   []string      `yaml:"post_recording"`
+	PreTranscoding  []string      `yaml:"pre_transcoding"`
+	PostTranscoding []string      `yaml:"post_transcoding"`
 }
 
 type RecorderInfo struct {
@@ -169,6 +171,10 @@ func (a *AppConfig) resolvePath(scriptPath string) string {
 }
 
 func InitializeStorageHooks(ctx context.Context, appCnf *AppConfig) error {
+	if appCnf.Hooks.HookTimeout == 0 {
+		appCnf.Hooks.HookTimeout = time.Hour
+	}
+
 	var allScripts []string
 	// Validate all defined hook scripts
 	if appCnf.Recorder.Mode == ModeBoth || appCnf.Recorder.Mode == ModeRecorderOnly {
