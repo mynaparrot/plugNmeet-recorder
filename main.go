@@ -35,6 +35,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Setup context for graceful shutdown.
+	ctx, cancel := context.WithCancel(context.Background())
+	// cancel all context when main function exit
+	defer cancel()
+
 	// Read the application configuration
 	cnf, err := helpers.ReadYamlConfigFile(configPath)
 	if err != nil {
@@ -55,17 +60,15 @@ func main() {
 	}
 	appCnf.Logger = logger
 
-	// Prepare the server (e.g., NATS connections, JetStream)
-	err = helpers.PrepareServer(appCnf)
-	if err != nil {
-		// Use the configured logger from this point on
-		appCnf.Logger.Fatalln(err)
+	if err := config.InitializeStorageHooks(ctx, appCnf); err != nil {
+		logger.WithError(err).Fatal("Failed to setup hooks")
 	}
 
-	// Setup context for graceful shutdown.
-	ctx, cancel := context.WithCancel(context.Background())
-	// cancel all context when main function exit
-	defer cancel()
+	// Prepare the server (e.g., NATS connections, JetStream)
+	if err := helpers.PrepareServer(appCnf); err != nil {
+		// Use the configured logger from this point on
+		appCnf.Logger.WithError(err).Fatal("Failed to setup server")
+	}
 
 	// Start recorder services
 	rc := controllers.NewRecorderController(ctx, appCnf, logger)

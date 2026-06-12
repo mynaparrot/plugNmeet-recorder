@@ -86,50 +86,42 @@ Each instance of the `plugnmeet-recorder` can be configured to run in one of thr
 *   **Resilience:** The job queue ensures that transcoding jobs are persistent. If a `transcoderOnly` worker fails, the job remains in the queue and will be picked up by another available worker, guaranteeing that all recordings are eventually processed.
 *   **Resource Management:** `transcoderOnly` workers process one `ffmpeg` job at a time, preventing CPU overload on individual machines.
 
-## Running the Recorder
-
-To start the recorder, run the binary for your system's architecture:
-
-```bash
-# For AMD64
-./plugnmeet-recorder-linux-amd64
-
-# For ARM64
-./plugnmeet-recorder-linux-arm64
-```
-
-## Deployment Recommendations
-
-For optimal performance and resource utilization, especially in production environments with frequent recordings, it is highly recommended to deploy `plugnmeet-recorder` instances on dedicated servers. Both live recording and transcoding can be CPU-intensive processes.
-
-Review the "Operational Modes" section above. Based on your specific use case and desired load distribution, deploy `plugnmeet-recorder` instances in the appropriate modes across dedicated servers.
-
-For a streamlined and automated installation on a single server, you can use the [plugnmeet-install](https://github.com/mynaparrot/plugNmeet-install) script.
-
 ## Scripting Hooks
 
 Scripting hooks allow you to automate tasks at different stages of the recording and transcoding process. This is especially powerful in a multi-server setup where recording and transcoding happen on different machines. For example, you can use hooks to automatically upload a raw recording to cloud storage from a `recorderOnly` instance, and then download it on a `transcoderOnly` instance for processing. This decouples your workflow and makes your storage management flexible.
 
-All scripts follow a standard interface: they receive a JSON payload via **stdin** and can optionally return a modified JSON payload via **stdout**. If multiple scripts are defined for a single hook, they form a pipeline: the **stdout** of the first script becomes the **stdin** for the second, and so on. If a script in the chain produces no output, the data from the previous step is passed along to the next.
+### The Long-Lived Process Model
+
+For maximum performance, all hook scripts are now **long-lived processes**. When the `plugnmeet-recorder` starts, it launches each configured script once. The script then runs continuously, waiting for requests. This eliminates the overhead of starting a new process for every hook event.
+
+All communication happens over `stdin` and `stdout` using **newline-delimited JSON**.
+
+*   **`stdin`**: Your script must read from `stdin` in a loop. Each line will be a complete JSON object representing a single request.
+*   **`stdout`**: For each request it receives, your script must print a single line of JSON to `stdout`. This line is the response.
+*   **`stderr`**: You can use `stderr` for logging. This output will be ignored by the recorder but is useful for debugging your script.
+
+If multiple scripts are defined for a single hook, they form a pipeline: the **stdout** of the first script becomes the **stdin** for the second, and so on.
 
 The application will validate that all configured scripts exist and have executable permissions on startup.
 
+### Hook Stages
+
 Scripts are executed in three stages:
-1. **post_recording**: Runs on the RECORDER after the raw file is saved.
+1. **`post_recording`**: Runs on the RECORDER after the raw file is saved.
    - **Purpose**: Upload the raw file to shared storage (NFS, S3, etc.).
    - **Action**: Should return JSON with the `output_path` updated to the new network-accessible location for the transcoder.
 
-2. **pre_transcoding**: Runs on the TRANSCODER before ffmpeg starts.
+2. **`pre_transcoding`**: Runs on the TRANSCODER before ffmpeg starts.
    - **Purpose**: Download the file from shared storage to a local path.
    - **Action**: Should return JSON with the `output_path` updated to the final local path for ffmpeg to use.
 
-3. **post_transcoding**: Runs on the TRANSCODER after ffmpeg finishes.
+3. **`post_transcoding`**: Runs on the TRANSCODER after ffmpeg finishes.
    - **Purpose**: Final cleanup, notification, or upload of the processed file.
    - **Action**: Can optionally return JSON with the `output_path` updated (e.g., to an S3 URL) to be sent to the main plugNmeet server.
 
 ### How to Use
 
-1.  **Create a Script:** A "script" can be any executable file (a shell script, a compiled Go program, a NodeJS script, etc.) that can read from `stdin`.
+1.  **Create a Long-Lived Script:** A "script" can be any executable file (a shell script, a compiled Go program, etc.) that runs in a loop, reading from `stdin` and writing to `stdout`.
 2.  **Enable in Config:** Add the path to your executable (or multiple executables) in the `hooks` section of your `config.yaml`. The order of scripts in the list defines the execution order of the chain.
 
     ```yaml
@@ -152,14 +144,9 @@ Scripts are executed in three stages:
 
 ### Script Data
 
-When a script is executed, it receives a JSON payload via **stdin**. Your script can parse this JSON to get the information it needs.
+When a script is executed, it receives a JSON payload via **stdin**. Your script can parse this JSON to get the information it needs. The `plugnmeet-recorder` sends the raw data payload directly.
 
-**Key Fields for Path Handling:**
-*   **`input_path`**: (string, optional) The primary path for the script to process. This could be a local file path or a remote storage URL, depending on the stage.
-*   **`input_paths`**: (array of strings, optional) Used for tasks involving multiple files (e.g., merging multiple recordings).
-*   **`output_path`**: (string, optional) The path that the script returns as the result of its operation. This could be a new local path, a remote storage URL, or any identifier for the processed file.
-
-**Example Initial JSON Data (received by the first script in a chain):**
+**Example JSON Data (received by your script on `stdin`):**
 
 ```json
 {
@@ -169,13 +156,15 @@ When a script is executed, it receives a JSON payload via **stdin**. Your script
   "room_id": "room01",
   "room_sid": "SID_d82k3s9d2l",
   "file_name": "REC_ax9s3djn2s.mp4",
-  "input_path": "/path/to/recording/files/node_01/room01/REC_ax9s3djn2s.mkv",
-  "file_size": 123.45, // in MB
+  "input_path": "/path/to/recording/files/node_01/room01/REC_ax9s3djn2s.mp4",
+  "file_size": 123.45,
   "recorder_id": "node_01"
 }
 ```
 
-**Example JSON Data (returned by a script, or received by a subsequent script in a chain):**
+**Example JSON Data (returned by your script on `stdout`):**
+
+Your script should return the same JSON structure, but with the `output_path` field added or modified to reflect the result of its operation.
 
 ```json
 {
@@ -185,14 +174,14 @@ When a script is executed, it receives a JSON payload via **stdin**. Your script
   "room_id": "room01",
   "room_sid": "SID_d82k3s9d2l",
   "file_name": "REC_ax9s3djn2s.mp4",
-  "input_path": "/path/to/recording/files/node_01/room01/REC_ax9s3djn2s.mkv",
-  "output_path": "s3://my-bucket/recordings/REC_ax9s3djn2s.mkv",
-  "file_size": 123.45, // in MB
+  "input_path": "/path/to/recording/files/node_01/room01/REC_ax9s3djn2s.mp4",
+  "output_path": "s3://my-bucket/recordings/REC_ax9s3djn2s.mp4",
+  "file_size": 123.45,
   "recorder_id": "node_01"
 }
 ```
 
-Example scripts are provided in the `./scripts` directory to demonstrate how to parse this JSON using tools like `jq` and log the output. You can use these as a template for your own custom workflows.
+Example scripts are provided in the `./scripts` directory to demonstrate how to build a long-lived script that can parse this JSON using tools like `jq` and log the output. You can use these as a template for your own custom workflows.
 
 ## Development
 

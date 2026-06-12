@@ -1,6 +1,8 @@
 package config
 
 import (
+	"context"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -26,6 +28,7 @@ type AppConfig struct {
 	JetStream      jetstream.JetStream
 	Logger         *logrus.Logger
 	IsShuttingDown *atomic.Bool
+	HookManager    *hooks.HookProcessManager
 
 	RootWorkingDir string
 	Recorder       RecorderInfo        `yaml:"recorder"`
@@ -137,35 +140,6 @@ func (a *AppConfig) setDefaultConfig() {
 		logrus.Fatalf("Configuration error: 'recorder.post_processing_scripts' is deprecated. Please move your scripts to the top-level 'hooks.post_transcoding' section. IMPORTANT: Scripts now receive data via stdin instead of command-line arguments. Please update your scripts to read from stdin.")
 	}
 
-	// Validate all defined hook scripts
-	if a.Recorder.Mode == ModeBoth || a.Recorder.Mode == ModeRecorderOnly {
-		for i, script := range a.Hooks.PostRecording {
-			resolved := a.resolvePath(script)
-			a.Hooks.PostRecording[i] = resolved
-			if err := hooks.ValidateHookScript(resolved, "post_recording"); err != nil {
-				logrus.WithError(err).Fatal("Error validating hook script")
-			}
-		}
-	}
-
-	if a.Recorder.Mode == ModeBoth || a.Recorder.Mode == ModeTranscoderOnly {
-		for i, script := range a.Hooks.PreTranscoding {
-			resolved := a.resolvePath(script)
-			a.Hooks.PostRecording[i] = resolved
-			if err := hooks.ValidateHookScript(resolved, "pre_transcoding"); err != nil {
-				logrus.WithError(err).Fatal("Error validating hook script")
-			}
-		}
-
-		for i, script := range a.Hooks.PostTranscoding {
-			resolved := a.resolvePath(script)
-			a.Hooks.PostRecording[i] = resolved
-			if err := hooks.ValidateHookScript(resolved, "post_transcoding"); err != nil {
-				logrus.WithError(err).Fatal("Error validating hook script")
-			}
-		}
-	}
-
 	if a.FfmpegSettings == nil {
 		a.FfmpegSettings = &FfmpegSettings{
 			Recording: FfmpegOptions{
@@ -192,4 +166,48 @@ func (a *AppConfig) resolvePath(scriptPath string) string {
 		return filepath.Join(a.RootWorkingDir, scriptPath)
 	}
 	return scriptPath
+}
+
+func InitializeStorageHooks(ctx context.Context, appCnf *AppConfig) error {
+	var allScripts []string
+	// Validate all defined hook scripts
+	if appCnf.Recorder.Mode == ModeBoth || appCnf.Recorder.Mode == ModeRecorderOnly {
+		for i, script := range appCnf.Hooks.PostRecording {
+			resolved := appCnf.resolvePath(script)
+			appCnf.Hooks.PostRecording[i] = resolved
+			if err := hooks.ValidateHookScript(resolved, "post_recording"); err != nil {
+				return fmt.Errorf("error validating hook script %s", script)
+			}
+			allScripts = append(allScripts, resolved)
+		}
+	}
+
+	if appCnf.Recorder.Mode == ModeBoth || appCnf.Recorder.Mode == ModeTranscoderOnly {
+		for i, script := range appCnf.Hooks.PreTranscoding {
+			resolved := appCnf.resolvePath(script)
+			appCnf.Hooks.PreTranscoding[i] = resolved
+			if err := hooks.ValidateHookScript(resolved, "pre_transcoding"); err != nil {
+				return fmt.Errorf("error validating hook script %s", script)
+			}
+			allScripts = append(allScripts, resolved)
+		}
+
+		for i, script := range appCnf.Hooks.PostTranscoding {
+			resolved := appCnf.resolvePath(script)
+			appCnf.Hooks.PostTranscoding[i] = resolved
+			if err := hooks.ValidateHookScript(resolved, "post_transcoding"); err != nil {
+				return fmt.Errorf("error validating hook script %s", script)
+			}
+			allScripts = append(allScripts, resolved)
+		}
+	}
+
+	if len(allScripts) > 0 {
+		appCnf.HookManager = hooks.NewHookProcessManager(ctx, appCnf.Logger.WithField("service", "hook_manager"))
+		if err := appCnf.HookManager.StartHookProcesses(allScripts); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

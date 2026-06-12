@@ -2,59 +2,102 @@
 
 #
 # STAGE 2: Pre-Transcoding Script (runs on Transcoder)
+# This script runs in a continuous loop, reading newline-delimited JSON from stdin.
+# For each request, it must generate a JSON response to stdout.
 #
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# This script's purpose is to get the raw file(s) from network storage
-# onto the transcoder's local disk, ready for ffmpeg.
+# Add a log function for easier debugging. Output is sent to stderr.
+log() {
+  echo "Pre-Transcoding Hook: $1" >&2
+}
 
-# For this to work, you may need tools like 'jq' and 'rsync'.
+log "Starting long-lived pre-transcoding download script..."
 
-# 1. Read the JSON job payload from stdin
-input_json=$(cat)
+while read -r line; do
+  log "Received request: $line"
 
-# 2. (Optional) Log the input for debugging to stderr
-# echo "Pre-Transcoding: Received input: $input_json" >&2
+  # The 'data' field contains the original JSON payload from the transcoder job.
+  DATA_JSON=$(echo "$line" | jq -c '.data')
 
-# 3. Use 'jq' to extract the task type
-task_type=$(echo "$input_json" | jq -r .task)
-recording_id=$(echo "$input_json" | jq -r .recording_id)
+  if [ -z "$DATA_JSON" ] || [ "$DATA_JSON" = "null" ]; then
+    log "Error: 'data' field is missing or empty in request."
+    jq -n '{"error": "data field is missing or empty"}'
+    continue
+  fi
 
-# 4. Define a local staging directory for this job
-local_staging_dir="/tmp/transcode-staging/$recording_id"
-mkdir -p "$local_staging_dir"
+  task_type=$(echo "$DATA_JSON" | jq -r '.task')
+  recording_id=$(echo "$DATA_JSON" | jq -r '.recording_id')
 
-# 5. Perform the download/copy operation based on the task type
-if [ "$task_type" == "merge" ]; then
-  # For merge tasks, 'input_paths' is an array.
-  # We iterate through it and copy each file to our local staging directory.
-  echo "Pre-Transcoding: Handling 'merge' task." >&2
+  if [ -z "$task_type" ] || [ "$task_type" = "null" ]; then
+    log "Error: task is missing from data."
+    jq -n '{"error": "task is missing"}'
+    continue
+  fi
+  if [ -z "$recording_id" ] || [ "$recording_id" = "null" ]; then
+    log "Error: recording_id is missing from data."
+    jq -n '{"error": "recording_id is missing"}'
+    continue
+  fi
 
-  # Read the file paths into a bash array
-  # Using 'input_paths' as per the new naming convention.
-  mapfile -t file_paths < <(echo "$input_json" | jq -r '.input_paths[]')
+  # Define a local staging directory for this job
+  local_staging_dir="/tmp/transcode-staging/$recording_id"
+  mkdir -p "$local_staging_dir" || {
+    log "Error: Failed to create local staging directory $local_staging_dir"
+    jq -n --arg err "Failed to create directory $local_staging_dir" '{"error": $err}'
+    continue
+  }
 
-  for file_path in "${file_paths[@]}"; do
-    echo "Copying file: $file_path" >&2
-    rsync -av "$file_path" "$local_staging_dir/"
-  done
+  # --- Your Custom Logic Goes Here ---
+  #
+  # This is where you would perform the actual download/copy operation from network storage
+  # onto the transcoder's local disk.
 
-else
-  # For "single" tasks, we just copy the one file.
-  echo "Pre-Transcoding: Handling 'single' task." >&2
-  # Using 'input_path' as per the new naming convention.
-  network_path=$(echo "$input_json" | jq -r .input_path)
-  original_filename=$(echo "$input_json" | jq -r .file_name)
-  full_network_path="$network_path/$original_filename"
+  if [ "$task_type" == "merge" ]; then
+    log "Handling 'merge' task for recording_id: $recording_id"
 
-  echo "Copying file: $full_network_path" >&2
-  rsync -av "$full_network_path" "$local_staging_dir/"
-fi
+    # Read the file paths into a bash array
+    mapfile -t file_paths < <(echo "$DATA_JSON" | jq -r '.input_paths[]')
 
-# 6. Modify the JSON with the new *local* path and print it to stdout.
-# The Go application will now use this path as the base for ffmpeg operations.
-# Using 'output_path' as per the new naming convention for the result path.
-output_json=$(echo "$input_json" | jq --arg new_path "$local_staging_dir" '.output_path = $new_path')
+    for file_path in "${file_paths[@]}"; do
+      log "Copying file: $file_path to $local_staging_dir/"
+      rsync -av "$file_path" "$local_staging_dir/" || {
+        log "Error: Failed to rsync file $file_path"
+        jq -n --arg err "Failed to rsync file $file_path" '{"error": $err}'
+        continue 2 # Continue outer loop
+      }
+    done
 
-echo "$output_json"
+  else # Assuming "single" task type
+    log "Handling 'single' task for recording_id: $recording_id"
+    network_path=$(echo "$DATA_JSON" | jq -r '.input_path')
+    original_filename=$(echo "$DATA_JSON" | jq -r '.file_name')
+
+    if [ -z "$network_path" ] || [ "$network_path" = "null" ]; then
+      log "Error: input_path is missing from data for single task."
+      jq -n '{"error": "input_path is missing"}'
+      continue
+    fi
+    if [ -z "$original_filename" ] || [ "$original_filename" = "null" ]; then
+      log "Error: file_name is missing from data for single task."
+      jq -n '{"error": "file_name is missing"}'
+      continue
+    fi
+
+    full_network_path="$network_path/$original_filename"
+
+    log "Copying file: $full_network_path to $local_staging_dir/"
+    rsync -av "$full_network_path" "$local_staging_dir/" || {
+      log "Error: Failed to rsync file $full_network_path"
+      jq -n --arg err "Failed to rsync file $full_network_path" '{"error": $err}'
+      continue
+    }
+  fi
+  # --- End of Custom Custom Logic ---
+
+  # Modify the JSON with the new *local* path and print it to stdout.
+  # The Go application will now use this path as the base for ffmpeg operations.
+  echo "$DATA_JSON" | jq --arg new_path "$local_staging_dir" '.output_path = $new_path'
+
+done

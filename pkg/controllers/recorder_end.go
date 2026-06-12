@@ -134,7 +134,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 			}
 
 			// Run post-recording scripts
-			if len(c.cnf.Hooks.PostRecording) > 0 {
+			if len(c.cnf.Hooks.PostRecording) > 0 && c.cnf.HookManager != nil {
 				modifiedPostRecording, err := c.runPostRecordingScripts(req, postRecording, log)
 				if err != nil {
 					log.WithError(err).Errorln("Post-recording script execution failed")
@@ -186,7 +186,7 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 		RecorderID:  req.GetRecorderId(),
 	}
 
-	jsonData, err := hooks.ExecuteHookPipeline(c.ctx, c.cnf.Hooks.PostRecording, data, log)
+	jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PostRecording, data, log)
 	if err != nil {
 		return nil, err
 	}
