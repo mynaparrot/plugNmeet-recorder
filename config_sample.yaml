@@ -50,25 +50,33 @@ recorder:
 # See the README.md for detailed information on the data payloads for each stage.
 # ----------------------------------------------------------------
 #hooks:
-#  # Maximum time to wait for a hook script to respond before timing out.
-#  # For c-recorder, this should be long enough to handle large file uploads.
-#  # Default: 1h
-#  hook_timeout: 1h
+#  # For each hook category, you can specify a 'pool_size', a 'hook_timeout' and a list of 'scripts'.
+#  # 'pool_size' controls how many pipelines for that category can run in parallel.
+#  # 'hook_timeout' sets a specific timeout for this category.
+#  # If a value is not set or is 0, it will default to 1 for pool_size and 1h for hook_timeout.
 #
 #  # Runs on the RECORDER after the raw file is saved.
 #  # Purpose: Upload the raw file to shared storage (NFS, S3, etc.).
 #  post_recording:
-#    - "./scripts/post-recording/upload.sh"
+#    pool_size: 2
+#    hook_timeout: 2h
+#    scripts:
+#      - "./scripts/post-recording/upload.sh"
 #
 #  # Runs on the TRANSCODER before ffmpeg starts.
 #  # Purpose: Download the file from shared storage to a local path.
 #  pre_transcoding:
-#    - "./scripts/pre-transcoding/download.sh"
+#    pool_size: 2
+#    hook_timeout: 2h
+#    scripts:
+#      - "./scripts/pre-transcoding/download.sh"
 #
 #  # Runs on the TRANSCODER after ffmpeg finishes.
 #  # Purpose: Final cleanup, notification, or upload of the processed file.
 #  post_transcoding:
-#    - "./scripts/post-transcoding/notify.sh"
+#    # If pool_size and hook_timeout are omitted, they will use the default values.
+#    scripts:
+#      - "./scripts/post-transcoding/notify.sh"
 
 log_settings:
   log_file: "./logs/recorder.log"

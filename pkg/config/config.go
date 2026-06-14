@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -40,11 +39,17 @@ type AppConfig struct {
 	PlugNmeetInfo  PlugNmeetInfo       `yaml:"plugNmeet_info"`
 }
 
+// HookScriptConfig defines the configuration for a specific hook category.
+type HookScriptConfig struct {
+	PoolSize    int           `yaml:"pool_size"`
+	Scripts     []string      `yaml:"scripts"`
+	HookTimeout time.Duration `yaml:"hook_timeout"`
+}
+
 type HooksConfig struct {
-	HookTimeout     time.Duration `yaml:"hook_timeout"`
-	PostRecording   []string      `yaml:"post_recording"`
-	PreTranscoding  []string      `yaml:"pre_transcoding"`
-	PostTranscoding []string      `yaml:"post_transcoding"`
+	PostRecording   *HookScriptConfig `yaml:"post_recording"`
+	PreTranscoding  *HookScriptConfig `yaml:"pre_transcoding"`
+	PostTranscoding *HookScriptConfig `yaml:"post_transcoding"`
 }
 
 type RecorderInfo struct {
@@ -171,46 +176,50 @@ func (a *AppConfig) resolvePath(scriptPath string) string {
 }
 
 func InitializeStorageHooks(ctx context.Context, appCnf *AppConfig) error {
-	if appCnf.Hooks.HookTimeout == 0 {
-		appCnf.Hooks.HookTimeout = time.Hour
+	scriptsWithPoolSize := make(map[string]int)
+
+	processHookCategory := func(config *HookScriptConfig, name string) error {
+		if config == nil {
+			return nil
+		}
+		if config.PoolSize <= 0 {
+			config.PoolSize = 1
+		}
+		if config.HookTimeout == 0 {
+			config.HookTimeout = time.Hour // Recorder hooks can be long-running.
+		}
+		for i, script := range config.Scripts {
+			resolved := appCnf.resolvePath(script)
+			if err := hooks.ValidateHookScript(resolved, name); err != nil {
+				return err
+			}
+			config.Scripts[i] = resolved
+
+			if currentSize, ok := scriptsWithPoolSize[resolved]; !ok || config.PoolSize > currentSize {
+				scriptsWithPoolSize[resolved] = config.PoolSize
+			}
+		}
+		return nil
 	}
 
-	var allScripts []string
-	// Validate all defined hook scripts
 	if appCnf.Recorder.Mode == ModeBoth || appCnf.Recorder.Mode == ModeRecorderOnly {
-		for i, script := range appCnf.Hooks.PostRecording {
-			resolved := appCnf.resolvePath(script)
-			appCnf.Hooks.PostRecording[i] = resolved
-			if err := hooks.ValidateHookScript(resolved, "post_recording"); err != nil {
-				return fmt.Errorf("error validating hook script %s", script)
-			}
-			allScripts = append(allScripts, resolved)
+		if err := processHookCategory(appCnf.Hooks.PostRecording, "post_recording"); err != nil {
+			return err
 		}
 	}
 
 	if appCnf.Recorder.Mode == ModeBoth || appCnf.Recorder.Mode == ModeTranscoderOnly {
-		for i, script := range appCnf.Hooks.PreTranscoding {
-			resolved := appCnf.resolvePath(script)
-			appCnf.Hooks.PreTranscoding[i] = resolved
-			if err := hooks.ValidateHookScript(resolved, "pre_transcoding"); err != nil {
-				return fmt.Errorf("error validating hook script %s", script)
-			}
-			allScripts = append(allScripts, resolved)
+		if err := processHookCategory(appCnf.Hooks.PreTranscoding, "pre_transcoding"); err != nil {
+			return err
 		}
-
-		for i, script := range appCnf.Hooks.PostTranscoding {
-			resolved := appCnf.resolvePath(script)
-			appCnf.Hooks.PostTranscoding[i] = resolved
-			if err := hooks.ValidateHookScript(resolved, "post_transcoding"); err != nil {
-				return fmt.Errorf("error validating hook script %s", script)
-			}
-			allScripts = append(allScripts, resolved)
+		if err := processHookCategory(appCnf.Hooks.PostTranscoding, "post_transcoding"); err != nil {
+			return err
 		}
 	}
 
-	if len(allScripts) > 0 {
+	if len(scriptsWithPoolSize) > 0 {
 		appCnf.HookManager = hooks.NewHookProcessManager(ctx, appCnf.Logger.WithField("service", "hook_manager"))
-		if err := appCnf.HookManager.StartHookProcesses(allScripts); err != nil {
+		if err := appCnf.HookManager.StartHookProcesses(scriptsWithPoolSize); err != nil {
 			return err
 		}
 	}
