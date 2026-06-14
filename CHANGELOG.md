@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.1.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.1.1...v2.1.2) (2026-06-14)
+
+
+### Bug Fixes
+
+* added hooks option to clean temporary objects ([395ad3d](https://github.com/mynaparrot/plugNmeet-recorder/commit/395ad3dacc669847a3eb9e5dd1642109c86a2aae))
+* added option to set `LogOutput` ([57e6c84](https://github.com/mynaparrot/plugNmeet-recorder/commit/57e6c84f6868041384a17f29f9dad6b74219fe66))
+* added option to set hook timeout ([aba1f0b](https://github.com/mynaparrot/plugNmeet-recorder/commit/aba1f0b2a9d084b495c74eeddbd8c98f9f4a4c53))
+* allowing the OS to respect the shebang ([5c7c113](https://github.com/mynaparrot/plugNmeet-recorder/commit/5c7c11387859ef8da5f5d558f6894ca1ae054bf9))
+* bump proto + permission ([32e1cf5](https://github.com/mynaparrot/plugNmeet-recorder/commit/32e1cf5dc00854ac0be4e62397d99bf95927c745))
+* **feat:** implemented recording hook with backward compatibility ([90dab1b](https://github.com/mynaparrot/plugNmeet-recorder/commit/90dab1b7574aeb6bef47e532375215974a86b564))
+* **feat:** option to modify path before transcoding using `pre_transcode_scripts` ([5452992](https://github.com/mynaparrot/plugNmeet-recorder/commit/545299255743f05155d0f9c1146691fce40b2eec))
+* **feat:** option to modify path before transcoding using `pre_transcode_scripts` ([bca13f5](https://github.com/mynaparrot/plugNmeet-recorder/commit/bca13f5f69354d1b6546a05d2d02ecdb2f873411))
+* **hooks:** use same pattern for communicating with hooks scripts ([6a4a534](https://github.com/mynaparrot/plugNmeet-recorder/commit/6a4a53460ee9e2529ab3a6480d5b0fd732049fec))
+* implemented long-lived hook ([e078490](https://github.com/mynaparrot/plugNmeet-recorder/commit/e078490a0afbe90426a69efd927fce5008619fbd))
+* invalid path was sending to hooks script ([58d8885](https://github.com/mynaparrot/plugNmeet-recorder/commit/58d8885450590240748348780f649d186032fb0e))
+* **refactor:** run `PostTranscoding` scripts before sending notification + standardize script execution ([11f2bdd](https://github.com/mynaparrot/plugNmeet-recorder/commit/11f2bdd7a7902de267a471e2a67222e5be36c42e))
+* **refactor:** run `PostTranscoding` scripts before sending notification + standardize script execution ([5638413](https://github.com/mynaparrot/plugNmeet-recorder/commit/5638413caa244cbf18151693b39ed893ce14e7eb))
+
 ## [2.1.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.1.0...v2.1.1) (2026-06-07)
 
 
