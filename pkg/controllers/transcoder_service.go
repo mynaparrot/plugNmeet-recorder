@@ -338,7 +338,7 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 		RecordingVariant: &taskDetails.RecordingVariant,
 	}
 
-	c.runPostTranscodingScriptsAndNotify(task, "single", toSend, outputFile, finalFileName, size, initialRemoteFilePath, log)
+	c.runPostTranscodingScriptsAndNotify(task, hooks.RecordingHookTaskSingle, toSend, outputFile, finalFileName, size, initialRemoteFilePath, log)
 	log.Infoln("Post-transcoding process has been finished")
 
 	return nil
@@ -482,7 +482,7 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 		FilePath:    relativePath,
 		FileSize:    float32(math.Round(float64(size)*100) / 100),
 	}
-	c.runPostTranscodingScriptsAndNotify(task, "merge", toSend, outputFile, finalFileName, size, "", log) // No initial remote path for merge
+	c.runPostTranscodingScriptsAndNotify(task, hooks.RecordingHookTaskMerge, toSend, outputFile, finalFileName, size, "", log) // No initial remote path for merge
 	log.Infoln("merge recordings process has been finished")
 	return nil
 }
@@ -527,7 +527,7 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 	return taskDetails, &finalData, nil
 }
 
-func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.TranscodingTask, taskType string, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, sourceForCleanup string, log *logrus.Entry) {
+func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.TranscodingTask, taskType hooks.RecordingHookTask, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, sourceForCleanup string, log *logrus.Entry) {
 	if len(c.cnf.Hooks.PostTranscoding) > 0 && c.cnf.HookManager != nil {
 		// Note: outputFile is the final path including file name
 		absPath, err := filepath.Abs(outputFile)
