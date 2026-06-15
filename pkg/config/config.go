@@ -218,8 +218,9 @@ func InitializeStorageHooks(ctx context.Context, appCnf *AppConfig) error {
 		}
 	}
 
+	// Initialize the HookProcessManager and start all unique scripts
+	appCnf.HookManager = hooks.NewHookProcessManager(ctx, appCnf.Logger.WithField("service", "hook_manager"))
 	if len(scriptsWithPoolSize) > 0 {
-		appCnf.HookManager = hooks.NewHookProcessManager(ctx, appCnf.Logger.WithField("service", "hook_manager"))
 		if err := appCnf.HookManager.StartHookProcesses(scriptsWithPoolSize); err != nil {
 			return err
 		}
