@@ -39,17 +39,10 @@ type AppConfig struct {
 	PlugNmeetInfo  PlugNmeetInfo       `yaml:"plugNmeet_info"`
 }
 
-// HookScriptConfig defines the configuration for a specific hook category.
-type HookScriptConfig struct {
-	PoolSize    int           `yaml:"pool_size"`
-	Scripts     []string      `yaml:"scripts"`
-	HookTimeout time.Duration `yaml:"hook_timeout"`
-}
-
 type HooksConfig struct {
-	PostRecording   *HookScriptConfig `yaml:"post_recording"`
-	PreTranscoding  *HookScriptConfig `yaml:"pre_transcoding"`
-	PostTranscoding *HookScriptConfig `yaml:"post_transcoding"`
+	PostRecording   *hooks.HookScriptConfig `yaml:"post_recording"`
+	PreTranscoding  *hooks.HookScriptConfig `yaml:"pre_transcoding"`
+	PostTranscoding *hooks.HookScriptConfig `yaml:"post_transcoding"`
 }
 
 type RecorderInfo struct {
@@ -68,7 +61,7 @@ type RecorderInfo struct {
 
 	// Deprecated fields for backward compatibility. They are unexported and will be migrated
 	// to the top-level `hooks` section during config initialization.
-	PostProcessingScripts []string `yaml:"post_processing_scripts"` // Deprecated
+	PostProcessingScripts []hooks.HookScript `yaml:"post_processing_scripts"` // Deprecated
 }
 
 type CopyToPathSettings struct {
@@ -178,7 +171,7 @@ func (a *AppConfig) resolvePath(scriptPath string) string {
 func InitializeStorageHooks(ctx context.Context, appCnf *AppConfig) error {
 	scriptsWithPoolSize := make(map[string]int)
 
-	processHookCategory := func(config *HookScriptConfig, name string) error {
+	processHookCategory := func(config *hooks.HookScriptConfig, name string) error {
 		if config == nil {
 			return nil
 		}
@@ -189,14 +182,22 @@ func InitializeStorageHooks(ctx context.Context, appCnf *AppConfig) error {
 			config.HookTimeout = time.Hour // Recorder hooks can be long-running.
 		}
 		for i, script := range config.Scripts {
-			resolved := appCnf.resolvePath(script)
+			var resolved string
+			if strings.HasPrefix(script.Script, hooks.HookCommandHttpRequest) {
+				resolved = script.Script
+			} else {
+				resolved = appCnf.resolvePath(script.Script)
+			}
+
 			if err := hooks.ValidateHookScript(resolved, name); err != nil {
 				return err
 			}
-			config.Scripts[i] = resolved
+			config.Scripts[i].Script = resolved
 
-			if currentSize, ok := scriptsWithPoolSize[resolved]; !ok || config.PoolSize > currentSize {
-				scriptsWithPoolSize[resolved] = config.PoolSize
+			if !script.IsOneShot {
+				if currentSize, ok := scriptsWithPoolSize[resolved]; !ok || config.PoolSize > currentSize {
+					scriptsWithPoolSize[resolved] = config.PoolSize
+				}
 			}
 		}
 		return nil

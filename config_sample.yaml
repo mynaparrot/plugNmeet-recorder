@@ -61,7 +61,10 @@ recorder:
 #    pool_size: 2
 #    hook_timeout: 2h
 #    scripts:
-#      - "./scripts/post-recording/upload.sh"
+#      - script: "/path/to/your/script.sh"
+#        is_one_shot: false
+#      - script: "http-request http://localhost:8090/your/endpoint"
+#        is_one_shot: true
 #
 #  # Runs on the TRANSCODER before ffmpeg starts.
 #  # Purpose: Download the file from shared storage to a local path.
@@ -69,14 +72,16 @@ recorder:
 #    pool_size: 2
 #    hook_timeout: 2h
 #    scripts:
-#      - "./scripts/pre-transcoding/download.sh"
+#      - script: "/path/to/your/script.sh"
+#        is_one_shot: false
 #
 #  # Runs on the TRANSCODER after ffmpeg finishes.
 #  # Purpose: Final cleanup, notification, or upload of the processed file.
 #  post_transcoding:
 #    # If pool_size and hook_timeout are omitted, they will use the default values.
 #    scripts:
-#      - "./scripts/post-transcoding/notify.sh"
+#      - script: "/path/to/your/script.sh"
+#        is_one_shot: false
 
 log_settings:
   log_file: "./logs/recorder.log"

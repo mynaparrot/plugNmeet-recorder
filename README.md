@@ -90,9 +90,9 @@ Each instance of the `plugnmeet-recorder` can be configured to run in one of thr
 
 Scripting hooks allow you to automate tasks at different stages of the recording and transcoding process. This is especially powerful in a multi-server setup where recording and transcoding happen on different machines. For example, you can use hooks to automatically upload a raw recording to cloud storage from a `recorderOnly` instance, and then download it on a `transcoderOnly` instance for processing. This decouples your workflow and makes your storage management flexible.
 
-### The Long-Lived Process Model
+### The Long-Lived & One-shot Process Model
 
-For maximum performance, all hook scripts are now **long-lived processes**. When the `plugnmeet-recorder` starts, it launches each configured script once. The script then runs continuously, waiting for requests. This eliminates the overhead of starting a new process for every hook event.
+For maximum performance, all hook scripts can be **long-lived processes** or **one-shot** commands. When the `plugnmeet-recorder` starts, it launches each configured script once. The script then runs continuously, waiting for requests. This eliminates the overhead of starting a new process for every hook event.
 
 All communication happens over `stdin` and `stdout` using **newline-delimited JSON**.
 
@@ -103,6 +103,15 @@ All communication happens over `stdin` and `stdout` using **newline-delimited JS
 If multiple scripts are defined for a single hook, they form a pipeline: the **stdout** of the first script becomes the **stdin** for the second, and so on.
 
 The application will validate that all configured scripts exist and have executable permissions on startup.
+
+### Built-in `http-request` command
+
+A special command `http-request` is available to send POST requests to an HTTP/HTTPS endpoint. This is useful for notifying external services without writing a full script.
+
+**Example:**
+`http-request http://localhost:8080/your/endpoint`
+
+This will send the current JSON payload to the specified URL.
 
 ### Hook Stages
 
@@ -128,12 +137,25 @@ Scripts are executed in three stages:
     # config.yaml
     hooks:
       post_recording:
-        - "./scripts/post-recording/upload.sh"
+        pool_size: 2
+        hook_timeout: 1h
+        scripts:
+          - script: "/path/to/your/script.sh"
+            is_one_shot: false
+          - script: "http-request http://localhost:8080/your/endpoint"
+            is_one_shot: true
       pre_transcoding:
-        - "./scripts/pre-transcoding/download.sh"
+        pool_size: 2
+        hook_timeout: 1h
+        scripts:
+          - script: "/path/to/your/script.sh"
+            is_one_shot: false
       post_transcoding:
-        - "./scripts/post-transcoding/upload-to-s3.sh"
-        - "./scripts/post-transcoding/notify-slack.sh"
+        pool_size: 2
+        hook_timeout: 1h
+        scripts:
+          - script: "/path/to/your/script.sh"
+            is_one_shot: false
     ```
 
 3.  **Make it Executable:** Ensure your script or program has execute permissions:
