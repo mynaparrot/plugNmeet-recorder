@@ -61,7 +61,7 @@ type RecorderInfo struct {
 
 	// Deprecated fields for backward compatibility. They are unexported and will be migrated
 	// to the top-level `hooks` section during config initialization.
-	PostProcessingScripts []hooks.HookScript `yaml:"post_processing_scripts"` // Deprecated
+	PostProcessingScripts []string `yaml:"post_processing_scripts"` // Deprecated
 }
 
 type CopyToPathSettings struct {
@@ -135,9 +135,16 @@ func (a *AppConfig) setDefaultConfig() {
 		a.Recorder.TranscodingCpuLimitBothMode = new(80.0)
 	}
 
-	// For backward compatibility, we'll show error message if user still using old format
+	// For backward compatibility
 	if len(a.Recorder.PostProcessingScripts) > 0 {
-		logrus.Fatalf("Configuration error: 'recorder.post_processing_scripts' is deprecated. Please move your scripts to the top-level 'hooks.post_transcoding' section. IMPORTANT: Scripts now receive data via stdin instead of command-line arguments. Please update your scripts to read from stdin.")
+		logrus.Warnln("Configuration error: 'recorder.post_processing_scripts' is deprecated. Please move your scripts to the top-level 'hooks.post_transcoding' section. IMPORTANT: Scripts now receive data via stdin instead of command-line arguments. Please update your scripts to read from stdin.")
+
+		if a.Hooks.PostTranscoding == nil {
+			a.Hooks.PostTranscoding = new(hooks.HookScriptConfig)
+			for _, script := range a.Recorder.PostProcessingScripts {
+				a.Hooks.PostTranscoding.Scripts = append(a.Hooks.PostTranscoding.Scripts, hooks.HookScript{Script: script, IsOneShot: true})
+			}
+		}
 	}
 
 	if a.FfmpegSettings == nil {
