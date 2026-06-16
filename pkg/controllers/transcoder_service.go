@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -206,7 +205,7 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 	initialRemoteFilePath := taskDetails.FilePath
 
 	// Run pre-transcoding scripts to get the file ready locally
-	if c.cnf.HookManager != nil && c.cnf.Hooks.PreTranscoding != nil && len(c.cnf.Hooks.PreTranscoding.Scripts) > 0 {
+	if c.cnf.Hooks != nil {
 		var err error
 		var preTranscodeHookResult *hooks.RecordingHookData
 		taskDetails, preTranscodeHookResult, err = c.runPreTranscodingScripts(task, taskDetails, log)
@@ -358,7 +357,7 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 	inputPath := path.Join(c.cnf.Recorder.CopyToPath.MainPath, relativeOutputDir)
 
 	var preTranscodeHookResult *hooks.RecordingHookData
-	if c.cnf.HookManager != nil && c.cnf.Hooks.PreTranscoding != nil && len(c.cnf.Hooks.PreTranscoding.Scripts) > 0 {
+	if c.cnf.Hooks != nil {
 		data := &hooks.RecordingHookData{
 			Task:        "merge",
 			RecordingID: task.GetRecordingId(),
@@ -369,22 +368,16 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 			RecorderID:  task.GetRecorderId(),
 		}
 
-		jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PreTranscoding.Scripts, data, c.cnf.Hooks.PreTranscoding.HookTimeout, log)
+		finalData, err := c.cnf.Hooks.RunPreTranscodingHook(data, log)
 		if err != nil {
-			return fmt.Errorf("pre-transcoding script execution failed for merge task: %w", err)
+			log.WithError(err).Error("pre-transcoding script execution failed")
+			return err
 		}
-
-		if len(jsonData) > 0 {
-			var finalData hooks.RecordingHookData
-			if err := json.Unmarshal(jsonData, &finalData); err != nil {
-				log.WithError(err).Error("failed to unmarshal final JSON from pre-transcoding scripts for merge task, will use original data")
-			} else {
-				// The script returns the new local base path for the source files.
-				if finalData.OutputPath != "" {
-					inputPath = finalData.OutputPath
-				}
-				preTranscodeHookResult = &finalData // Capture the result for cleanup
+		if finalData != nil {
+			if finalData.OutputPath != "" {
+				inputPath = finalData.OutputPath
 			}
+			preTranscodeHookResult = finalData
 		}
 	}
 
@@ -499,36 +492,25 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 		RecorderID:  task.GetRecorderId(),
 	}
 
-	jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PreTranscoding.Scripts, data, c.cnf.Hooks.PreTranscoding.HookTimeout, log)
+	finalData, err := c.cnf.Hooks.RunPreTranscodingHook(data, log)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var finalData hooks.RecordingHookData
-	if len(jsonData) > 0 {
-		if err := json.Unmarshal(jsonData, &finalData); err != nil {
-			log.WithError(err).Error("failed to unmarshal final JSON from pre-transcoding scripts, will use original data")
-			// In case of unmarshal error, we still return the original taskDetails and an empty finalData
-			return taskDetails, &hooks.RecordingHookData{}, nil
-		}
-
+	if finalData != nil {
 		if finalData.OutputPath != "" {
 			taskDetails.FilePath = finalData.OutputPath
 		}
 		if finalData.FileName != taskDetails.FileName {
 			taskDetails.FileName = finalData.FileName
 		}
-		if finalData.Error != "" {
-			log.Errorf("Script responded with error msg: %s", finalData.Error)
-			return nil, nil, fmt.Errorf("script responded with error msg: %s", finalData.Error)
-		}
 	}
 
-	return taskDetails, &finalData, nil
+	return taskDetails, finalData, nil
 }
 
 func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.TranscodingTask, taskType hooks.RecordingHookTask, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, sourceForCleanup string, log *logrus.Entry) {
-	if c.cnf.HookManager != nil && c.cnf.Hooks.PostTranscoding != nil && len(c.cnf.Hooks.PostTranscoding.Scripts) > 0 {
+	if c.cnf.Hooks != nil {
 		// Note: outputFile is the final path including file name
 		absPath, err := filepath.Abs(outputFile)
 		if err != nil {
@@ -548,23 +530,13 @@ func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.
 			RecorderID:       task.RecorderId,
 			SourceForCleanup: sourceForCleanup,
 		}
-
-		jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PostTranscoding.Scripts, data, c.cnf.Hooks.PostTranscoding.HookTimeout, log)
+		finalData, err := c.cnf.Hooks.RunPostTranscodingHook(data, log)
 		if err != nil {
 			log.WithError(err).Error("post-transcoding script execution failed")
-		} else if len(jsonData) > 0 {
-			var finalData hooks.RecordingHookData
-			if err := json.Unmarshal(jsonData, &finalData); err == nil {
-				if finalData.OutputPath != "" {
-					toSend.FilePath = finalData.OutputPath
-					log.Infof("post-transcoding script updated FilePath to: %s", finalData.OutputPath)
-				}
-				if finalData.Error != "" {
-					log.Errorf("Script responded with error msg: %s", finalData.Error)
-				}
-			} else {
-				log.Errorf("failed to unmarshal post-transcoding script output, will use original data. output: %s", string(jsonData))
-			}
+		}
+		if finalData != nil && finalData.OutputPath != "" {
+			toSend.FilePath = finalData.OutputPath
+			log.Infof("post-transcoding script updated FilePath to: %s", finalData.OutputPath)
 		}
 	}
 

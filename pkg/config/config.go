@@ -1,11 +1,7 @@
 package config
 
 import (
-	"context"
-	"path/filepath"
-	"strings"
 	"sync/atomic"
-	"time"
 
 	"github.com/mynaparrot/plugnmeet-protocol/hooks"
 	"github.com/mynaparrot/plugnmeet-protocol/logging"
@@ -28,21 +24,14 @@ type AppConfig struct {
 	JetStream      jetstream.JetStream
 	Logger         *logrus.Logger
 	IsShuttingDown *atomic.Bool
-	HookManager    *hooks.HookProcessManager
 
 	RootWorkingDir string
 	Recorder       RecorderInfo        `yaml:"recorder"`
-	Hooks          HooksConfig         `yaml:"hooks"`
+	Hooks          *Hooks              `yaml:"hooks"`
 	LogSettings    logging.LogSettings `yaml:"log_settings"`
 	FfmpegSettings *FfmpegSettings     `yaml:"ffmpeg_settings"`
 	NatsInfo       NatsInfo            `yaml:"nats_info"`
 	PlugNmeetInfo  PlugNmeetInfo       `yaml:"plugNmeet_info"`
-}
-
-type HooksConfig struct {
-	PostRecording   *hooks.HookScriptConfig `yaml:"post_recording"`
-	PreTranscoding  *hooks.HookScriptConfig `yaml:"pre_transcoding"`
-	PostTranscoding *hooks.HookScriptConfig `yaml:"post_transcoding"`
 }
 
 type RecorderInfo struct {
@@ -139,6 +128,10 @@ func (a *AppConfig) setDefaultConfig() {
 	if len(a.Recorder.PostProcessingScripts) > 0 {
 		logrus.Warnln("Configuration error: 'recorder.post_processing_scripts' is deprecated. Please move your scripts to the top-level 'hooks.post_transcoding' section. IMPORTANT: Scripts now receive data via stdin instead of command-line arguments. Please update your scripts to read from stdin.")
 
+		if a.Hooks == nil {
+			a.Hooks = new(Hooks)
+		}
+
 		if a.Hooks.PostTranscoding == nil {
 			a.Hooks.PostTranscoding = new(hooks.HookScriptConfig)
 			for _, script := range a.Recorder.PostProcessingScripts {
@@ -166,72 +159,4 @@ func (a *AppConfig) setDefaultConfig() {
 	if a.NatsInfo.Recorder.TranscodingJobs == "" {
 		a.NatsInfo.Recorder.TranscodingJobs = "pnm-RecorderTranscoderJobs"
 	}
-}
-
-func (a *AppConfig) resolvePath(scriptPath string) string {
-	if strings.HasPrefix(scriptPath, "./") {
-		return filepath.Join(a.RootWorkingDir, scriptPath)
-	}
-	return scriptPath
-}
-
-func InitializeStorageHooks(ctx context.Context, appCnf *AppConfig) error {
-	scriptsWithPoolSize := make(map[string]int)
-
-	processHookCategory := func(config *hooks.HookScriptConfig, name string) error {
-		if config == nil {
-			return nil
-		}
-		if config.PoolSize <= 0 {
-			config.PoolSize = 1
-		}
-		if config.HookTimeout == 0 {
-			config.HookTimeout = time.Hour // Recorder hooks can be long-running.
-		}
-		for i, script := range config.Scripts {
-			var resolved string
-			if strings.HasPrefix(script.Script, hooks.HookCommandHttpRequest) {
-				resolved = script.Script
-			} else {
-				resolved = appCnf.resolvePath(script.Script)
-			}
-
-			if err := hooks.ValidateHookScript(resolved, name); err != nil {
-				return err
-			}
-			config.Scripts[i].Script = resolved
-
-			if !script.IsOneShot {
-				if currentSize, ok := scriptsWithPoolSize[resolved]; !ok || config.PoolSize > currentSize {
-					scriptsWithPoolSize[resolved] = config.PoolSize
-				}
-			}
-		}
-		return nil
-	}
-
-	if appCnf.Recorder.Mode == ModeBoth || appCnf.Recorder.Mode == ModeRecorderOnly {
-		if err := processHookCategory(appCnf.Hooks.PostRecording, "post_recording"); err != nil {
-			return err
-		}
-	}
-
-	if appCnf.Recorder.Mode == ModeBoth || appCnf.Recorder.Mode == ModeTranscoderOnly {
-		if err := processHookCategory(appCnf.Hooks.PreTranscoding, "pre_transcoding"); err != nil {
-			return err
-		}
-		if err := processHookCategory(appCnf.Hooks.PostTranscoding, "post_transcoding"); err != nil {
-			return err
-		}
-	}
-
-	// Initialize the HookProcessManager and start all unique scripts
-	appCnf.HookManager = hooks.NewHookProcessManager(ctx, appCnf.Logger.WithField("service", "hook_manager"))
-	if len(scriptsWithPoolSize) > 0 {
-		if err := appCnf.HookManager.StartHookProcesses(scriptsWithPoolSize); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
