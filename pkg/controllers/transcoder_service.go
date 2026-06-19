@@ -24,8 +24,6 @@ import (
 	"mvdan.cc/sh/v3/shell"
 )
 
-const maxTranscodingRetries = 3
-
 func (c *RecorderController) startTranscodingService() {
 	logger := c.logger.WithField("service", "transcoder")
 
@@ -102,15 +100,8 @@ func (c *RecorderController) startTranscodingService() {
 					"room_sid":      task.RoomSid,
 					"room_table_id": task.RoomTableId,
 					"recorder_id":   task.RecorderId,
-					"NumDelivered":  meta.NumDelivered,
+					"numDelivered":  meta.NumDelivered,
 				})
-
-				if meta.NumDelivered > maxTranscodingRetries {
-					log.Warnf("Transcoding job failed after %d attempts, removing from queue", maxTranscodingRetries)
-					// Ack the message to prevent it from being redelivered
-					_ = msg.Ack()
-					continue
-				}
 
 				// All the tasks are a blocking call. The loop will not continue to the next Fetch until this transcoding is finished.
 				started := time.Now()
@@ -158,7 +149,7 @@ func (c *RecorderController) startTranscodingService() {
 
 				if procErr != nil {
 					log.WithError(procErr).Warnln("Transcoding failed, sending NAK to re-queue job")
-					_ = msg.NakWithDelay(30 * time.Second)
+					_ = msg.NakWithDelay(5 * time.Minute)
 				} else {
 					// Everything was successful, ACK the message so it's not processed again.
 					if err := msg.Ack(); err != nil {
