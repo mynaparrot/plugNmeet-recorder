@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -134,7 +133,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 			}
 
 			// Run post-recording scripts
-			if c.cnf.HookManager != nil && c.cnf.Hooks.PostRecording != nil && len(c.cnf.Hooks.PostRecording.Scripts) > 0 {
+			if c.cnf.Hooks != nil {
 				modifiedPostRecording, err := c.runPostRecordingScripts(req, postRecording, log)
 				if err != nil {
 					log.WithError(err).Errorln("Post-recording script execution failed")
@@ -186,26 +185,17 @@ func (c *RecorderController) runPostRecordingScripts(req *plugnmeet.PlugNmeetToR
 		RecorderID:  req.GetRecorderId(),
 	}
 
-	jsonData, err := hooks.ExecuteHookPipeline(c.cnf.HookManager, c.cnf.Hooks.PostRecording.Scripts, data, c.cnf.Hooks.PostRecording.HookTimeout, log)
+	finalData, err := c.cnf.Hooks.RunPostRecordingHook(data, log)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(jsonData) > 0 {
-		var finalData hooks.RecordingHookData
-		if err := json.Unmarshal(jsonData, &finalData); err != nil {
-			log.WithError(err).Error("failed to unmarshal final JSON from post-recording scripts, will use original data")
-		} else {
-			if finalData.OutputPath != "" {
-				postRecording.FilePath = finalData.OutputPath
-			}
-			if finalData.FileName != postRecording.FileName {
-				postRecording.FileName = finalData.FileName
-			}
-			if finalData.Error != "" {
-				log.Errorf("Script responded with error msg: %s", finalData.Error)
-				return nil, fmt.Errorf("script responded with error msg: %s", finalData.Error)
-			}
+	if finalData != nil {
+		if finalData.OutputPath != "" {
+			postRecording.FilePath = finalData.OutputPath
+		}
+		if finalData.FileName != postRecording.FileName {
+			postRecording.FileName = finalData.FileName
 		}
 	}
 

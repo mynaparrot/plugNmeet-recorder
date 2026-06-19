@@ -60,8 +60,10 @@ func main() {
 	}
 	appCnf.Logger = logger
 
-	if err := config.InitializeStorageHooks(ctx, appCnf); err != nil {
-		logger.WithError(err).Fatal("Failed to setup hooks")
+	if appCnf.Hooks != nil {
+		if err := appCnf.Hooks.InitializeStorageHooks(ctx, appCnf); err != nil {
+			logger.WithError(err).Fatal("Failed to setup hooks")
+		}
 	}
 
 	// Prepare the server (e.g., NATS connections, JetStream)
