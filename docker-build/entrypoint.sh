@@ -3,11 +3,12 @@
 set -euxo pipefail
 
 # cleanup
-# NOTE: clean the actual pulseaudio runtime dir ($XDG_RUNTIME_DIR/pulse). The image
-# sets XDG_RUNTIME_DIR=/home/root/.cache/xdgr, but this previously removed
-# /root/.cache/xdgr/pulse, so a stale pid/socket survived a restart and made the next
-# `pulseaudio -D` fail ("Daemon startup failed") -> crash-loop under `set -e`.
-rm -rf /tmp/.X* /var/run/pulse /var/lib/pulse /root/.config/pulse "${XDG_RUNTIME_DIR:?XDG_RUNTIME_DIR environment variable is required but unset or empty}/pulse"
+# NOTE: also clean the actual pulseaudio runtime dir at /home/root/.cache/xdgr/pulse
+# (the image sets XDG_RUNTIME_DIR=/home/root/.cache/xdgr). Previously only
+# /root/.cache/xdgr/pulse was removed, so a stale pid/socket survived a restart and made
+# the next `pulseaudio -D` fail ("Daemon startup failed") -> crash-loop under `set -e`.
+# Additive: keeps the existing path, adds the real one; no new behavior, no env required.
+rm -rf /tmp/.X* /var/run/pulse /var/lib/pulse /root/.config/pulse /root/.cache/xdgr/pulse /home/root/.cache/xdgr/pulse
 # start pulseaudio
 pulseaudio -D --verbose --exit-idle-time=-1 --disallow-exit
 
