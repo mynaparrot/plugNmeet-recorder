@@ -29,5 +29,4 @@ COPY docker-build/entrypoint.sh /
 RUN chmod +x entrypoint.sh
 
 ENV PATH=${PATH}:/chrome
-ENV XDG_RUNTIME_DIR=/home/root/.cache/xdgr
 ENTRYPOINT ["/entrypoint.sh"]
