@@ -17,12 +17,12 @@ type NatsService struct {
 	js     jetstream.JetStream
 }
 
-func New(ctx context.Context, app *config.AppConfig) *NatsService {
+func New(ctx context.Context, app *config.AppConfig, nc *nats.Conn, js jetstream.JetStream, logger *logrus.Logger) *NatsService {
 	return &NatsService{
 		ctx:    ctx,
 		app:    app,
-		nc:     app.NatsConn,
-		js:     app.JetStream,
-		logger: app.Logger.WithField("service", "nats"),
+		nc:     nc,
+		js:     js,
+		logger: logger.WithField("service", "nats"),
 	}
 }

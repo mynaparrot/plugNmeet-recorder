@@ -11,7 +11,7 @@ func (c *RecorderController) startRecordingService() {
 	logger := c.logger.WithField("service", "recorder")
 
 	// subscribe to channel for receiving tasks
-	_, err := c.cnf.NatsConn.Subscribe(c.cnf.NatsInfo.Recorder.RecorderChannel, func(msg *nats.Msg) {
+	_, err := c.nc.Subscribe(c.cnf.NatsInfo.Recorder.RecorderChannel, func(msg *nats.Msg) {
 		req := new(plugnmeet.PlugNmeetToRecorder)
 		if err := proto.Unmarshal(msg.Data, req); err != nil {
 			logger.WithError(err).Error("Failed to unmarshal message")

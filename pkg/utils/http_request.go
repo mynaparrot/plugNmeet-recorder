@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -22,17 +23,15 @@ type Notifier struct {
 
 // NewNotifier creates and initializes a new Notifier instance.
 // The retryablehttp.Client is created once and reused for all notifications.
-func NewNotifier(host, apiKey, apiSecret string, retryMax *uint) *Notifier {
+func NewNotifier(cnf *config.AppConfig) *Notifier {
 	client := retryablehttp.NewClient()
 	client.Logger = nil
-	if retryMax != nil {
-		client.RetryMax = int(*retryMax)
-	}
+
 	return &Notifier{
 		client:    client,
-		host:      host,
-		apiKey:    apiKey,
-		apiSecret: apiSecret,
+		host:      cnf.PlugNmeetInfo.Host,
+		apiKey:    cnf.PlugNmeetInfo.ApiKey,
+		apiSecret: cnf.PlugNmeetInfo.ApiSecret,
 	}
 }
 
