@@ -16,7 +16,7 @@ import (
 
 const recorderUserAuthName = "PLUGNMEET_RECORDER_AUTH"
 
-func provideNATSConnection(lc fx.Lifecycle, appCnf *config.AppConfig, log *logrus.Logger) (*nats.Conn, error) {
+func provideNATSConnection(lc fx.Lifecycle, sd fx.Shutdowner, appCnf *config.AppConfig, log *logrus.Logger) (*nats.Conn, error) {
 	tokenHandler := func() string {
 		c := &plugnmeet.PlugNmeetTokenClaims{
 			UserId: appCnf.Recorder.Id,
@@ -45,7 +45,8 @@ func provideNATSConnection(lc fx.Lifecycle, appCnf *config.AppConfig, log *logru
 			log.Infof("NATS reconnected to %s", nc.ConnectedUrl())
 		}),
 		nats.ClosedHandler(func(nc *nats.Conn) {
-			log.Warn("NATS connection is permanently closed.")
+			log.Warn("NATS connection is permanently closed. Shutting down...")
+			_ = sd.Shutdown()
 		}),
 	}
 

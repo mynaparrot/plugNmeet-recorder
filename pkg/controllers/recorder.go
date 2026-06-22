@@ -91,11 +91,11 @@ func (c *RecorderController) bootUp() error {
 	case config.ModeRecorderOnly:
 		go c.startRecordingService()
 	case config.ModeTranscoderOnly:
-		go c.startTranscodingService(&c.isShuttingDown)
+		go c.startTranscodingService()
 	default:
 		// by default, it will be both
 		go c.startRecordingService()
-		go c.startTranscodingService(&c.isShuttingDown)
+		go c.startTranscodingService()
 	}
 
 	c.logger.WithFields(logrus.Fields{

@@ -10,7 +10,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/mynaparrot/plugnmeet-protocol/hooks"
@@ -25,7 +24,7 @@ import (
 	"mvdan.cc/sh/v3/shell"
 )
 
-func (c *RecorderController) startTranscodingService(isShuttingDown *atomic.Bool) {
+func (c *RecorderController) startTranscodingService() {
 	logger := c.logger.WithField("service", "transcoder")
 
 	consumer, err := c.js.Consumer(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, utils.TranscoderConsumerDurable)
@@ -73,7 +72,7 @@ func (c *RecorderController) startTranscodingService(isShuttingDown *atomic.Bool
 				if errors.Is(err, context.DeadlineExceeded) {
 					continue
 				}
-				if !isShuttingDown.Load() {
+				if !c.isShuttingDown.Load() {
 					logger.WithError(err).Errorln("Failed to fetch messages")
 				}
 
