@@ -159,7 +159,7 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 				return
 			}
 
-			if _, err = c.cnf.JetStream.Publish(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, marshal); err != nil {
+			if _, err = c.js.Publish(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, marshal); err != nil {
 				log.WithError(err).Errorln("Failed to publish transcoding task")
 			}
 		} else {

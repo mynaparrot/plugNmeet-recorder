@@ -27,7 +27,7 @@ import (
 func (c *RecorderController) startTranscodingService() {
 	logger := c.logger.WithField("service", "transcoder")
 
-	consumer, err := c.cnf.JetStream.Consumer(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, utils.TranscoderConsumerDurable)
+	consumer, err := c.js.Consumer(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, utils.TranscoderConsumerDurable)
 	if err != nil {
 		logger.WithError(err).Fatalln("Failed to create consumer for transcoding jobs")
 	}
@@ -72,7 +72,10 @@ func (c *RecorderController) startTranscodingService() {
 				if errors.Is(err, context.DeadlineExceeded) {
 					continue
 				}
-				logger.WithError(err).Errorln("Failed to fetch messages")
+				if !c.isShuttingDown.Load() {
+					logger.WithError(err).Errorln("Failed to fetch messages")
+				}
+
 				// Backoff before retrying on other errors
 				time.Sleep(2 * time.Second)
 				continue

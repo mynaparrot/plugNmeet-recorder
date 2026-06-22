@@ -1,12 +1,10 @@
 package config
 
 import (
-	"sync/atomic"
+	"path/filepath"
 
 	"github.com/mynaparrot/plugnmeet-protocol/hooks"
 	"github.com/mynaparrot/plugnmeet-protocol/logging"
-	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,12 +18,8 @@ const (
 )
 
 type AppConfig struct {
-	NatsConn       *nats.Conn
-	JetStream      jetstream.JetStream
-	Logger         *logrus.Logger
-	IsShuttingDown *atomic.Bool
-
 	RootWorkingDir string
+
 	Recorder       RecorderInfo        `yaml:"recorder"`
 	Hooks          *Hooks              `yaml:"hooks"`
 	LogSettings    logging.LogSettings `yaml:"log_settings"`
@@ -88,14 +82,12 @@ type NatsInfoRecorder struct {
 	TranscodingJobs string `yaml:"transcoding_jobs_subject"`
 }
 
-func New(a *AppConfig) *AppConfig {
+func Initialize(a *AppConfig) *AppConfig {
 	a.setDefaultConfig()
 	return a
 }
 
 func (a *AppConfig) setDefaultConfig() {
-	a.IsShuttingDown = new(atomic.Bool)
-
 	// Set default mode or validate the provided one.
 	switch a.Recorder.Mode {
 	case ModeBoth, ModeRecorderOnly, ModeTranscoderOnly:
@@ -122,6 +114,10 @@ func (a *AppConfig) setDefaultConfig() {
 	}
 	if a.Recorder.TranscodingCpuLimitBothMode == nil {
 		a.Recorder.TranscodingCpuLimitBothMode = new(80.0)
+	}
+
+	if !filepath.IsAbs(a.LogSettings.LogFile) {
+		a.LogSettings.LogFile = filepath.Join(a.RootWorkingDir, a.LogSettings.LogFile)
 	}
 
 	// For backward compatibility

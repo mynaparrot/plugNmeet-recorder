@@ -1,6 +1,7 @@
-package factory
+package app
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -9,12 +10,13 @@ import (
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+	"go.uber.org/fx"
 )
 
 const recorderUserAuthName = "PLUGNMEET_RECORDER_AUTH"
 
-func NewNatsConnection(appCnf *config.AppConfig) error {
+func provideNATSConnection(lc fx.Lifecycle, sd fx.Shutdowner, appCnf *config.AppConfig, log *logrus.Logger) (*nats.Conn, error) {
 	tokenHandler := func() string {
 		c := &plugnmeet.PlugNmeetTokenClaims{
 			UserId: appCnf.Recorder.Id,
@@ -43,26 +45,45 @@ func NewNatsConnection(appCnf *config.AppConfig) error {
 			log.Infof("NATS reconnected to %s", nc.ConnectedUrl())
 		}),
 		nats.ClosedHandler(func(nc *nats.Conn) {
-			if !appCnf.IsShuttingDown.Load() {
-				// This will be called if MaxReconnects is reached or if the connection is closed by the server.
-				// Using log.Fatal will ensure the application exits if it can't maintain a connection.
-				log.Fatal("NATS connection is permanently closed.")
-			}
+			log.Warn("NATS connection is permanently closed. Shutting down...")
+			_ = sd.Shutdown()
 		}),
 	}
 
 	info := appCnf.NatsInfo
 	nc, err := nats.Connect(strings.Join(info.NatsUrls, ","), opts...)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	appCnf.NatsConn = nc
 
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			log.Info("Closing NATS connection")
+			if err := nc.Drain(); err != nil {
+				return err
+			}
+			nc.Close()
+			return nil
+		},
+	})
+
+	return nc, nil
+}
+
+func provideJetStream(nc *nats.Conn, logger *logrus.Logger) (jetstream.JetStream, error) {
+	l := logger.WithField("method", "provideJetStream")
 	js, err := jetstream.New(nc)
 	if err != nil {
-		return err
+		l.WithError(err).Error("failed to create jetstream context")
+		return nil, err
 	}
-	appCnf.JetStream = js
-
-	return nil
+	return js, nil
 }
+
+var ConnectionModule = fx.Module("connections",
+	// Providers for each connection type
+	fx.Provide(
+		provideNATSConnection,
+		provideJetStream,
+	),
+)

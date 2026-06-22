@@ -5,15 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/mynaparrot/plugnmeet-protocol/logging"
-	"github.com/mynaparrot/plugnmeet-recorder/helpers"
+	"github.com/mynaparrot/plugnmeet-recorder/pkg/app"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
-	"github.com/mynaparrot/plugnmeet-recorder/pkg/controllers"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/fx"
+	"gopkg.in/yaml.v3"
 )
 
 func main() {
@@ -35,13 +34,8 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Setup context for graceful shutdown.
-	ctx, cancel := context.WithCancel(context.Background())
-	// cancel all context when main function exit
-	defer cancel()
-
 	// Read the application configuration
-	cnf, err := helpers.ReadYamlConfigFile(configPath)
+	cnf, err := readYamlConfigFile(configPath)
 	if err != nil {
 		logrus.Fatalln(err)
 	}
@@ -51,41 +45,58 @@ func main() {
 	}
 
 	// Set this config for global usage
-	appCnf := config.New(cnf)
+	appCnf := config.Initialize(cnf)
 
 	// Setup the logger
 	logger, err := logging.NewLogger(&appCnf.LogSettings)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to setup logger")
 	}
-	appCnf.Logger = logger
 
-	if appCnf.Hooks != nil {
-		if err := appCnf.Hooks.InitializeStorageHooks(ctx, appCnf); err != nil {
-			logger.WithError(err).Fatal("Failed to setup hooks")
-		}
+	// Prepare fx options
+	fxOpts := []fx.Option{
+		fx.Provide(func(lc fx.Lifecycle) context.Context {
+			ctx, cancel := context.WithCancel(context.Background())
+			lc.Append(fx.Hook{
+				OnStop: func(ctx context.Context) error {
+					logger.Info("Stopping application...")
+					cancel()
+					return nil
+				},
+			})
+			return ctx
+		}),
+
+		fx.Supply(appCnf, logger),
+		app.ApplicationModule,
+	}
+	if !appCnf.Recorder.Debug {
+		fxOpts = append(fxOpts, fx.NopLogger)
 	}
 
-	// Prepare the server (e.g., NATS connections, JetStream)
-	if err := helpers.PrepareServer(appCnf); err != nil {
-		// Use the configured logger from this point on
-		appCnf.Logger.WithError(err).Fatal("Failed to setup server")
+	// Run the fx application
+	fx.New(fxOpts...).Run()
+}
+
+func readYamlConfigFile(file string) (*config.AppConfig, error) {
+	yamlFile, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
 	}
 
-	// Start recorder services
-	rc := controllers.NewRecorderController(ctx, appCnf, logger)
-	rc.BootUp()
+	appCnf := new(config.AppConfig)
+	if err := yaml.Unmarshal(yamlFile, appCnf); err != nil {
+		return nil, err
+	}
 
-	// Defer closing connections to ensure they are cleaned up
-	// when the main function exits
-	defer helpers.HandleCloseConnections(appCnf)
+	// get current working dir
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
 
-	// Wait for interrupt signal to gracefully shut down the server.
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	<-sigChan
+	// set the root path
+	appCnf.RootWorkingDir = wd
 
-	appCnf.IsShuttingDown.Store(true)
-	appCnf.Logger.Infoln("Exit requested, shutting down services...")
-	rc.CallEndToAll()
+	return appCnf, err
 }

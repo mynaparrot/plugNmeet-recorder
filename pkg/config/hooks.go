@@ -20,7 +20,7 @@ type Hooks struct {
 	PostTranscoding *hooks.HookScriptConfig `yaml:"post_transcoding"`
 }
 
-func (h *Hooks) InitializeStorageHooks(ctx context.Context, appCnf *AppConfig) error {
+func (h *Hooks) InitializeStorageHooks(ctx context.Context, appCnf *AppConfig, logger *log.Logger) error {
 	scriptsWithPoolSize := make(map[string]int)
 
 	resolvePath := func(scriptPath string) string {
@@ -78,7 +78,7 @@ func (h *Hooks) InitializeStorageHooks(ctx context.Context, appCnf *AppConfig) e
 	}
 
 	// Initialize the HookProcessManager and start all unique scripts
-	h.hookManager = hooks.NewHookProcessManager(ctx, appCnf.Logger.WithField("service", "hook_manager"))
+	h.hookManager = hooks.NewHookProcessManager(ctx, logger.WithField("service", "hook_manager"))
 	if len(scriptsWithPoolSize) > 0 {
 		if err := h.hookManager.StartHookProcesses(scriptsWithPoolSize); err != nil {
 			return err

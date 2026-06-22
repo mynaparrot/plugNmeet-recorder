@@ -10,6 +10,7 @@ require (
 	github.com/nats-io/nats.go v1.52.0
 	github.com/shirou/gopsutil/v4 v4.26.5
 	github.com/sirupsen/logrus v1.9.4
+	go.uber.org/fx v1.24.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.13.1
@@ -89,6 +90,7 @@ require (
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.uber.org/dig v1.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect
 	go.uber.org/zap/exp v0.3.0 // indirect

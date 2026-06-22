@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
@@ -12,7 +13,10 @@ import (
 	natsservice "github.com/mynaparrot/plugnmeet-recorder/pkg/services/nats"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/fx"
 )
 
 const (
@@ -24,35 +28,53 @@ type RecorderController struct {
 	ctx                 context.Context
 	cnf                 *config.AppConfig
 	notifier            *utils.Notifier
+	nc                  *nats.Conn
+	js                  jetstream.JetStream
 	ns                  *natsservice.NatsService
 	logger              *logrus.Entry
 	closeTicker         chan bool
 	recordersInProgress sync.Map
+	isShuttingDown      atomic.Bool
 }
 
-func NewRecorderController(ctx context.Context, cnf *config.AppConfig, logger *logrus.Logger) *RecorderController {
-	ns := natsservice.New(ctx, cnf)
+func NewRecorderController(ctx context.Context, cnf *config.AppConfig, nc *nats.Conn, js jetstream.JetStream, ns *natsservice.NatsService, notifier *utils.Notifier, logger *logrus.Logger) *RecorderController {
+	log := logger.WithFields(logrus.Fields{
+		"component":  "recorder-controller",
+		"recorderId": cnf.Recorder.Id,
+	})
 
 	return &RecorderController{
-		ctx:      ctx,
-		cnf:      cnf,
-		ns:       ns,
-		notifier: utils.NewNotifier(cnf.PlugNmeetInfo.Host, cnf.PlugNmeetInfo.ApiKey, cnf.PlugNmeetInfo.ApiSecret, nil),
-		logger: logger.WithFields(logrus.Fields{
-			"component":  "recorder-controller",
-			"recorderId": cnf.Recorder.Id,
-		}),
+		ctx:         ctx,
+		cnf:         cnf,
+		nc:          nc,
+		js:          js,
+		ns:          ns,
+		notifier:    notifier,
 		closeTicker: make(chan bool),
+		logger:      log,
 	}
 }
 
-func (c *RecorderController) BootUp() {
+func (c *RecorderController) RegisterHooks(lc fx.Lifecycle) {
+	lc.Append(fx.Hook{
+		OnStart: func(_ context.Context) error {
+			return c.bootUp()
+		},
+		OnStop: func(_ context.Context) error {
+			c.callEndToAll()
+			return nil
+		},
+	})
+}
+
+func (c *RecorderController) bootUp() error {
 	// Only register as an active recorder if we are in a mode that can handle recordings.
 	if c.cnf.Recorder.Mode != config.ModeTranscoderOnly {
 		c.logger.Info("Registering as an active recorder")
 		// add this recorder to the bucket
 		if err := c.ns.RegisterAsActiveRecorder(pingInterval); err != nil {
-			c.logger.WithError(err).Fatal("Failed to add this recorder to the bucket")
+			c.logger.WithError(err).Error("failed to add this recorder to the bucket")
+			return err
 		}
 		// now start ping
 		go c.startPing()
@@ -82,9 +104,14 @@ func (c *RecorderController) BootUp() {
 		"runtime":    runtime.Version(),
 		"mode":       c.cnf.Recorder.Mode,
 	}).Infof("=== Recorder is ready v%s ====", version.Version)
+	return nil
 }
 
-func (c *RecorderController) CallEndToAll() {
+func (c *RecorderController) callEndToAll() {
+	if !c.isShuttingDown.CompareAndSwap(false, true) {
+		return // already shutting down
+	}
+
 	c.logger.Infoln("Received request to shut down services")
 
 	// Only perform recorder-specific cleanup if we are not in transcoderOnly mode.
@@ -119,7 +146,7 @@ func (c *RecorderController) startPing() {
 		case <-c.closeTicker:
 			return
 		case <-ping.C:
-			if c.cnf.IsShuttingDown.Load() {
+			if c.isShuttingDown.Load() {
 				return
 			}
 			if err := c.ns.UpdateStatus(); err != nil {
