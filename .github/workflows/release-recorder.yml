@@ -24,7 +24,7 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup go
         uses: actions/setup-go@v6
         with:
@@ -85,7 +85,7 @@ jobs:
 
     steps:
       - name: Checkout code for the new tag
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
 
