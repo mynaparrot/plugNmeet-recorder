@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mynaparrot/plugnmeet-protocol/logging"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/app"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/version"
@@ -34,23 +33,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Read the application configuration
-	cnf, err := readYamlConfigFile(configPath)
+	// Read config early to determine if fx.NopLogger should be used
+	isDebug, err := getDebugStatus(configPath)
 	if err != nil {
-		logrus.Fatalln(err)
-	}
-
-	if recorderMode != "" {
-		cnf.Recorder.Mode = recorderMode
-	}
-
-	// Set this config for global usage
-	appCnf := config.Initialize(cnf)
-
-	// Setup the logger
-	logger, err := logging.NewLogger(&appCnf.LogSettings)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to setup logger")
+		logrus.WithError(err).Fatal("Failed to read client debug status from config")
 	}
 
 	// Prepare fx options
@@ -58,8 +44,8 @@ func main() {
 		fx.Provide(func(lc fx.Lifecycle) context.Context {
 			ctx, cancel := context.WithCancel(context.Background())
 			lc.Append(fx.Hook{
-				OnStop: func(ctx context.Context) error {
-					logger.Info("Stopping application...")
+				OnStop: func(_ context.Context) error {
+					logrus.Info("Shutting down application...")
 					cancel()
 					return nil
 				},
@@ -67,10 +53,10 @@ func main() {
 			return ctx
 		}),
 
-		fx.Supply(appCnf, logger),
+		fx.Supply(configPath, recorderMode),
 		app.ApplicationModule,
 	}
-	if !appCnf.Recorder.Debug {
+	if !isDebug {
 		fxOpts = append(fxOpts, fx.NopLogger)
 	}
 
@@ -78,25 +64,20 @@ func main() {
 	fx.New(fxOpts...).Run()
 }
 
-func readYamlConfigFile(file string) (*config.AppConfig, error) {
+// getDebugStatus reads the config file to determine the Debug status.
+// This is a temporary read, the full config will be provided by fx.
+func getDebugStatus(file string) (bool, error) {
 	yamlFile, err := os.ReadFile(file)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	appCnf := new(config.AppConfig)
-	if err := yaml.Unmarshal(yamlFile, appCnf); err != nil {
-		return nil, err
+	var tempConfig struct {
+		RecorderInfo config.RecorderInfo `yaml:"recorder"`
+	}
+	if err := yaml.Unmarshal(yamlFile, &tempConfig); err != nil {
+		return false, err
 	}
 
-	// get current working dir
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
-	// set the root path
-	appCnf.RootWorkingDir = wd
-
-	return appCnf, err
+	return tempConfig.RecorderInfo.Debug, nil
 }

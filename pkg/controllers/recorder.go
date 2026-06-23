@@ -135,7 +135,7 @@ func (c *RecorderController) callEndToAll() {
 		c.logger.Infoln("All recorders closed and unregistered")
 	}
 
-	c.logger.Infoln("Shutdown complete")
+	c.logger.Infoln("Closing complete")
 }
 
 func (c *RecorderController) startPing() {

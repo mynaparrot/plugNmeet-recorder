@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/mynaparrot/plugnmeet-protocol/hooks"
@@ -82,12 +83,15 @@ type NatsInfoRecorder struct {
 	TranscodingJobs string `yaml:"transcoding_jobs_subject"`
 }
 
-func Initialize(a *AppConfig) *AppConfig {
-	a.setDefaultConfig()
-	return a
+func Initialize(a *AppConfig) (*AppConfig, error) {
+	if err := a.setDefaultConfig(); err != nil {
+		return nil, err
+	}
+
+	return a, nil
 }
 
-func (a *AppConfig) setDefaultConfig() {
+func (a *AppConfig) setDefaultConfig() error {
 	// Set default mode or validate the provided one.
 	switch a.Recorder.Mode {
 	case ModeBoth, ModeRecorderOnly, ModeTranscoderOnly:
@@ -97,7 +101,7 @@ func (a *AppConfig) setDefaultConfig() {
 		a.Recorder.Mode = ModeBoth
 	default:
 		// if the value is not recognized, exit
-		logrus.Fatalf("Invalid value for -mode flag: '%s'. Allowed values are 'both', 'recorderOnly', 'transcoderOnly'.", a.Recorder.Mode)
+		return fmt.Errorf("invalid value for -mode flag: '%s'. Allowed values are 'both', 'recorderOnly', 'transcoderOnly'", a.Recorder.Mode)
 	}
 
 	if a.Recorder.MaxLimit == 0 {
@@ -155,4 +159,6 @@ func (a *AppConfig) setDefaultConfig() {
 	if a.NatsInfo.Recorder.TranscodingJobs == "" {
 		a.NatsInfo.Recorder.TranscodingJobs = "pnm-RecorderTranscoderJobs"
 	}
+
+	return nil
 }

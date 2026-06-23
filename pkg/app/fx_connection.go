@@ -26,7 +26,8 @@ func provideNATSConnection(lc fx.Lifecycle, sd fx.Shutdowner, appCnf *config.App
 		if err != nil {
 			// This will only be fatal on the first connection attempt.
 			// On reconnect, the NATS client logs the error from the handler but doesn't exit.
-			log.Fatalf("Failed to generate NATS auth token: %v", err)
+			log.WithError(err).Fatal("Failed to generate NATS auth token")
+			return ""
 		}
 		return token
 	}
@@ -53,6 +54,7 @@ func provideNATSConnection(lc fx.Lifecycle, sd fx.Shutdowner, appCnf *config.App
 	info := appCnf.NatsInfo
 	nc, err := nats.Connect(strings.Join(info.NatsUrls, ","), opts...)
 	if err != nil {
+		log.WithError(err).Error("failed to connect to NATS")
 		return nil, err
 	}
 

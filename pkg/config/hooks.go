@@ -20,7 +20,7 @@ type Hooks struct {
 	PostTranscoding *hooks.HookScriptConfig `yaml:"post_transcoding"`
 }
 
-func (h *Hooks) InitializeStorageHooks(ctx context.Context, appCnf *AppConfig, logger *log.Logger) error {
+func (h *Hooks) InitializeHooks(ctx context.Context, appCnf *AppConfig, logger *log.Logger) error {
 	scriptsWithPoolSize := make(map[string]int)
 
 	resolvePath := func(scriptPath string) string {
