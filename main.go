@@ -60,8 +60,12 @@ func main() {
 		fxOpts = append(fxOpts, fx.NopLogger)
 	}
 
-	// Run the fx application
-	fx.New(fxOpts...).Run()
+	a := fx.New(fxOpts...)
+	a.Run() // run the app
+
+	if err := a.Err(); err != nil {
+		logrus.WithError(err).Fatal("Application failed to run")
+	}
 }
 
 // getDebugStatus reads the config file to determine the Debug status.
