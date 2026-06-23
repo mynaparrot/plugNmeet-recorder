@@ -5,6 +5,7 @@ go 1.26
 require (
 	github.com/chromedp/cdproto v0.0.0-20260427013145-5737772c319b
 	github.com/chromedp/chromedp v0.15.1
+	github.com/goccy/go-yaml v1.19.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/mynaparrot/plugnmeet-protocol v1.3.1-0.20260621195714-595f2b000baa
 	github.com/nats-io/nats.go v1.52.0
@@ -12,7 +13,6 @@ require (
 	github.com/sirupsen/logrus v1.9.4
 	go.uber.org/fx v1.24.0
 	google.golang.org/protobuf v1.36.11
-	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.13.1
 )
 
@@ -104,4 +104,5 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20260504160031-60b97b32f348 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260504160031-60b97b32f348 // indirect
 	google.golang.org/grpc v1.80.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

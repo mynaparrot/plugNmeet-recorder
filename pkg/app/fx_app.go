@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/goccy/go-yaml"
 	"github.com/mynaparrot/plugnmeet-protocol/logging"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/controllers"
@@ -12,7 +13,6 @@ import (
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
-	"gopkg.in/yaml.v3"
 )
 
 // provideAppConfig reads the config file and initializes the AppConfig.
