@@ -7,9 +7,9 @@ require (
 	github.com/chromedp/chromedp v0.15.1
 	github.com/goccy/go-yaml v1.19.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/mynaparrot/plugnmeet-protocol v1.3.1-0.20260621195714-595f2b000baa
+	github.com/mynaparrot/plugnmeet-protocol v1.3.1-0.20260701061341-4f7871afd8f0
 	github.com/nats-io/nats.go v1.52.0
-	github.com/shirou/gopsutil/v4 v4.26.5
+	github.com/shirou/gopsutil/v4 v4.26.6
 	github.com/sirupsen/logrus v1.9.4
 	go.uber.org/fx v1.24.0
 	google.golang.org/protobuf v1.36.11

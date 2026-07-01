@@ -143,16 +143,16 @@ func (a *AppConfig) setDefaultConfig() error {
 	if a.FfmpegSettings == nil {
 		a.FfmpegSettings = &FfmpegSettings{
 			Recording: FfmpegOptions{
-				PreInput:  "-loglevel error -thread_queue_size 512 -draw_mouse 0 -threads 1",
-				PostInput: "-c:v libx264 -x264-params keyint=120:scenecut=0 -preset ultrafast -crf 23 -c:a copy -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y",
+				PreInput:  "-loglevel error -thread_queue_size 1024 -framerate 30 -draw_mouse 0 -threads 1",
+				PostInput: "-c:v libx264 -pix_fmt yuv420p -bf 0 -x264-params keyint=120:scenecut=0 -preset ultrafast -crf 23 -c:a copy -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y",
 			},
 			PostRecording: FfmpegOptions{
 				PreInput:  "-loglevel error",
-				PostInput: "-pix_fmt yuv420p -preset veryfast -movflags faststart -y -c:a aac -af highpass=f=200,lowpass=f=4000,afftdn",
+				PostInput: "-c:v libx264 -profile:v high -level:v 4.1 -pix_fmt yuv420p -preset medium -crf 20 -movflags faststart -y -c:a aac -b:a 128k -af highpass=f=80,lowpass=f=8000,afftdn",
 			},
 			Rtmp: FfmpegOptions{
-				PreInput:  "-loglevel error -draw_mouse 0 -threads 1",
-				PostInput: "-c:v libx264 -pix_fmt yuv420p -x264-params keyint=120:scenecut=0 -b:v 2500k -video_size 1920x1080 -c:a aac -b:a 128k -ar 44100 -preset ultrafast -crf 23 -movflags frag_keyframe+empty_moov+default_base_moof -bufsize 5000k -flush_packets 1 -tune zerolatency -f flv",
+				PreInput:  "-loglevel error -thread_queue_size 512 -framerate 30 -draw_mouse 0 -threads 1",
+				PostInput: "-c:v libx264 -profile:v baseline -pix_fmt yuv420p -bf 0 -x264-params keyint=60:scenecut=0:nal-hrd=cbr -b:v 2500k -maxrate 2500k -bufsize 2500k -video_size 1920x1080 -c:a aac -b:a 128k -ar 44100 -preset ultrafast -tune zerolatency -flush_packets 1 -f flv",
 			},
 		}
 	}
