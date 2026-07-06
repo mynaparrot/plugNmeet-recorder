@@ -1,5 +1,41 @@
 # Changelog
 
+## [2.2.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.1.1...v2.2.0) (2026-07-06)
+
+
+### Features
+
+* **refactor:** refactored project to use `uber fx` ([916bc1e](https://github.com/mynaparrot/plugNmeet-recorder/commit/916bc1ea268ae615a5747826a01ac48531d61992))
+* **refactor:** refactored project to use `uber fx` ([af773cc](https://github.com/mynaparrot/plugNmeet-recorder/commit/af773ccf057a6f2f2e0cad1cf06029c791bb3c8c))
+* storage hook ([af8168a](https://github.com/mynaparrot/plugNmeet-recorder/commit/af8168a5dd578a083c642fb2d4499bac21d8d809))
+
+
+### Bug Fixes
+
+* added hooks option to clean temporary objects ([395ad3d](https://github.com/mynaparrot/plugNmeet-recorder/commit/395ad3dacc669847a3eb9e5dd1642109c86a2aae))
+* added option to set `LogOutput` ([57e6c84](https://github.com/mynaparrot/plugNmeet-recorder/commit/57e6c84f6868041384a17f29f9dad6b74219fe66))
+* added option to set hook timeout ([aba1f0b](https://github.com/mynaparrot/plugNmeet-recorder/commit/aba1f0b2a9d084b495c74eeddbd8c98f9f4a4c53))
+* allowing the OS to respect the shebang ([5c7c113](https://github.com/mynaparrot/plugNmeet-recorder/commit/5c7c11387859ef8da5f5d558f6894ca1ae054bf9))
+* bump proto + permission ([32e1cf5](https://github.com/mynaparrot/plugNmeet-recorder/commit/32e1cf5dc00854ac0be4e62397d99bf95927c745))
+* detect error if any, during initialization ([c18fd9c](https://github.com/mynaparrot/plugNmeet-recorder/commit/c18fd9c3541cc99979fe4de41e95e50e88b8eb7b))
+* **feat:** implemented recording hook with backward compatibility ([90dab1b](https://github.com/mynaparrot/plugNmeet-recorder/commit/90dab1b7574aeb6bef47e532375215974a86b564))
+* **feat:** option to modify path before transcoding using `pre_transcode_scripts` ([5452992](https://github.com/mynaparrot/plugNmeet-recorder/commit/545299255743f05155d0f9c1146691fce40b2eec))
+* **feat:** option to modify path before transcoding using `pre_transcode_scripts` ([bca13f5](https://github.com/mynaparrot/plugNmeet-recorder/commit/bca13f5f69354d1b6546a05d2d02ecdb2f873411))
+* handle backward compatibility ([c4da6d2](https://github.com/mynaparrot/plugNmeet-recorder/commit/c4da6d226c5e1abc7f5684af5b55dd18f7dec37f))
+* **hooks:** use same pattern for communicating with hooks scripts ([6a4a534](https://github.com/mynaparrot/plugNmeet-recorder/commit/6a4a53460ee9e2529ab3a6480d5b0fd732049fec))
+* implemented long-lived hook ([e078490](https://github.com/mynaparrot/plugNmeet-recorder/commit/e078490a0afbe90426a69efd927fce5008619fbd))
+* improvement in ffmpeg args ([3bd80f7](https://github.com/mynaparrot/plugNmeet-recorder/commit/3bd80f7f12a7484de40c3e583f96c55e7dc3d7a8))
+* invalid path was sending to hooks script ([58d8885](https://github.com/mynaparrot/plugNmeet-recorder/commit/58d8885450590240748348780f649d186032fb0e))
+* missed to initialized ([1cf70c6](https://github.com/mynaparrot/plugNmeet-recorder/commit/1cf70c66816a8a59a6bac74e40fb2c00be38e6ac))
+* moved all hooks related logic to own file ([621a6ce](https://github.com/mynaparrot/plugNmeet-recorder/commit/621a6ce8b44738fa81a36f4e2e384c9f2cc7f93c))
+* moved all related code to `BootstrapModule` ([548a57d](https://github.com/mynaparrot/plugNmeet-recorder/commit/548a57de8e8fd897c2bb79ede61d8a28c0dd85e5))
+* **refactor:** implemented multi pools hook script support ([344c3c1](https://github.com/mynaparrot/plugNmeet-recorder/commit/344c3c1cbf33eea936757ba707f2d2e3ed436ecc))
+* **refactor:** run `PostTranscoding` scripts before sending notification + standardize script execution ([11f2bdd](https://github.com/mynaparrot/plugNmeet-recorder/commit/11f2bdd7a7902de267a471e2a67222e5be36c42e))
+* **refactor:** run `PostTranscoding` scripts before sending notification + standardize script execution ([5638413](https://github.com/mynaparrot/plugNmeet-recorder/commit/5638413caa244cbf18151693b39ed893ce14e7eb))
+* **refactor:** support for both `long-lived` and `one-shot` commands ([5362443](https://github.com/mynaparrot/plugNmeet-recorder/commit/53624433a32461eb81428cb157bd706530b69966))
+* removed confusing `XDG_RUNTIME_DIR` environment value ([f5710b8](https://github.com/mynaparrot/plugNmeet-recorder/commit/f5710b82770557402e74d993134ca359b6845143))
+* yaml lib replaced with `goccy/go-yaml` ([1da70f4](https://github.com/mynaparrot/plugNmeet-recorder/commit/1da70f4c027e0a1ee64b1aaa5005996e7d2c7ec2))
+
 ## [2.1.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.1.0...v2.1.1) (2026-06-07)
 
 
