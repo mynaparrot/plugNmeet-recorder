@@ -1,4 +1,5 @@
 name: Build and release recorder
+
 on:
   push:
     branches:
@@ -16,6 +17,7 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name }}
       major: ${{ steps.release.outputs.major }}
       minor: ${{ steps.release.outputs.minor }}
+
     steps:
       - uses: googleapis/release-please-action@v5
         id: release
@@ -23,22 +25,29 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
       - name: Checkout
+        if: steps.release.outputs.release_created != 'true'
         uses: actions/checkout@v7
+
       - name: Setup go
-        uses: actions/setup-go@v6
+        if: steps.release.outputs.release_created != 'true'
+        uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
+
       - name: Download Go modules
+        if: steps.release.outputs.release_created != 'true'
         run: go mod download
+
       - name: Update beta version
-        if: ${{ ! steps.release.outputs.release_created }}
+        if: steps.release.outputs.release_created != 'true'
         run: |
           cp config_sample.yaml config.yaml
           GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -s -buildid=' -o plugnmeet-recorder main.go
           CURRENT_VERSION=$(./plugnmeet-recorder --version)
           IFS='-' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-          
+
           if [ ! "${VERSION_PARTS[1]}" ]; then
             # increment main part
             NEXT_VERSION=$(echo "${VERSION_PARTS[0]}" | awk -F. -v OFS=. '{$NF += 1 ; print}')
@@ -48,21 +57,20 @@ jobs:
             NEW_BETA=$(echo "${VERSION_PARTS[1]}" | awk -F. -v OFS=. '{$NF += 1 ; print}')
             NEXT_VERSION="${VERSION_PARTS[0]}-${NEW_BETA}"
           fi
-          
+
           echo "Changing version from: ${CURRENT_VERSION} To: ${NEXT_VERSION}"
           sed -i "s/${CURRENT_VERSION}/${NEXT_VERSION}/" version/version.go
-          # now delete
+
           rm -rf plugnmeet-recorder config.yaml
-          
-          # push changes
+
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
-          git commit -m "bump beta version"
+          git commit -m "bump beta version [skip ci]"
           git push
 
       - name: Upload server files
-        if: ${{ steps.release.outputs.release_created }}
+        if: steps.release.outputs.release_created == 'true'
         run: make -j upload
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -70,8 +78,9 @@ jobs:
 
   build:
     needs: release-please
-    if: needs.release-please.outputs.release_created
+    if: needs.release-please.outputs.release_created == 'true'
     runs-on: ${{ matrix.runner }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -97,15 +106,16 @@ jobs:
           tags: |
             type=raw,value=${{ needs.release-please.outputs.tag_name }}-${{ matrix.arch }}
             type=raw,value=v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}-${{ matrix.arch }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+            type=raw,value=latest-${{ matrix.arch }}
 
       - name: Login to DockerHub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push arch-specific image
         uses: docker/build-push-action@v7
@@ -120,7 +130,7 @@ jobs:
 
   push-manifest:
     needs: [release-please, build]
-    if: needs.release-please.outputs.release_created
+    if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub
@@ -131,11 +141,15 @@ jobs:
 
       - name: Create and push manifest
         run: |
-          TAGS="${{ needs.release-please.outputs.tag_name }} v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}"
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/plugnmeet-recorder"
+          TAGS="${{ needs.release-please.outputs.tag_name }} v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} latest"
+
           for TAG in $TAGS; do
             echo "Creating and pushing manifest for tag: $TAG"
-            docker manifest create ${{ secrets.DOCKERHUB_USERNAME }}/plugnmeet-recorder:$TAG \
-              --amend ${{ secrets.DOCKERHUB_USERNAME }}/plugnmeet-recorder:$TAG-amd64 \
-              --amend ${{ secrets.DOCKERHUB_USERNAME }}/plugnmeet-recorder:$TAG-arm64
-            docker manifest push ${{ secrets.DOCKERHUB_USERNAME }}/plugnmeet-recorder:$TAG
+
+            docker manifest create "$IMAGE:$TAG" \
+              --amend "$IMAGE:$TAG-amd64" \
+              --amend "$IMAGE:$TAG-arm64"
+
+            docker manifest push "$IMAGE:$TAG"
           done
