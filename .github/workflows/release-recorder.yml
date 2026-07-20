@@ -27,7 +27,6 @@ jobs:
           manifest-file: .release-please-manifest.json
 
       - name: Checkout
-        if: steps.release.outputs.release_created != 'true'
         uses: actions/checkout@v7
 
       - name: Setup go
@@ -132,6 +131,7 @@ jobs:
     needs: [release-please, build]
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - name: Login to Docker Hub
         uses: docker/login-action@v4
