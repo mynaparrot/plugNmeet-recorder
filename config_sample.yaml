@@ -20,8 +20,6 @@ recorder:
   # If the current CPU usage exceeds this value, the transcoding task will be delayed. This helps prioritize live recordings over transcoding.
   # Defaults to 80.0. Set to 0 to disable.
   transcoding_cpu_limit_both_mode: 80.0
-  # Specify a custom Chrome binary path if required.
-  custom_chrome_path: ""
   # Optional: Set the dimensions of the virtual recording window.
   # The output video will match this resolution.
   width: 1920
@@ -41,6 +39,66 @@ recorder:
     # Optional: Specify a subdirectory for this recorder instance.
     # This path must reside within main_path and will be stored in the database.
     sub_path: "node_01"
+
+log_settings:
+  log_file: "./logs/recorder.log"
+  # Maximum log file size in megabytes.
+  maxsize: 20
+  # Maximum number of backup log files to retain.
+  maxbackups: 4
+  # Maximum age (in days) before log rotation stops.
+  maxage: 2
+  # Log levels: info, warn, error, fatal, debug, or panic.
+  log_level: "info"
+
+# Define custom FFmpeg options here.
+ffmpeg_settings:
+  recording:
+    # Options to apply before the input (-i) parameter.
+    pre_input: "-loglevel error -thread_queue_size 1024 -framerate 30 -draw_mouse 0 -threads 1"
+    # Options to apply after the input (-i) parameter.
+    post_input: "-c:v libx264 -pix_fmt yuv420p -bf 0 -x264-params keyint=120:scenecut=0 -preset ultrafast -crf 23 -c:a copy -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y"
+
+  post_recording:
+    pre_input: "-loglevel error"
+    post_input: "-c:v libx264 -profile:v high -level:v 4.1 -pix_fmt yuv420p -preset medium -crf 20 -movflags faststart -y -c:a aac -b:a 128k -af highpass=f=80,lowpass=f=8000,afftdn"
+
+  rtmp:
+    pre_input: "-loglevel error -thread_queue_size 512 -framerate 30 -draw_mouse 0 -threads 1"
+    post_input: "-c:v libx264 -profile:v baseline -pix_fmt yuv420p -bf 0 -x264-params keyint=60:scenecut=0:nal-hrd=cbr -b:v 2500k -maxrate 2500k -bufsize 2500k -video_size 1920x1080 -c:a aac -b:a 128k -ar 44100 -preset ultrafast -tune zerolatency -flush_packets 1 -f flv"
+
+# Optional: Custom Chrome/Chromium browser settings.
+# Custom flags replace built-in flags with the same name. However,
+# these protected flags cannot be overridden:
+#   window-size, display, PULSE_SINK
+#chrome_settings:
+  # Specify a custom Chrome binary path if required.
+  # custom_chrome_path: "/usr/bin/google-chrome-stable"
+  # Add custom Chrome command-line flags.
+  # flags:
+  #   - name: "use-gl"
+  #     value: "swiftshader"
+  #   - name: "enable-webgl"
+  #     value: true           # boolean: --enable-webgl
+
+plugNmeet_info:
+  # Example: http://localhost:8080
+  host: PLUG_N_MEET_SERVER_DOMAIN
+  api_key: PLUG_N_MEET_API_KEY
+  api_secret: PLUG_N_MEET_SECRET
+  # Optional: Use join_host if the plugNmeet client is hosted separately.
+  # For non-localhost servers, use an HTTPS URL, or it will not function correctly.
+  # Format: https://PLUG_N_MEET_SERVER_DOMAIN/?access_token=
+  # join_host: "http://localhost:3000/?access_token="
+
+nats_info:
+  nats_urls:
+    - "nats://127.0.0.1:4222"
+  num_replicas: 1 # Acceptable values: 1, 3, or 5
+  recorder:
+    recorder_channel: "recorderChannel"
+    recorder_info_kv: "pnm-recorderInfo"
+    transcoding_jobs_subject: "pnm-RecorderTranscoderJobs"
 
 # ----------------------------------------------------------------
 # Scripting Hooks
@@ -82,49 +140,3 @@ recorder:
 #    scripts:
 #      - script: "/path/to/your/script.sh"
 #        is_one_shot: false
-
-log_settings:
-  log_file: "./logs/recorder.log"
-  # Maximum log file size in megabytes.
-  maxsize: 20
-  # Maximum number of backup log files to retain.
-  maxbackups: 4
-  # Maximum age (in days) before log rotation stops.
-  maxage: 2
-  # Log levels: info, warn, error, fatal, debug, or panic.
-  log_level: "info"
-
-# Define custom FFmpeg options here.
-ffmpeg_settings:
-  recording:
-    # Options to apply before the input (-i) parameter.
-    pre_input: "-loglevel error -thread_queue_size 1024 -framerate 30 -draw_mouse 0 -threads 1"
-    # Options to apply after the input (-i) parameter.
-    post_input: "-c:v libx264 -pix_fmt yuv420p -bf 0 -x264-params keyint=120:scenecut=0 -preset ultrafast -crf 23 -c:a copy -movflags frag_keyframe+empty_moov+default_base_moof -flush_packets 1 -tune zerolatency -y"
-
-  post_recording:
-    pre_input: "-loglevel error"
-    post_input: "-c:v libx264 -profile:v high -level:v 4.1 -pix_fmt yuv420p -preset medium -crf 20 -movflags faststart -y -c:a aac -b:a 128k -af highpass=f=80,lowpass=f=8000,afftdn"
-
-  rtmp:
-    pre_input: "-loglevel error -thread_queue_size 512 -framerate 30 -draw_mouse 0 -threads 1"
-    post_input: "-c:v libx264 -profile:v baseline -pix_fmt yuv420p -bf 0 -x264-params keyint=60:scenecut=0:nal-hrd=cbr -b:v 2500k -maxrate 2500k -bufsize 2500k -video_size 1920x1080 -c:a aac -b:a 128k -ar 44100 -preset ultrafast -tune zerolatency -flush_packets 1 -f flv"
-
-plugNmeet_info:
-  # Example: http://localhost:8080
-  host: PLUG_N_MEET_SERVER_DOMAIN
-  api_key: PLUG_N_MEET_API_KEY
-  api_secret: PLUG_N_MEET_SECRET
-  # Optional: Use join_host if the plugNmeet client is hosted separately.
-  # For non-localhost servers, use an HTTPS URL, or it will not function correctly.
-  # Format: https://PLUG_N_MEET_SERVER_DOMAIN/?access_token=
-  # join_host: "http://localhost:3000/?access_token="
-
-nats_info:
-  nats_urls:
-    - "nats://127.0.0.1:4222"
-  num_replicas: 1 # Acceptable values: 1, 3, or 5
-  recorder:
-    recorder_channel: "recorderChannel"
-    recorder_info_kv: "pnm-recorderInfo"
-    transcoding_jobs_subject: "pnm-RecorderTranscoderJobs"

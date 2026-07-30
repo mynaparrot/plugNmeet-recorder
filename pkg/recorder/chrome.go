@@ -18,49 +18,67 @@ func (r *Recorder) launchChrome() {
 	log := r.Logger.WithField("joinUrl", r.joinUrl)
 	log.Infof("Launching chrome")
 
-	opts := []chromedp.ExecAllocatorOption{
+	// Default Chrome flags
+	flags := map[string]interface{}{
 		// ---- Performance & Stability Flags ----
-		chromedp.DisableGPU,
-		chromedp.Flag("disable-background-networking", true),
-		chromedp.Flag("disable-background-timer-throttling", true),
-		chromedp.Flag("disable-backgrounding-occluded-windows", true),
-		chromedp.Flag("disable-breakpad", true),
-		chromedp.Flag("disable-client-side-phishing-detection", true),
-		chromedp.Flag("disable-dev-shm-usage", true), // Crucial for Docker/containerized environments
-		chromedp.Flag("disable-extensions", true),
-		chromedp.Flag("disable-features", "site-per-process,Translate,TranslateUI"),
-		chromedp.Flag("disable-hang-monitor", true),
-		chromedp.Flag("disable-ipc-flooding-protection", true),
-		chromedp.Flag("disable-renderer-backgrounding", true),
-		chromedp.Flag("disable-sync", true),
-		chromedp.Flag("metrics-recording-only", true),
-		chromedp.Flag("safebrowsing-disable-auto-update", true),
+		"disable-gpu":                            true, // DisableGPU
+		"disable-background-networking":          true,
+		"disable-background-timer-throttling":    true,
+		"disable-backgrounding-occluded-windows": true,
+		"disable-breakpad":                       true,
+		"disable-client-side-phishing-detection": true,
+		"disable-dev-shm-usage":                  true, // Crucial for Docker/containerized environments
+		"disable-extensions":                     true,
+		"disable-features":                       "site-per-process,Translate,TranslateUI",
+		"disable-hang-monitor":                   true,
+		"disable-ipc-flooding-protection":        true,
+		"disable-renderer-backgrounding":         true,
+		"disable-sync":                           true,
+		"metrics-recording-only":                 true,
+		"safebrowsing-disable-auto-update":       true,
 
 		// ---- Automation & UI Control Flags ----
-		chromedp.NoFirstRun,
-		chromedp.NoDefaultBrowserCheck,
-		chromedp.Flag("excludeSwitches", "enable-automation"), // Removes the "controlled by automation" bar
-		chromedp.Flag("disable-default-apps", true),
-		chromedp.Flag("disable-popup-blocking", true),
-		chromedp.Flag("disable-prompt-on-repost", true),
-		chromedp.Flag("password-store", "basic"), // Prevents prompts for OS-level keyrings
-		chromedp.Flag("use-mock-keychain", true),
-		chromedp.Flag("kiosk", true),
-		chromedp.Flag("disable-notifications", true),
-		chromedp.Flag("autoplay-policy", "no-user-gesture-required"),
-		chromedp.Flag("window-position", "0,0"),
-		chromedp.Flag("window-size", fmt.Sprintf("%d,%d", r.AppCnf.Recorder.Width, r.AppCnf.Recorder.Height)),
-		chromedp.Flag("force-device-scale-factor", "1"),
+		"no-first-run":              true, // NoFirstRun
+		"no-default-browser-check":  true, // NoDefaultBrowserCheck
+		"excludeSwitches":           "enable-automation",
+		"disable-default-apps":      true,
+		"disable-popup-blocking":    true,
+		"disable-prompt-on-repost":  true,
+		"password-store":            "basic",
+		"use-mock-keychain":         true,
+		"kiosk":                     true,
+		"disable-notifications":     true,
+		"autoplay-policy":           "no-user-gesture-required",
+		"window-position":           "0,0",
+		"force-device-scale-factor": "1",
 
 		// ---- Environment & Rendering Flags ----
-		chromedp.NoSandbox,
-		chromedp.Flag("force-color-profile", "srgb"),
-		chromedp.Env(fmt.Sprintf("PULSE_SINK=%s", r.pulseSinkName)),
-		chromedp.Flag("display", r.displayId),
+		"no-sandbox":          true, // NoSandbox
+		"force-color-profile": "srgb",
 	}
 
-	if r.AppCnf.Recorder.CustomChromePath != nil && *r.AppCnf.Recorder.CustomChromePath != "" {
-		opts = append(opts, chromedp.ExecPath(*r.AppCnf.Recorder.CustomChromePath))
+	// Merge user's custom flags (replaces defaults with same key)
+	if r.AppCnf.ChromeSettings != nil {
+		for _, cf := range r.AppCnf.ChromeSettings.Flags {
+			flags[cf.Name] = cf.Value
+		}
+	}
+
+	// Build opts from map
+	var opts []chromedp.ExecAllocatorOption
+	for name, value := range flags {
+		opts = append(opts, chromedp.Flag(name, value))
+	}
+
+	// Non-editable / required options
+	opts = append(opts,
+		chromedp.Flag("window-size", fmt.Sprintf("%d,%d", r.AppCnf.Recorder.Width, r.AppCnf.Recorder.Height)),
+		chromedp.Env(fmt.Sprintf("PULSE_SINK=%s", r.pulseSinkName)),
+		chromedp.Flag("display", r.displayId),
+	)
+
+	if r.AppCnf.ChromeSettings != nil && r.AppCnf.ChromeSettings.CustomChromePath != nil && *r.AppCnf.ChromeSettings.CustomChromePath != "" {
+		opts = append(opts, chromedp.ExecPath(*r.AppCnf.ChromeSettings.CustomChromePath))
 	}
 
 	allocCtx, allocCancel := chromedp.NewExecAllocator(r.ctx, opts...)

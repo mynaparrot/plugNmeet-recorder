@@ -25,6 +25,7 @@ type AppConfig struct {
 	Hooks          *Hooks              `yaml:"hooks"`
 	LogSettings    logging.LogSettings `yaml:"log_settings"`
 	FfmpegSettings *FfmpegSettings     `yaml:"ffmpeg_settings"`
+	ChromeSettings *ChromeSettings     `yaml:"chrome_settings"`
 	NatsInfo       NatsInfo            `yaml:"nats_info"`
 	PlugNmeetInfo  PlugNmeetInfo       `yaml:"plugNmeet_info"`
 }
@@ -35,7 +36,6 @@ type RecorderInfo struct {
 	MaxLimit                    uint64             `yaml:"max_limit"`
 	Debug                       bool               `yaml:"debug"`
 	PostMp4Convert              bool               `yaml:"post_mp4_convert"`
-	CustomChromePath            *string            `yaml:"custom_chrome_path"`
 	Width                       uint64             `yaml:"width"`
 	Height                      uint64             `yaml:"height"`
 	XvfbDpi                     uint64             `yaml:"xvfb_dpi"`
@@ -46,6 +46,19 @@ type RecorderInfo struct {
 	// Deprecated fields for backward compatibility. They are unexported and will be migrated
 	// to the top-level `hooks` section during config initialization.
 	PostProcessingScripts []string `yaml:"post_processing_scripts"` // Deprecated
+
+	// Deprecated: Use chrome_settings.custom_chrome_path instead.
+	CustomChromePath *string `yaml:"custom_chrome_path"`
+}
+
+type ChromeFlag struct {
+	Name  string      `yaml:"name"`
+	Value interface{} `yaml:"value"`
+}
+
+type ChromeSettings struct {
+	CustomChromePath *string      `yaml:"custom_chrome_path"`
+	Flags            []ChromeFlag `yaml:"flags"`
 }
 
 type CopyToPathSettings struct {
@@ -118,6 +131,17 @@ func (a *AppConfig) setDefaultConfig() error {
 	}
 	if a.Recorder.TranscodingCpuLimitBothMode == nil {
 		a.Recorder.TranscodingCpuLimitBothMode = new(80.0)
+	}
+
+	// Migrate deprecated recorder.custom_chrome_path to chrome_settings.custom_chrome_path
+	if a.Recorder.CustomChromePath != nil && *a.Recorder.CustomChromePath != "" {
+		logrus.Warnln("Configuration warning: 'recorder.custom_chrome_path' is deprecated. Please move it to 'chrome_settings.custom_chrome_path'.")
+		if a.ChromeSettings == nil {
+			a.ChromeSettings = &ChromeSettings{}
+		}
+		if a.ChromeSettings.CustomChromePath == nil || *a.ChromeSettings.CustomChromePath == "" {
+			a.ChromeSettings.CustomChromePath = a.Recorder.CustomChromePath
+		}
 	}
 
 	if !filepath.IsAbs(a.LogSettings.LogFile) {
