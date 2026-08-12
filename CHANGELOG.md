@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.3.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.2.0...v2.3.0) (2026-08-11)
+
+
+### Features
+
+* added config option to set custom chrome flags ([def69fa](https://github.com/mynaparrot/plugNmeet-recorder/commit/def69fa24f167f66c0086f095d64a034865608f2))
+
+
+### Bug Fixes
+
+* ensure to tag latest as well ([eda7ede](https://github.com/mynaparrot/plugNmeet-recorder/commit/eda7edef0f38d6cbe379637da36457c282e53696))
+* remove condition from `Checkout` ([1830d97](https://github.com/mynaparrot/plugNmeet-recorder/commit/1830d97d7bd5160ebcf472d4adaba93df7d7f2f7))
+
 ## [2.2.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.1.1...v2.2.0) (2026-07-06)
 
 
