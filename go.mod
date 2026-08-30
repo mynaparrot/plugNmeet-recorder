@@ -1,6 +1,6 @@
 module github.com/mynaparrot/plugnmeet-recorder
 
-go 1.26
+go 1.26.0
 
 require (
 	github.com/chromedp/cdproto v0.0.0-20260714215040-dc233986426f
@@ -13,7 +13,7 @@ require (
 	github.com/sirupsen/logrus v1.9.4
 	go.uber.org/fx v1.24.0
 	google.golang.org/protobuf v1.36.11
-	mvdan.cc/sh/v3 v3.13.1
+	mvdan.cc/sh/v3 v3.14.0
 )
 
 require (
