@@ -10,7 +10,7 @@ require (
 	github.com/mynaparrot/plugnmeet-protocol v1.5.0
 	github.com/nats-io/nats.go v1.52.0
 	github.com/shirou/gopsutil/v4 v4.26.7
-	github.com/sirupsen/logrus v1.9.4
+	github.com/sirupsen/logrus v1.10.2
 	go.uber.org/fx v1.24.0
 	google.golang.org/protobuf v1.36.11
 	mvdan.cc/sh/v3 v3.13.1
@@ -99,7 +99,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
 	go.uber.org/zap/exp v0.3.0 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/exp v0.0.0-20260603202125-055de637280b // indirect
 	golang.org/x/net v0.56.0 // indirect
