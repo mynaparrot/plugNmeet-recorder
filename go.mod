@@ -12,7 +12,7 @@ require (
 	github.com/shirou/gopsutil/v4 v4.26.7
 	github.com/sirupsen/logrus v1.9.4
 	go.uber.org/fx v1.24.0
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 	mvdan.cc/sh/v3 v3.13.1
 )
 
