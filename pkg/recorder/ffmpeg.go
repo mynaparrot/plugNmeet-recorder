@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/sirupsen/logrus"
@@ -16,8 +17,14 @@ func (r *Recorder) launchFfmpegProcess() error {
 	var preInput, postInput string
 
 	if r.Req.Task == plugnmeet.RecordingTasks_START_RTMP {
-		preInput = r.AppCnf.FfmpegSettings.Rtmp.PreInput
-		postInput = r.AppCnf.FfmpegSettings.Rtmp.PostInput
+		if url := strings.ToLower(*r.Req.RtmpUrl); strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+			r.Logger.Infoln("broadcast URL is WHIP, using whip ffmpeg settings")
+			preInput = r.AppCnf.FfmpegSettings.Whip.PreInput
+			postInput = r.AppCnf.FfmpegSettings.Whip.PostInput
+		} else {
+			preInput = r.AppCnf.FfmpegSettings.Rtmp.PreInput
+			postInput = r.AppCnf.FfmpegSettings.Rtmp.PostInput
+		}
 	} else if r.Req.Task == plugnmeet.RecordingTasks_START_RECORDING {
 		preInput = r.AppCnf.FfmpegSettings.Recording.PreInput
 		postInput = r.AppCnf.FfmpegSettings.Recording.PostInput

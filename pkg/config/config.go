@@ -70,6 +70,7 @@ type FfmpegSettings struct {
 	Recording     FfmpegOptions `yaml:"recording"`
 	PostRecording FfmpegOptions `yaml:"post_recording"`
 	Rtmp          FfmpegOptions `yaml:"rtmp"`
+	Whip          FfmpegOptions `yaml:"whip"`
 }
 
 type FfmpegOptions struct {
@@ -178,6 +179,17 @@ func (a *AppConfig) setDefaultConfig() error {
 				PreInput:  "-loglevel error -thread_queue_size 512 -framerate 30 -draw_mouse 0 -threads 1",
 				PostInput: "-c:v libx264 -profile:v baseline -pix_fmt yuv420p -bf 0 -x264-params keyint=60:scenecut=0:nal-hrd=cbr -b:v 2500k -maxrate 2500k -bufsize 2500k -video_size 1920x1080 -c:a aac -b:a 128k -ar 44100 -preset ultrafast -tune zerolatency -flush_packets 1 -f flv",
 			},
+			Whip: FfmpegOptions{
+				PreInput:  "-loglevel error -thread_queue_size 512 -framerate 30 -draw_mouse 0 -threads 1",
+				PostInput: "-c:v libx264 -profile:v baseline -pix_fmt yuv420p -bf 0 -x264-params keyint=60:scenecut=0:nal-hrd=cbr -b:v 2500k -maxrate 2500k -bufsize 2500k -video_size 1920x1080 -c:a libopus -ar 48000 -b:a 128k -preset ultrafast -tune zerolatency -flush_packets 1 -f whip",
+			},
+		}
+	}
+	// Handle configs with a partial ffmpeg_settings block (missing the whip: section).
+	if a.FfmpegSettings != nil && a.FfmpegSettings.Whip == (FfmpegOptions{}) {
+		a.FfmpegSettings.Whip = FfmpegOptions{
+			PreInput:  "-loglevel error -thread_queue_size 512 -framerate 30 -draw_mouse 0 -threads 1",
+			PostInput: "-c:v libx264 -profile:v baseline -pix_fmt yuv420p -bf 0 -x264-params keyint=60:scenecut=0:nal-hrd=cbr -b:v 2500k -maxrate 2500k -bufsize 2500k -video_size 1920x1080 -c:a libopus -ar 48000 -b:a 128k -preset ultrafast -tune zerolatency -flush_packets 1 -f whip",
 		}
 	}
 	if a.NatsInfo.Recorder.TranscodingJobs == "" {
