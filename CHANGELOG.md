@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.3.0...v2.3.1) (2026-09-09)
+
+
+### Bug Fixes
+
+* added `WHIP` support for live broadcasting ([a71de51](https://github.com/mynaparrot/plugNmeet-recorder/commit/a71de51c1052e41653cbd0261f2419202fd68b79))
+* use FFmpeg from `BtbN/FFmpeg-Builds` ([ab1a15e](https://github.com/mynaparrot/plugNmeet-recorder/commit/ab1a15ee47d10cc6354bfc2d21a1d333d58a1a9b))
+
 ## [2.3.0](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.2.0...v2.3.0) (2026-08-11)
 
 
