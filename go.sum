@@ -141,6 +141,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/mynaparrot/plugnmeet-protocol v1.6.1 h1:D1H4V5bZcFVkzrLztIQjDYrFGlO49No8G+srLz34ufA=
 github.com/mynaparrot/plugnmeet-protocol v1.6.1/go.mod h1:SFan08avkdK7dW1AbSIeFsZmKBqc9i+p5Re74izz4bM=
+github.com/mynaparrot/plugnmeet-protocol v1.6.2 h1:kaRP9tN4GxMcvwpk7gvMK/fNMt4s1XY2Lqun2EdAQMo=
+github.com/mynaparrot/plugnmeet-protocol v1.6.2/go.mod h1:SFan08avkdK7dW1AbSIeFsZmKBqc9i+p5Re74izz4bM=
 github.com/nats-io/nats.go v1.53.1 h1:Otsq3uLc/kLdjmkNHkXH0jBqwUquwdKFoe3fq6/3/Xo=
 github.com/nats-io/nats.go v1.53.1/go.mod h1:26HypzazeOkyO3/mqd1zZd53STJN0EjCYF9Uy2ZOBno=
 github.com/nats-io/nkeys v0.4.16 h1:rd5oAuLOb8mnAycB0xleuEBNS1pVVnN0fv/FF34Eypg=
