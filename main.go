@@ -15,6 +15,14 @@ import (
 )
 
 func main() {
+	// Dispatch subcommands before flag.Parse so their own flags are handled by the subcommand.
+	if len(os.Args) > 1 && os.Args[1] == "retry-transcode" {
+		if err := app.RetryTranscode(os.Args[2:]); err != nil {
+			logrus.WithError(err).Fatal("retry-transcode failed")
+		}
+		return
+	}
+
 	// Define command-line flags
 	var configPath string
 	flag.StringVar(&configPath, "config", "config.yaml", "Path to the configuration file")
@@ -24,6 +32,18 @@ func main() {
 
 	var recorderMode config.AppMode
 	flag.StringVar((*string)(&recorderMode), "mode", "", "Override recorder mode (recorderOnly, transcoderOnly, or both)")
+
+	// Override the default usage so help/usage errors also document the subcommands.
+	flag.Usage = func() {
+		out := flag.CommandLine.Output()
+		fmt.Fprintf(out, "Usage of %s:\n", os.Args[0])
+		fmt.Fprintf(out, "\nRun without a command to start the recorder.\n\n")
+		fmt.Fprintf(out, "Commands:\n")
+		fmt.Fprintf(out, "  retry-transcode    re-submit a dropped post-recording transcoding job\n")
+		fmt.Fprintf(out, "                     (use '%s retry-transcode --help' for details)\n", os.Args[0])
+		fmt.Fprintf(out, "\nFlags:\n")
+		flag.PrintDefaults()
+	}
 
 	// Parse the command-line arguments
 	flag.Parse()

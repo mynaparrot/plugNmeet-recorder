@@ -16,7 +16,9 @@ import (
 
 const recorderUserAuthName = "PLUGNMEET_RECORDER_AUTH"
 
-func provideNATSConnection(lc fx.Lifecycle, sd fx.Shutdowner, appCnf *config.AppConfig, log *logrus.Logger) (*nats.Conn, error) {
+// connectNATS opens a NATS connection reusing the recorder's JWT auth. The onClosed
+// callback, when non-nil, is invoked if the connection is permanently closed.
+func connectNATS(appCnf *config.AppConfig, log *logrus.Logger, onClosed func()) (*nats.Conn, error) {
 	tokenHandler := func() string {
 		c := &plugnmeet.PlugNmeetTokenClaims{
 			UserId: appCnf.Recorder.Id,
@@ -47,7 +49,9 @@ func provideNATSConnection(lc fx.Lifecycle, sd fx.Shutdowner, appCnf *config.App
 		}),
 		nats.ClosedHandler(func(nc *nats.Conn) {
 			log.Warn("NATS connection is permanently closed. Shutting down...")
-			_ = sd.Shutdown()
+			if onClosed != nil {
+				onClosed()
+			}
 		}),
 	}
 
@@ -55,6 +59,17 @@ func provideNATSConnection(lc fx.Lifecycle, sd fx.Shutdowner, appCnf *config.App
 	nc, err := nats.Connect(strings.Join(info.NatsUrls, ","), opts...)
 	if err != nil {
 		log.WithError(err).Error("failed to connect to NATS")
+		return nil, err
+	}
+
+	return nc, nil
+}
+
+func provideNATSConnection(lc fx.Lifecycle, sd fx.Shutdowner, appCnf *config.AppConfig, log *logrus.Logger) (*nats.Conn, error) {
+	nc, err := connectNATS(appCnf, log, func() {
+		_ = sd.Shutdown()
+	})
+	if err != nil {
 		return nil, err
 	}
 

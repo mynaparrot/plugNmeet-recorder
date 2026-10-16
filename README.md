@@ -205,6 +205,24 @@ Your script should return the same JSON structure, but with the `output_path` fi
 
 Example scripts are provided in the `./scripts` directory to demonstrate how to build a long-lived script that can parse this JSON using tools like `jq` and log the output. You can use these as a template for your own custom workflows.
 
+## Retry a Failed Transcoding Job
+
+The transcoding queue retries a failed job up to 3 times; after that the job is dropped from the queue permanently. The `retry-transcode` subcommand re-submits such a job manually — it publishes the same transcoding task the recorder publishes when a recording finishes.
+
+```bash
+plugnmeet-recorder retry-transcode \
+  --recording-id "REC_ax9s3djn2s" \
+  --room-table-id 123 \
+  --room-id "room01" \
+  --file "/path/to/recording/files/node_01/room01/REC_ax9s3djn2s.mp4"
+```
+
+*   Run it with a valid `config.yaml` (add `--config /path/to/config.yaml` if it is not in the working directory); it publishes to NATS and any `both` or `transcoderOnly` worker picks up the job.
+*   `--room-table-id` can be copied from the recorder logs (the `roomTableId` field); the plugnmeet server uses it to resolve the room.
+*   `--file` must be resolvable by the transcoder: with `pre_transcoding` hooks enabled it may be a remote location (e.g., S3) that your hooks fetch from. The transcoder deletes the raw file after a successful transcoding, so a job can only be re-submitted while the file still exists. If the transcoder cannot find the file it drops the job — just re-run with a corrected path.
+*   `--recording-id` determines the final output file name (`<recording_id>.mp4`).
+*   The recorder id is taken from `config.yaml` automatically.
+
 ## Development
 
 1.  Clone this repository and navigate into the project directory.
