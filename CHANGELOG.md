@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.3.1...v2.3.2) (2026-10-16)
+
+
+### Bug Fixes
+
+* added cli option to push transcoding task manually ([f877953](https://github.com/mynaparrot/plugNmeet-recorder/commit/f8779535722bc336af2fd27cd517c3bddef3730c))
+
 ## [2.3.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.3.0...v2.3.1) (2026-09-09)
 
 
