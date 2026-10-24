@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
@@ -90,31 +89,53 @@ func (r *Recorder) launchChrome() {
 	}
 	r.Unlock()
 
-	chromedp.ListenBrowser(chromeCtx, func(ev interface{}) {
-		switch ev.(type) {
-		case *target.EventDetachedFromTarget:
+	// Call BrowserEvents here, not inside the goroutines: it starts the browser
+	// on first use, and that start is not concurrency-safe.
+	detached := chromedp.BrowserEvents(chromeCtx, target.DetachedFromTarget)
+	crashed := chromedp.BrowserEvents(chromeCtx, target.TargetCrashed)
+
+	go func() {
+		for _, err := range detached {
+			if err != nil {
+				return
+			}
+			if chromeCtx.Err() != nil {
+				return
+			}
 			log.Errorln("Browser detached from target unexpectedly")
 			r.Close(plugnmeet.RecordingTasks_STOP, errors.New("browser detached from target unexpectedly"))
-		case *target.EventTargetCrashed:
+			return
+		}
+	}()
+	go func() {
+		for _, err := range crashed {
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			if chromeCtx.Err() != nil {
+				return
+			}
 			log.Errorln("Browser crashed")
 			r.Close(plugnmeet.RecordingTasks_STOP, errors.New("browser crashed"))
+			return
 		}
-	})
+	}()
 
-	err := chromedp.Run(chromeCtx,
+	err := chromedp.Do(chromeCtx,
 		chromedp.Navigate(r.joinUrl),
 		r.waitVisibleWithTimeout("div[id=startupJoinModal]", waitForSelectorTimeout),
 		chromedp.Click("button[id=listenOnlyJoin]", chromedp.NodeVisible),
 		// Move the mouse to the top-left corner to remove hover effects.
-		chromedp.MouseEvent(input.MouseMoved, 0, 0),
+		chromedp.MouseEvent(chromedp.MouseMoved, 0, 0),
 		r.waitVisibleWithTimeout("div[id=main-area]", waitForSelectorTimeout),
-		chromedp.ActionFunc(func(context.Context) error {
+		chromedp.Func(func(context.Context, *chromedp.Target) error {
 			// wait to make sure videos are all loaded properly
 			time.Sleep(time.Second * 3)
 			return r.launchFfmpegProcess()
 		}),
 		chromedp.WaitVisible("div[id=errorPage]"),
-		chromedp.ActionFunc(func(context.Context) error {
+		chromedp.Func(func(context.Context, *chromedp.Target) error {
 			log.Infoln("Got error page, closing recorder")
 			r.Close(plugnmeet.RecordingTasks_STOP, nil)
 			return nil
@@ -140,14 +161,14 @@ func (r *Recorder) closeChromeDp(log *logrus.Entry) {
 	}
 }
 
-func (r *Recorder) waitVisibleWithTimeout(selector string, timeout time.Duration) chromedp.ActionFunc {
-	return func(ctx context.Context) error {
+func (r *Recorder) waitVisibleWithTimeout(selector string, timeout time.Duration) chromedp.Action[chromedp.Void] {
+	return func(ctx context.Context, t *chromedp.Target) (chromedp.Void, error) {
 		timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
-		err := chromedp.WaitVisible(selector).Do(timeoutCtx)
+		_, err := chromedp.Run(timeoutCtx, chromedp.WaitVisible(selector))
 		if err != nil && errors.Is(err, context.DeadlineExceeded) {
 			err = fmt.Errorf("%s was not visible after %v", selector, timeout)
 		}
-		return err
+		return chromedp.Void{}, err
 	}
 }
