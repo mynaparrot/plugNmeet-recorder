@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.3.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.3.1...v2.3.2) (2026-10-28)
+
+
+### Bug Fixes
+
+* added cli option to push transcoding task manually ([f877953](https://github.com/mynaparrot/plugNmeet-recorder/commit/f8779535722bc336af2fd27cd517c3bddef3730c))
+* bump chrome-installer ([2bc0df8](https://github.com/mynaparrot/plugNmeet-recorder/commit/2bc0df8a8b902e96cdfa2aad5717828b2e3d2142))
+* bump go to `1.27.3` ([167f77d](https://github.com/mynaparrot/plugNmeet-recorder/commit/167f77dcf2069a95423ea551dbdf71be8a9fa2ab))
+* upgrade `chromedp` to `v0.21.0` ([bc6c57d](https://github.com/mynaparrot/plugNmeet-recorder/commit/bc6c57dd4f5ed4f663109dd6a80fb718f67cb495))
+
 ## [2.3.1](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.3.0...v2.3.1) (2026-09-09)
 
 
