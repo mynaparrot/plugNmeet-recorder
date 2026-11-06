@@ -196,5 +196,11 @@ func (a *AppConfig) setDefaultConfig() error {
 		a.NatsInfo.Recorder.TranscodingJobs = "pnm-RecorderTranscoderJobs"
 	}
 
+	natsUrls, err := normalizeNatsUrls(a.NatsInfo.NatsUrls)
+	if err != nil {
+		return err
+	}
+	a.NatsInfo.NatsUrls = natsUrls
+
 	return nil
 }

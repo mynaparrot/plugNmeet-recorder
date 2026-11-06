@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -15,6 +16,15 @@ import (
 )
 
 const recorderUserAuthName = "PLUGNMEET_RECORDER_AUTH"
+
+// isWebsocketNats reports whether the NATS urls use the websocket transport.
+// config.normalizeNatsUrls guarantees that all urls share a single scheme.
+func isWebsocketNats(urls []string) bool {
+	if len(urls) == 0 {
+		return false
+	}
+	return strings.HasPrefix(urls[0], "ws://") || strings.HasPrefix(urls[0], "wss://")
+}
 
 // connectNATS opens a NATS connection reusing the recorder's JWT auth. The onClosed
 // callback, when non-nil, is invoked if the connection is permanently closed.
@@ -35,10 +45,11 @@ func connectNATS(appCnf *config.AppConfig, log *logrus.Logger, onClosed func()) 
 	}
 
 	opts := []nats.Option{
-		nats.Name("plugnmeet-recorder"),
+		nats.Name(fmt.Sprintf("plugnmeet-recorder-%s", appCnf.Recorder.Id)),
 		nats.TokenHandler(tokenHandler),
 		nats.ReconnectWait(5 * time.Second),
 		nats.MaxReconnects(-1), // Keep trying to reconnect indefinitely.
+		nats.CustomInboxPrefix(fmt.Sprintf("%srecorder.%s", nats.InboxPrefix, appCnf.Recorder.Id)),
 		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
 			if err != nil {
 				log.Errorf("NATS disconnected with error: %v", err)
@@ -56,6 +67,16 @@ func connectNATS(appCnf *config.AppConfig, log *logrus.Logger, onClosed func()) 
 	}
 
 	info := appCnf.NatsInfo
+	if isWebsocketNats(info.NatsUrls) {
+		// Proxies/CDNs drop idle websockets long before the default 2m ping interval.
+		opts = append(opts,
+			nats.PingInterval(20*time.Second),
+			nats.MaxPingsOutstanding(3),
+			nats.Timeout(10*time.Second),
+		)
+	}
+
+	log.Infof("Connecting to NATS at %s", strings.Join(info.NatsUrls, ","))
 	nc, err := nats.Connect(strings.Join(info.NatsUrls, ","), opts...)
 	if err != nil {
 		log.WithError(err).Error("failed to connect to NATS")

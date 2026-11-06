@@ -49,7 +49,7 @@ Edit `config.yaml` to configure the recorder.
 
 ### Basic Configuration
 
-*   **`nats_info`**: This section must match the NATS configuration in your `plugnmeet-server`'s `config.yaml`.
+*   **`nats_info`**: This section must match the NATS configuration in your `plugnmeet-server`'s `config.yaml`. `nats_urls` accepts `nats://`, `tls://`, `ws://` or `wss://` (e.g. `wss://PLUG_N_MEET_SERVER_DOMAIN/ws` when NATS is reachable only through a proxy). All entries must use the same scheme.
 *   **`main_path`**: This should be the same as `recording_files_path` in your `plugnmeet-server`'s `config.yaml`.
 *   **`plugNmeet_info`**: Update this section with your plugnmeet server details.
 

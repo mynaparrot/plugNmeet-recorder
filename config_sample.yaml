@@ -96,6 +96,8 @@ plugNmeet_info:
   # join_host: "http://localhost:3000/?access_token="
 
 nats_info:
+  # nats://, tls://, ws:// or wss:// (http/https prefixes work too).
+  # e.g. "wss://PLUG_N_MEET_SERVER_DOMAIN/ws" for websocket behind a proxy.
   nats_urls:
     - "nats://127.0.0.1:4222"
   num_replicas: 1 # Acceptable values: 1, 3, or 5
