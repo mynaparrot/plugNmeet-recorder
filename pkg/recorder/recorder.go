@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
@@ -42,7 +43,7 @@ type Recorder struct {
 	closeChrome   context.CancelFunc
 
 	sync.Mutex
-	closeOnce sync.Once
+	stopping atomic.Bool
 }
 
 func New(mainCtx context.Context, r *Recorder) *Recorder {
@@ -106,37 +107,39 @@ func (r *Recorder) Start() error {
 }
 
 func (r *Recorder) Close(task plugnmeet.RecordingTasks, err error) {
-	r.closeOnce.Do(func() {
-		log := r.Logger.WithField("closeTask", task)
-		log.Infoln("Closing recorder")
+	if !r.stopping.CompareAndSwap(false, true) {
+		return
+	}
 
-		// timeout for graceful shutdown
-		shutdownCtx, cancel := context.WithTimeout(r.ctx, shutdownTimeout)
-		defer cancel()
+	log := r.Logger.WithField("closeTask", task)
+	log.Infoln("Closing recorder")
 
-		done := make(chan struct{})
-		go func() {
-			defer close(done)
-			r.closeFfmpeg(log)
-			r.closeChromeDp(log)
-			r.closeXvfb(log)
-			r.closePulse(log, shutdownCtx)
-		}()
+	// timeout for graceful shutdown
+	shutdownCtx, cancel := context.WithTimeout(r.ctx, shutdownTimeout)
+	defer cancel()
 
-		select {
-		case <-done:
-			log.Infoln("Graceful shutdown finished")
-		case <-shutdownCtx.Done():
-			log.Errorln("Graceful shutdown timed out, forcing close")
-		}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		r.closeFfmpeg(log)
+		r.closeChromeDp(log)
+		r.closeXvfb(log)
+		r.closePulse(log, shutdownCtx)
+	}()
 
-		if r.OnAfterCloseCallback != nil {
-			r.OnAfterCloseCallback(r.Req, r.recordingFilePath, r.finalRawFilePath, err, log)
-		}
+	select {
+	case <-done:
+		log.Infoln("Graceful shutdown finished")
+	case <-shutdownCtx.Done():
+		log.Errorln("Graceful shutdown timed out, forcing close")
+	}
 
-		// close everything if still running
-		r.ctxCancel()
-	})
+	if r.OnAfterCloseCallback != nil {
+		r.OnAfterCloseCallback(r.Req, r.recordingFilePath, r.finalRawFilePath, err, log)
+	}
+
+	// close everything if still running
+	r.ctxCancel()
 }
 
 // infoLogger is used to capture stdout/stderr of external commands.

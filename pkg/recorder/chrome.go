@@ -4,12 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	errBrowserDetached = errors.New("browser detached from target unexpectedly")
+	errBrowserCrashed  = errors.New("browser crashed")
+	errBrowserLost     = errors.New("lost the connection to the browser")
 )
 
 // launch Chrome to access URL
@@ -89,40 +96,80 @@ func (r *Recorder) launchChrome() {
 	}
 	r.Unlock()
 
-	// Call BrowserEvents here, not inside the goroutines: it starts the browser
-	// on first use, and that start is not concurrency-safe.
-	detached := chromedp.BrowserEvents(chromeCtx, target.DetachedFromTarget)
-	crashed := chromedp.BrowserEvents(chromeCtx, target.TargetCrashed)
+	// The watchers, the Do error path and the errorPage Func may all report a
+	// failure; stopChrome acts only on the first one and stays silent when the
+	// shutdown was requested by us.
+	var stopOnce sync.Once
+	stopChrome := func(reason string, err error) {
+		stopOnce.Do(func() {
+			if r.stopping.Load() {
+				return
+			}
+			log.WithError(err).Error(reason)
+			r.Close(plugnmeet.RecordingTasks_STOP, err)
+		})
+	}
 
+	// Start the browser and the tab here, not inside the goroutines: that start
+	// is not concurrency-safe. It also gives chromedp.Detached a target to watch.
+	if err := chromedp.Do(chromeCtx); err != nil {
+		stopChrome("Chrome failed to start", fmt.Errorf("chrome failed to start: %w", err))
+		return
+	}
+	detached, err := chromedp.Detached(chromeCtx)
+	if err != nil {
+		stopChrome("Unable to watch the target", err)
+		return
+	}
+	browser := chromedp.FromContext(chromeCtx).Browser
+
+	// The Wait* query actions retry until their context ends, so they never
+	// report a detached target. chromedp.Detached does, also when the detach
+	// already happened before we looked.
 	go func() {
-		for _, err := range detached {
-			if err != nil {
-				return
+		select {
+		case <-detached:
+			stopChrome("Browser detached from target unexpectedly", errBrowserDetached)
+		case <-browser.LostConnection:
+			stopChrome("Lost the connection to the browser", errBrowserLost)
+		case <-chromeCtx.Done():
+			// chromedp also cancels chromeCtx right after closing LostConnection
+			// when the browser dies. Re-check it so a select tie never drops it.
+			select {
+			case <-browser.LostConnection:
+				stopChrome("Lost the connection to the browser", errBrowserLost)
+			default:
 			}
-			if chromeCtx.Err() != nil {
-				return
-			}
-			log.Errorln("Browser detached from target unexpectedly")
-			r.Close(plugnmeet.RecordingTasks_STOP, errors.New("browser detached from target unexpectedly"))
-			return
 		}
 	}()
+
+	// Keep a separate watcher for renderer crashes so they keep their own reason.
+	crashed := chromedp.BrowserEvents(chromeCtx, target.TargetCrashed)
 	go func() {
 		for _, err := range crashed {
 			if err != nil {
-				fmt.Println(err)
+				// A dying browser closes LostConnection before chromeCtx is
+				// cancelled, so prefer that reason over a bare crash.
+				select {
+				case <-browser.LostConnection:
+					stopChrome("Lost the connection to the browser", errBrowserLost)
+				default:
+					stopChrome("Browser crashed", err)
+				}
 				return
 			}
-			if chromeCtx.Err() != nil {
-				return
-			}
-			log.Errorln("Browser crashed")
-			r.Close(plugnmeet.RecordingTasks_STOP, errors.New("browser crashed"))
+			stopChrome("Browser crashed", errBrowserCrashed)
 			return
+		}
+		select {
+		case <-browser.LostConnection:
+			stopChrome("Lost the connection to the browser", errBrowserLost)
+		default:
+			stopChrome("Browser crashed", errBrowserCrashed)
 		}
 	}()
 
-	err := chromedp.Do(chromeCtx,
+	err = chromedp.Do(chromeCtx,
 		chromedp.Navigate(r.joinUrl),
 		r.waitVisibleWithTimeout("div[id=startupJoinModal]", waitForSelectorTimeout),
 		chromedp.Click("button[id=listenOnlyJoin]", chromedp.NodeVisible),
@@ -142,10 +189,21 @@ func (r *Recorder) launchChrome() {
 		}),
 	)
 	if err != nil {
-		if !errors.Is(err, context.Canceled) {
-			log.WithError(err).Error("Chromedp run error")
+		// A plain command fails at once with ErrTargetDetached when the target is
+		// already gone. Report it the same way as the watcher above.
+		if errors.Is(err, chromedp.ErrTargetDetached) {
+			stopChrome("Browser detached from target unexpectedly", errBrowserDetached)
+			return
 		}
-		r.Close(plugnmeet.RecordingTasks_STOP, err)
+		// A killed browser cancels chromeCtx too, so report the lost connection
+		// rather than the resulting context error.
+		select {
+		case <-browser.LostConnection:
+			stopChrome("Lost the connection to the browser", errBrowserLost)
+			return
+		default:
+		}
+		stopChrome("Chromedp run error", err)
 	}
 }
 
