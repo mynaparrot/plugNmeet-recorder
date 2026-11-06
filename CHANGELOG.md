@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.3](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.3.2...v2.3.3) (2026-11-06)
+
+
+### Bug Fixes
+
+* add support to connect by NATS websocket + CustomInboxPrefix ([7d5bd71](https://github.com/mynaparrot/plugNmeet-recorder/commit/7d5bd710e420b45f32e0120e28d5da0e72b1ded3))
+* detect all Chrome failure modes and notify on unexpected exit ([866c8ea](https://github.com/mynaparrot/plugNmeet-recorder/commit/866c8ea1c71246a1a19376a2e7014db0be5de2b9))
+
 ## [2.3.2](https://github.com/mynaparrot/plugNmeet-recorder/compare/v2.3.1...v2.3.2) (2026-10-28)
 
 
