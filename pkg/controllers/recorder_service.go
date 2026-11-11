@@ -32,6 +32,14 @@ func (c *RecorderController) startRecordingService() {
 		switch req.Task {
 		case plugnmeet.RecordingTasks_START_RECORDING,
 			plugnmeet.RecordingTasks_START_RTMP:
+			// this recorder only supports full screen recording, other variants are
+			// handled by their own recorder instances.
+			if req.Task == plugnmeet.RecordingTasks_START_RECORDING &&
+				req.RecordingVariant != nil &&
+				req.GetRecordingVariant() != plugnmeet.CloudRecordingVariants_FULL_SCREEN_CLOUD_RECORDING {
+				taskLogger.Infof("ignoring task for unsupported recording variant: %s", req.GetRecordingVariant().String())
+				return
+			}
 			if req.RecorderId == c.cnf.Recorder.Id {
 				res := &plugnmeet.CommonResponse{
 					Status: true,

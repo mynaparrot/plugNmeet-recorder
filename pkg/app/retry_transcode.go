@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	"github.com/mynaparrot/plugnmeet-protocol/utils"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
@@ -115,13 +116,14 @@ Flags:
 		"file":        file,
 	}).Info("Publishing retry transcoding task")
 
-	ack, err := js.Publish(context.Background(), appCnf.NatsInfo.Recorder.TranscodingJobs, data)
+	subject := utils.GetTranscodingJobSubject(appCnf.NatsInfo.Recorder.TranscodingJobs, plugnmeet.CloudRecordingVariants_FULL_SCREEN_CLOUD_RECORDING)
+	ack, err := js.Publish(context.Background(), subject, data)
 	if err != nil {
-		return fmt.Errorf("failed to publish transcoding task to %s: %w", appCnf.NatsInfo.Recorder.TranscodingJobs, err)
+		return fmt.Errorf("failed to publish transcoding task to %s: %w", subject, err)
 	}
 
 	logger.WithFields(logrus.Fields{
-		"subject":  appCnf.NatsInfo.Recorder.TranscodingJobs,
+		"subject":  subject,
 		"stream":   ack.Stream,
 		"sequence": ack.Sequence,
 	}).Info("Retry transcoding task published successfully")

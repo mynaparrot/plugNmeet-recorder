@@ -19,6 +19,7 @@ var (
 	lastPingField   = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_LAST_PING)
 	totalCoresField = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_TOTAL_CORES)
 	cpuScoreField   = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_CPU_SCORE)
+	variantField    = fmt.Sprintf("%d", plugnmeet.RecorderInfoKeys_RECORDER_INFO_VARIANT)
 )
 
 // RegisterAsActiveRecorder initializes a recorder's information and ensures it is the only active instance with this ID.
@@ -56,6 +57,7 @@ func (s *NatsService) RegisterAsActiveRecorder(pingInterval time.Duration) error
 		utils.FormatRecorderKey(recorderId, progressField):   "0",
 		utils.FormatRecorderKey(recorderId, lastPingField):   fmt.Sprintf("%d", time.Now().UTC().UnixMilli()),
 		utils.FormatRecorderKey(recorderId, totalCoresField): fmt.Sprintf("%d", runtime.NumCPU()),
+		utils.FormatRecorderKey(recorderId, variantField):    fmt.Sprintf("%d", plugnmeet.CloudRecordingVariants_FULL_SCREEN_CLOUD_RECORDING),
 	}
 
 	// Put all fields into the consolidated bucket
@@ -132,6 +134,7 @@ func (s *NatsService) DeleteRecorder() {
 		lastPingField,
 		totalCoresField,
 		cpuScoreField,
+		variantField,
 	}
 
 	// Purge each key. Purge sends a specific marker that watchers can act on.

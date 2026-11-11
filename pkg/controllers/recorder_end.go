@@ -9,6 +9,7 @@ import (
 
 	"github.com/mynaparrot/plugnmeet-protocol/hooks"
 	"github.com/mynaparrot/plugnmeet-protocol/plugnmeet"
+	"github.com/mynaparrot/plugnmeet-protocol/utils"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/recorder"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
@@ -128,8 +129,9 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 		}
 		if stat.Size() > 0 {
 			postRecording := &plugnmeet.TranscodingTaskPostRecording{
-				FileName: finalFileName, // this is the raw file name
-				FilePath: finalFilePath, // this is now the final path
+				FileName:         finalFileName, // this is the raw file name
+				FilePath:         finalFilePath, // this is now the final path
+				RecordingVariant: plugnmeet.CloudRecordingVariants_FULL_SCREEN_CLOUD_RECORDING,
 			}
 
 			// Run post-recording scripts
@@ -159,7 +161,8 @@ func (c *RecorderController) onAfterClose(req *plugnmeet.PlugNmeetToRecorder, re
 				return
 			}
 
-			if _, err = c.js.Publish(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, marshal); err != nil {
+			subject := utils.GetTranscodingJobSubject(c.cnf.NatsInfo.Recorder.TranscodingJobs, plugnmeet.CloudRecordingVariants_FULL_SCREEN_CLOUD_RECORDING)
+			if _, err = c.js.Publish(c.ctx, subject, marshal); err != nil {
 				log.WithError(err).Errorln("Failed to publish transcoding task")
 			}
 		} else {

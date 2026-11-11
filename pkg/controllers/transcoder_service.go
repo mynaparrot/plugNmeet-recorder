@@ -27,7 +27,7 @@ import (
 func (c *RecorderController) startTranscodingService() {
 	logger := c.logger.WithField("service", "transcoder")
 
-	consumer, err := c.js.Consumer(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, utils.TranscoderConsumerDurable)
+	consumer, err := c.js.Consumer(c.ctx, c.cnf.NatsInfo.Recorder.TranscodingJobs, utils.GetTranscoderConsumerDurable(plugnmeet.CloudRecordingVariants_FULL_SCREEN_CLOUD_RECORDING))
 	if err != nil {
 		logger.WithError(err).Fatalln("Failed to create consumer for transcoding jobs")
 	}
