@@ -22,7 +22,7 @@ type AppConfig struct {
 	RootWorkingDir string
 
 	Recorder       RecorderInfo        `yaml:"recorder"`
-	Hooks          *Hooks              `yaml:"hooks"`
+	Hooks          *hooks.Config       `yaml:"hooks"`
 	LogSettings    logging.LogSettings `yaml:"log_settings"`
 	FfmpegSettings *FfmpegSettings     `yaml:"ffmpeg_settings"`
 	ChromeSettings *ChromeSettings     `yaml:"chrome_settings"`
@@ -154,7 +154,7 @@ func (a *AppConfig) setDefaultConfig() error {
 		logrus.Warnln("Configuration error: 'recorder.post_processing_scripts' is deprecated. Please move your scripts to the top-level 'hooks.post_transcoding' section. IMPORTANT: Scripts now receive data via stdin instead of command-line arguments. Please update your scripts to read from stdin.")
 
 		if a.Hooks == nil {
-			a.Hooks = new(Hooks)
+			a.Hooks = new(hooks.Config)
 		}
 
 		if a.Hooks.PostTranscoding == nil {

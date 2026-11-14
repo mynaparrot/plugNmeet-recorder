@@ -195,7 +195,7 @@ func (c *RecorderController) handlePostRecordingTranscoding(task *plugnmeet.Tran
 	initialRemoteFilePath := taskDetails.FilePath
 
 	// Run pre-transcoding scripts to get the file ready locally
-	if c.cnf.Hooks != nil {
+	if c.cnf.Hooks.HasPreTranscoding() {
 		var err error
 		var preTranscodeHookResult *hooks.RecordingHookData
 		taskDetails, preTranscodeHookResult, err = c.runPreTranscodingScripts(task, taskDetails, log)
@@ -347,7 +347,7 @@ func (c *RecorderController) handleMergeRecordings(task *plugnmeet.TranscodingTa
 	inputPath := path.Join(c.cnf.Recorder.CopyToPath.MainPath, relativeOutputDir)
 
 	var preTranscodeHookResult *hooks.RecordingHookData
-	if c.cnf.Hooks != nil {
+	if c.cnf.Hooks.HasPreTranscoding() {
 		data := &hooks.RecordingHookData{
 			Task:        "merge",
 			RecordingID: task.GetRecordingId(),
@@ -500,7 +500,7 @@ func (c *RecorderController) runPreTranscodingScripts(task *plugnmeet.Transcodin
 }
 
 func (c *RecorderController) runPostTranscodingScriptsAndNotify(task *plugnmeet.TranscodingTask, taskType hooks.RecordingHookTask, toSend *plugnmeet.RecorderToPlugNmeet, outputFile, finalFileName string, size float32, sourceForCleanup string, log *logrus.Entry) {
-	if c.cnf.Hooks != nil {
+	if c.cnf.Hooks.HasPostTranscoding() {
 		// Note: outputFile is the final path including file name
 		absPath, err := filepath.Abs(outputFile)
 		if err != nil {

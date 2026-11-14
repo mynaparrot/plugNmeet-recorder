@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/goccy/go-yaml"
+	"github.com/mynaparrot/plugnmeet-protocol/hooks"
 	"github.com/mynaparrot/plugnmeet-protocol/logging"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/config"
 	"github.com/mynaparrot/plugnmeet-recorder/pkg/controllers"
@@ -61,7 +63,23 @@ func provideLogger(appCnf *config.AppConfig) (*logrus.Logger, error) {
 // In the future, other pre-start logic can be added here.
 func ExecuteBootstrapTasks(lc fx.Lifecycle, ctx context.Context, cancel context.CancelFunc, appCnf *config.AppConfig, logger *logrus.Logger) error {
 	if appCnf.Hooks != nil {
-		if err := appCnf.Hooks.InitializeHooks(ctx, appCnf, logger); err != nil {
+		// Only the hook categories relevant to the current mode are initialized.
+		categories := make([]hooks.Category, 0, 3)
+		if appCnf.Recorder.Mode == config.ModeBoth || appCnf.Recorder.Mode == config.ModeRecorderOnly {
+			categories = append(categories, hooks.Category{Name: hooks.HookNamePostRecording, Config: appCnf.Hooks.PostRecording})
+		}
+		if appCnf.Recorder.Mode == config.ModeBoth || appCnf.Recorder.Mode == config.ModeTranscoderOnly {
+			categories = append(categories,
+				hooks.Category{Name: hooks.HookNamePreTranscoding, Config: appCnf.Hooks.PreTranscoding},
+				hooks.Category{Name: hooks.HookNamePostTranscoding, Config: appCnf.Hooks.PostTranscoding},
+			)
+		}
+
+		if err := appCnf.Hooks.Initialize(ctx, hooks.InitOptions{
+			RootWorkingDir: appCnf.RootWorkingDir,
+			DefaultTimeout: time.Hour,
+			Logger:         logger,
+		}, categories...); err != nil {
 			logger.WithError(err).Error("failed to initialize hooks")
 			return err
 		}
