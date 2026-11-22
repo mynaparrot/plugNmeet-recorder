@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	github.com/chromedp/cdproto v0.160.2
-	github.com/chromedp/chromedp v0.23.1
+	github.com/chromedp/chromedp v0.24.0
 	github.com/goccy/go-yaml v1.19.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/mynaparrot/plugnmeet-protocol v1.6.4-0.20261114142648-c4d001a4109d
