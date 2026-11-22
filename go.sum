@@ -32,6 +32,8 @@ github.com/chromedp/cdproto v0.160.2 h1:VSgRQWUSKDxohb2KUbL06qGKQZcF84pogqu272Nb
 github.com/chromedp/cdproto v0.160.2/go.mod h1:h68JaIuFr9o3yiayxEYhBdvaxgYO3shDrPSYhNlyfu0=
 github.com/chromedp/chromedp v0.23.1 h1:CbK1Knbhe9H/m/KT3qfmuSG1c6ErR8ZjmmpHb4Fadz8=
 github.com/chromedp/chromedp v0.23.1/go.mod h1:cz9BPo2oR1YBCu7e+KTdO+7uMvTTuEYh11fErlxdCuQ=
+github.com/chromedp/chromedp v0.24.0 h1:bARawUSS5gshTOsNbFz2YFJyjaQCt7IHcW6E2mqDABQ=
+github.com/chromedp/chromedp v0.24.0/go.mod h1:cz9BPo2oR1YBCu7e+KTdO+7uMvTTuEYh11fErlxdCuQ=
 github.com/containerd/errdefs v1.0.0 h1:tg5yIfIlQIrxYtu9ajqY42W3lpS19XqdxRQeEwYG8PI=
 github.com/containerd/errdefs v1.0.0/go.mod h1:+YBYIdtsnF4Iw6nWZhJcqGSg/dwvV7tyJ/kCkyJ2k+M=
 github.com/containerd/errdefs/pkg v0.3.0 h1:9IKJ06FvyNlexW690DXuQNx2KA2cUJXx151Xdx3ZPPE=
